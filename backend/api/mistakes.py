@@ -1,9 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-错题管理和解题辅导API
+AI智能学习系统 - API接口 - mistakes.py
 
-提供错题记录、分析、复习和分层辅导的API端点
+Description:
+    错题管理API接口，提供错题收集、分析、复习等功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -14,7 +22,7 @@ from services.mistake_service import MistakeService
 from services.tutoring_service import TutoringService
 from models.mistake import MistakeType, MistakeLevel
 from utils.response import success_response, error_response
-from utils.validation import validate_request_data
+from utils.validators import validate_required_fields
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -48,10 +56,10 @@ def create_mistake_record():
         
         # 验证请求数据
         required_fields = ['question_id', 'user_answer', 'correct_answer']
-        validation_result = validate_request_data(data, required_fields)
-        if not validation_result['valid']:
+        is_valid, error_msg = validate_required_fields(data, required_fields)
+        if not is_valid:
             return error_response(
-                message=validation_result['message'],
+                message=error_msg,
                 code=400
             )
         

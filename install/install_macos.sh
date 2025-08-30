@@ -152,6 +152,35 @@ install_redis() {
     fi
 }
 
+# 安装Node.js和npm
+install_nodejs() {
+    log_info "检查 Node.js 环境..."
+    
+    if command_exists node; then
+        node_version=$(node --version)
+        log_info "Node.js 版本: $node_version"
+        
+        # 检查Node.js版本是否满足要求（16+）
+        if node -e "process.exit(process.version.match(/^v(\d+)/)[1] >= 16 ? 0 : 1)"; then
+            log_success "Node.js 版本满足要求"
+        else
+            log_warning "Node.js 版本过低，正在安装最新版本..."
+            brew install node@18
+        fi
+    else
+        log_info "正在安装 Node.js..."
+        brew install node@18
+    fi
+    
+    # 确保npm可用
+    if ! command_exists npm; then
+        log_error "npm 未正确安装"
+        exit 1
+    fi
+    
+    log_success "Node.js 环境准备完成"
+}
+
 # 创建Python虚拟环境
 setup_virtualenv() {
     log_info "创建 Python 虚拟环境..."
@@ -173,7 +202,7 @@ setup_virtualenv() {
 }
 
 # 安装Python依赖
-install_dependencies() {
+install_python_dependencies() {
     log_info "安装 Python 依赖包..."
     
     cd "$(dirname "$0")/.."
@@ -182,7 +211,25 @@ install_dependencies() {
     # 安装依赖
     pip install -r install/requirements.txt
     
-    log_success "依赖包安装完成"
+    log_success "Python 依赖包安装完成"
+}
+
+# 安装前端依赖
+install_frontend_dependencies() {
+    log_info "安装前端依赖包..."
+    
+    cd "$(dirname "$0")/../frontend"
+    
+    # 检查package.json是否存在
+    if [[ ! -f "package.json" ]]; then
+        log_error "未找到前端项目的 package.json 文件"
+        return 1
+    fi
+    
+    # 安装依赖
+    npm install
+    
+    log_success "前端依赖包安装完成"
 }
 
 # 配置环境变量
@@ -261,15 +308,16 @@ init_database() {
 }
 
 # 创建启动脚本
-create_start_script() {
+create_start_scripts() {
     log_info "创建启动脚本..."
     
     cd "$(dirname "$0")/.."
     
-    cat > start.sh << 'EOF'
+    # 创建后端启动脚本
+    cat > start_backend.sh << 'EOF'
 #!/bin/bash
 
-# AI智能学习系统启动脚本
+# AI智能学习系统 - 后端启动脚本
 
 cd "$(dirname "$0")"
 
@@ -280,17 +328,74 @@ source venv/bin/activate
 export FLASK_APP=backend/app.py
 export FLASK_ENV=development
 
-# 启动应用
-echo "正在启动 AI智能学习系统..."
-echo "访问地址: http://localhost:5000"
+# 启动后端服务
+echo "正在启动后端服务..."
+echo "后端API地址: http://localhost:5001"
 echo "按 Ctrl+C 停止服务"
 
-flask run --host=0.0.0.0 --port=5000
+python -c "from backend.app import create_app; app = create_app(); app.run(debug=True, host='0.0.0.0', port=5001)"
+EOF
+    
+    # 创建前端启动脚本
+    cat > start_frontend.sh << 'EOF'
+#!/bin/bash
+
+# AI智能学习系统 - 前端启动脚本
+
+cd "$(dirname "$0")/frontend"
+
+# 启动前端开发服务器
+echo "正在启动前端开发服务器..."
+echo "前端访问地址: http://localhost:5173"
+echo "按 Ctrl+C 停止服务"
+
+npm run dev
+EOF
+    
+    # 创建完整系统启动脚本
+    cat > start.sh << 'EOF'
+#!/bin/bash
+
+# AI智能学习系统 - 完整启动脚本
+
+echo "=========================================="
+echo "    AI智能学习系统启动中..."
+echo "=========================================="
+echo ""
+
+# 检查是否安装了tmux
+if ! command -v tmux &> /dev/null; then
+    echo "正在安装 tmux..."
+    brew install tmux
+fi
+
+# 创建tmux会话
+tmux new-session -d -s ai-score
+
+# 启动后端服务
+tmux send-keys -t ai-score "./start_backend.sh" Enter
+
+# 创建新窗口启动前端服务
+tmux new-window -t ai-score
+tmux send-keys -t ai-score "./start_frontend.sh" Enter
+
+echo "系统启动完成！"
+echo ""
+echo "访问地址:"
+echo "  前端: http://localhost:5173"
+echo "  后端API: http://localhost:5001"
+echo ""
+echo "管理命令:"
+echo "  查看服务: tmux attach -t ai-score"
+echo "  停止服务: tmux kill-session -t ai-score"
+echo ""
 EOF
     
     chmod +x start.sh
+    chmod +x start_backend.sh
+    chmod +x start_frontend.sh
     
-    log_success "启动脚本已创建: start.sh"
+    log_success "启动脚本已创建: start.sh, start_backend.sh, start_frontend.sh"
 }
 
 # 主安装流程
@@ -306,17 +411,21 @@ main() {
     # 安装基础软件
     install_homebrew
     install_python
+    install_nodejs
     install_postgresql
     install_redis
     
     # 设置Python环境
     setup_virtualenv
-    install_dependencies
+    install_python_dependencies
+    
+    # 设置前端环境
+    install_frontend_dependencies
     
     # 配置应用
     setup_environment
     init_database
-    create_start_script
+    create_start_scripts
     
     echo ""
     echo "==========================================="
@@ -325,8 +434,14 @@ main() {
     echo ""
     echo "下一步操作："
     echo "1. 编辑 .env 文件，配置必要的参数"
-    echo "2. 运行 ./start.sh 启动应用"
-    echo "3. 在浏览器中访问 http://localhost:5000"
+    echo "2. 运行 ./start.sh 启动完整系统（前端+后端）"
+    echo "3. 或者分别启动："
+    echo "   - ./start_backend.sh  启动后端服务"
+    echo "   - ./start_frontend.sh 启动前端服务"
+    echo ""
+    echo "访问地址："
+    echo "- 前端界面: http://localhost:5173"
+    echo "- 后端API:  http://localhost:5001"
     echo ""
     echo "如需帮助，请查看 install/README.md 文档"
     echo ""

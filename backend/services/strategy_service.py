@@ -1,9 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-策略服务
+AI智能学习系统 - 业务服务 - strategy_service.py
 
-提供时间分配策略和得分策略的管理功能
+Description:
+    策略服务，提供学习策略推荐和优化。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import json
 from datetime import datetime, timedelta

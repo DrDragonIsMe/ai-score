@@ -1,11 +1,20 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-知识体系模型
+AI智能学习系统 - 数据模型 - knowledge.py
+
+Description:
+    知识点数据模型，定义学科知识体系结构。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from utils.database import db
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 class Subject(db.Model):
@@ -13,8 +22,8 @@ class Subject(db.Model):
     
     __tablename__ = 'subjects'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tenants.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
     
     # 基本信息
     code = db.Column(db.String(20), nullable=False, comment='学科代码')
@@ -66,8 +75,8 @@ class Chapter(db.Model):
     
     __tablename__ = 'chapters'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    subject_id = db.Column(UUID(as_uuid=True), db.ForeignKey('subjects.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    subject_id = db.Column(db.String(36), db.ForeignKey('subjects.id'), nullable=False)
     
     # 基本信息
     code = db.Column(db.String(20), nullable=False, comment='章节代码')
@@ -121,8 +130,8 @@ class KnowledgePoint(db.Model):
     
     __tablename__ = 'knowledge_points'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chapter_id = db.Column(UUID(as_uuid=True), db.ForeignKey('chapters.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    chapter_id = db.Column(db.String(36), db.ForeignKey('chapters.id'), nullable=False)
     
     # 基本信息
     code = db.Column(db.String(30), nullable=False, comment='知识点代码')
@@ -200,8 +209,8 @@ class SubKnowledgePoint(db.Model):
     
     __tablename__ = 'sub_knowledge_points'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    knowledge_point_id = db.Column(UUID(as_uuid=True), db.ForeignKey('knowledge_points.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'), nullable=False)
     
     # 基本信息
     code = db.Column(db.String(40), nullable=False, comment='子知识点代码')

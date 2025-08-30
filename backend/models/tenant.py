@@ -1,11 +1,20 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-租户模型
+AI智能学习系统 - 数据模型 - tenant.py
+
+Description:
+    租户数据模型，支持多租户架构的数据隔离。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from utils.database import db
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 class Tenant(db.Model):
@@ -13,7 +22,7 @@ class Tenant(db.Model):
     
     __tablename__ = 'tenants'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(100), nullable=False, comment='租户名称')
     subdomain = db.Column(db.String(50), unique=True, nullable=False, comment='子域名')
     domain = db.Column(db.String(100), comment='自定义域名')

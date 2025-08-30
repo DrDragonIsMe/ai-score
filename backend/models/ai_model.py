@@ -1,11 +1,20 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI模型配置模型
+AI智能学习系统 - 数据模型 - ai_model.py
+
+Description:
+    AI模型数据模型，定义AI模型配置和使用记录。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from utils.database import db
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 class AIModelConfig(db.Model):
@@ -13,8 +22,8 @@ class AIModelConfig(db.Model):
     
     __tablename__ = 'ai_model_configs'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tenants.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
     
     # 模型基本信息
     model_name = db.Column(db.String(50), nullable=False, comment='模型名称')

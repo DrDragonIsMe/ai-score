@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-装饰器工具
+AI智能学习系统 - 工具模块 - decorators.py
+
+Description:
+    装饰器工具，提供权限验证、缓存、限流等装饰器。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from functools import wraps
 from flask import request, jsonify, g

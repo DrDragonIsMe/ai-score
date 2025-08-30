@@ -1,3 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AI智能学习系统 - 业务服务 - learning_path_service.py
+
+Description:
+    学习路径服务，提供个性化学习路径生成和优化。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
+"""
+
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from models.diagnosis import DiagnosisReport, LearningProfile

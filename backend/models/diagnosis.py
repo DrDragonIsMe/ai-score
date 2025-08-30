@@ -1,13 +1,22 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-个性化诊断模型 - 支持三层诊断、AI自适应出题、学习画像
+AI智能学习系统 - 数据模型 - diagnosis.py
+
+Description:
+    诊断数据模型，定义学习诊断结果和分析数据。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from enum import Enum
 from utils.database import db
 from .base import BaseModel
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 class DiagnosisType(Enum):
@@ -35,9 +44,9 @@ class DiagnosisReport(BaseModel):
     
     __tablename__ = 'diagnosis_reports'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
-    subject_id = db.Column(UUID(as_uuid=True), db.ForeignKey('subjects.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    subject_id = db.Column(db.String(36), db.ForeignKey('subjects.id'), nullable=False)
     knowledge_point_ids = db.Column(db.JSON, default=[], comment='涉及的知识点ID列表')
     
     # 基本信息
@@ -320,8 +329,8 @@ class DiagnosisSession(BaseModel):
     
     __tablename__ = 'diagnosis_sessions'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    diagnosis_report_id = db.Column(UUID(as_uuid=True), db.ForeignKey('diagnosis_reports.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    diagnosis_report_id = db.Column(db.String(36), db.ForeignKey('diagnosis_reports.id'), nullable=False)
     
     # 会话信息
     session_name = db.Column(db.String(100), comment='会话名称')
@@ -441,10 +450,10 @@ class QuestionResponse(BaseModel):
     
     __tablename__ = 'question_responses'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    diagnosis_session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('diagnosis_sessions.id'), nullable=False)
-    question_id = db.Column(UUID(as_uuid=True), comment='题目ID')
-    knowledge_point_id = db.Column(UUID(as_uuid=True), db.ForeignKey('knowledge_points.id'), comment='知识点ID')
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    diagnosis_session_id = db.Column(db.String(36), db.ForeignKey('diagnosis_sessions.id'), nullable=False)
+    question_id = db.Column(db.String(36), comment='题目ID')
+    knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'), comment='知识点ID')
     
     # 题目信息
     question_content = db.Column(db.Text, comment='题目内容')
@@ -492,9 +501,9 @@ class WeaknessPoint(BaseModel):
     
     __tablename__ = 'weakness_points'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    diagnosis_report_id = db.Column(UUID(as_uuid=True), db.ForeignKey('diagnosis_reports.id'), nullable=False)
-    knowledge_point_id = db.Column(UUID(as_uuid=True), db.ForeignKey('knowledge_points.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    diagnosis_report_id = db.Column(db.String(36), db.ForeignKey('diagnosis_reports.id'), nullable=False)
+    knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'), nullable=False)
     
     # 薄弱程度
     weakness_level = db.Column(db.Integer, default=1, comment='薄弱程度1-5')
@@ -540,8 +549,8 @@ class LearningProfile(BaseModel):
     
     __tablename__ = 'learning_profiles'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     
     # 思维特征
     thinking_style = db.Column(db.String(20), comment='思维风格：logical/creative/analytical/intuitive')

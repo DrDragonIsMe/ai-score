@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-API响应工具
+AI智能学习系统 - 工具模块 - response.py
+
+Description:
+    响应工具，提供统一的API响应格式处理。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from flask import jsonify
 from typing import Any, Dict, Optional

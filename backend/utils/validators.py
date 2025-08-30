@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-数据验证工具
+AI智能学习系统 - 工具模块 - validators.py
+
+Description:
+    数据验证工具，提供各种数据格式和业务规则验证。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import re
 from typing import Any, Dict, List, Optional

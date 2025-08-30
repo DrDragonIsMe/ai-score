@@ -1,13 +1,22 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-记忆强化服务
-基于艾宾浩斯遗忘曲线的智能复习系统
+AI智能学习系统 - 业务服务 - memory_service.py
+
+Description:
+    记忆服务，实现艾宾浩斯记忆曲线算法。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy import and_, or_, desc
-from models.memory import MemoryCard, ReviewRecord
+from models.learning import MemoryCard
 from models.knowledge import KnowledgePoint
 from models.question import Question
 from models.user import User

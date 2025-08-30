@@ -1,13 +1,22 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-用户模型
+AI智能学习系统 - 数据模型 - user.py
+
+Description:
+    用户数据模型，定义用户信息、权限等数据结构。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
 from utils.database import db
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 class User(db.Model):
@@ -15,8 +24,8 @@ class User(db.Model):
     
     __tablename__ = 'users'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tenants.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
     
     # 基本信息
     username = db.Column(db.String(50), nullable=False, comment='用户名')
@@ -103,8 +112,8 @@ class UserProfile(db.Model):
     
     __tablename__ = 'user_profiles'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     
     # 学习目标
     target_score = db.Column(db.Integer, comment='目标分数')

@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-日志工具
+AI智能学习系统 - 工具模块 - logger.py
+
+Description:
+    日志工具，提供结构化日志记录和管理功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import logging
 import os

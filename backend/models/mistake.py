@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-错题管理相关数据模型
+AI智能学习系统 - 数据模型 - mistake.py
+
+Description:
+    错题数据模型，定义错题信息和分析数据。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey, JSON, Enum
@@ -46,15 +56,15 @@ class MistakeRecord(db.Model):
     mistake_type = Column(Enum(MistakeType), nullable=False)  # 错误类型
     mistake_level = Column(Enum(MistakeLevel), default=MistakeLevel.MEDIUM)  # 错误严重程度
     
-    # 分析结果
+    # 分析和建议
     error_analysis = Column(Text, nullable=True)      # 错误分析
-    solution_steps = Column(JSON, default=list)       # 解题步骤
-    key_concepts = Column(JSON, default=list)         # 关键概念
-    similar_questions = Column(JSON, default=list)    # 相似题目ID列表
+    solution_steps = Column(JSON, nullable=True)       # 解题步骤
+    key_concepts = Column(JSON, nullable=True)         # 关键概念
+    similar_questions = Column(JSON, nullable=True)    # 相似题目ID列表
     
     # 改进建议
-    improvement_suggestions = Column(JSON, default=list)  # 改进建议
-    practice_recommendations = Column(JSON, default=list) # 练习推荐
+    improvement_suggestions = Column(JSON, nullable=True)  # 改进建议
+    practice_recommendations = Column(JSON, nullable=True) # 练习推荐
     
     # 复习状态
     review_count = Column(Integer, default=0)         # 复习次数
@@ -77,7 +87,20 @@ class MistakeRecord(db.Model):
     question = relationship('Question', backref='mistake_records')
     knowledge_point = relationship('KnowledgePoint', backref='mistake_records')
     review_sessions = relationship('MistakeReviewSession', backref='mistake_record', cascade='all, delete-orphan')
-    
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.solution_steps is None:
+            self.solution_steps = []
+        if self.key_concepts is None:
+            self.key_concepts = []
+        if self.similar_questions is None:
+            self.similar_questions = []
+        if self.improvement_suggestions is None:
+            self.improvement_suggestions = []
+        if self.practice_recommendations is None:
+            self.practice_recommendations = []
+
     def __repr__(self):
         return f'<MistakeRecord {self.id}: User {self.user_id} - Question {self.question_id}>'
     
@@ -269,14 +292,14 @@ class MistakePattern(db.Model):
     frequency = Column(Integer, default=1)               # 出现频率
     confidence_score = Column(Float, default=0.0)        # 置信度分数
     
-    # 关联信息
-    related_knowledge_points = Column(JSON, default=list) # 相关知识点ID列表
-    related_mistake_types = Column(JSON, default=list)    # 相关错误类型列表
-    example_mistakes = Column(JSON, default=list)         # 示例错题ID列表
+    # 模式特征
+    related_knowledge_points = Column(JSON, nullable=True) # 相关知识点ID列表
+    related_mistake_types = Column(JSON, nullable=True)    # 相关错误类型列表
+    example_mistakes = Column(JSON, nullable=True)         # 示例错题ID列表
     
-    # 改进建议
-    improvement_plan = Column(JSON, default=dict)         # 改进计划
-    recommended_resources = Column(JSON, default=list)    # 推荐资源
+    # 改进计划
+    improvement_plan = Column(JSON, nullable=True)         # 改进计划
+    recommended_resources = Column(JSON, nullable=True)    # 推荐资源
     
     # 状态信息
     is_active = Column(Boolean, default=True)            # 是否活跃
@@ -288,7 +311,20 @@ class MistakePattern(db.Model):
     
     # 关联关系
     user = relationship('User', backref='mistake_patterns')
-    
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.related_knowledge_points is None:
+            self.related_knowledge_points = []
+        if self.related_mistake_types is None:
+            self.related_mistake_types = []
+        if self.example_mistakes is None:
+            self.example_mistakes = []
+        if self.improvement_plan is None:
+            self.improvement_plan = {}
+        if self.recommended_resources is None:
+            self.recommended_resources = []
+
     def __repr__(self):
         return f'<MistakePattern {self.id}: {self.pattern_type} for User {self.user_id}>'
     
@@ -351,13 +387,13 @@ class TutoringSession(db.Model):
     total_steps = Column(Integer, default=0)             # 总步骤数
     
     # 辅导内容
-    guidance_history = Column(JSON, default=list)        # 辅导历史
-    hints_used = Column(JSON, default=list)              # 使用的提示
-    user_responses = Column(JSON, default=list)          # 用户回应
+    guidance_history = Column(JSON, nullable=True)        # 辅导历史
+    hints_used = Column(JSON, nullable=True)              # 使用的提示
+    user_responses = Column(JSON, nullable=True)          # 用户回应
     
-    # 表现评估
-    understanding_progress = Column(JSON, default=dict)   # 理解进度
-    difficulty_adjustments = Column(JSON, default=list)  # 难度调整记录
+    # 学习分析
+    understanding_progress = Column(JSON, nullable=True)   # 理解进度
+    difficulty_adjustments = Column(JSON, nullable=True)  # 难度调整记录
     help_effectiveness = Column(Float, nullable=True)    # 帮助有效性
     
     # 状态管理
@@ -372,7 +408,20 @@ class TutoringSession(db.Model):
     # 关联关系
     user = relationship('User', backref='tutoring_sessions')
     question = relationship('Question', backref='tutoring_sessions')
-    
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.guidance_history is None:
+            self.guidance_history = []
+        if self.hints_used is None:
+            self.hints_used = []
+        if self.user_responses is None:
+            self.user_responses = []
+        if self.understanding_progress is None:
+            self.understanding_progress = {}
+        if self.difficulty_adjustments is None:
+            self.difficulty_adjustments = []
+
     def __repr__(self):
         return f'<TutoringSession {self.id}: User {self.user_id} - Question {self.question_id}>'
     

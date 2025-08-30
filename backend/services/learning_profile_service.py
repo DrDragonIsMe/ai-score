@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-学习画像服务 - 个性化学习特征分析
+AI智能学习系统 - 业务服务 - learning_profile_service.py
+
+Description:
+    学习档案服务，提供学习者画像分析。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import json
 import math

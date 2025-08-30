@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-用户管理API
+AI智能学习系统 - API接口 - users.py
+
+Description:
+    用户管理API接口，提供用户信息查询、更新、权限管理等功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from flask import request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -75,7 +85,7 @@ def get_users():
     except Exception as e:
         return error_response(f'Failed to get users: {str(e)}', 500)
 
-@api_bp.route('/users/<int:user_id>', methods=['GET'])
+@api_bp.route('/users/<string:user_id>', methods=['GET'])
 @jwt_required()
 def get_user(user_id):
     """获取用户详情"""
@@ -112,9 +122,9 @@ def get_user(user_id):
         ).first()
         
         user_data['study_stats'] = {
-            'total_records': study_stats.total_records or 0,
-            'total_duration': int(study_stats.total_duration or 0),
-            'avg_score': float(study_stats.avg_score or 0)
+            'total_records': getattr(study_stats, 'total_records', 0) or 0,
+            'total_duration': int(getattr(study_stats, 'total_duration', 0) or 0),
+            'avg_score': float(getattr(study_stats, 'avg_score', 0) or 0)
         }
         
         return success_response(user_data)
@@ -122,7 +132,7 @@ def get_user(user_id):
     except Exception as e:
         return error_response(f'Failed to get user: {str(e)}', 500)
 
-@api_bp.route('/users/<int:user_id>', methods=['PUT'])
+@api_bp.route('/users/<string:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
     """更新用户信息"""
@@ -167,7 +177,7 @@ def update_user(user_id):
         db.session.rollback()
         return error_response(f'Failed to update user: {str(e)}', 500)
 
-@api_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@api_bp.route('/users/<string:user_id>', methods=['DELETE'])
 @jwt_required()
 @admin_required
 def delete_user(user_id):
@@ -191,7 +201,7 @@ def delete_user(user_id):
         db.session.rollback()
         return error_response(f'Failed to delete user: {str(e)}', 500)
 
-@api_bp.route('/users/<int:user_id>/study-records', methods=['GET'])
+@api_bp.route('/users/<string:user_id>/study-records', methods=['GET'])
 @jwt_required()
 def get_user_study_records(user_id):
     """获取用户学习记录"""
@@ -256,7 +266,7 @@ def get_user_study_records(user_id):
     except Exception as e:
         return error_response(f'Failed to get study records: {str(e)}', 500)
 
-@api_bp.route('/users/<int:user_id>/stats', methods=['GET'])
+@api_bp.route('/users/<string:user_id>/stats', methods=['GET'])
 @jwt_required()
 def get_user_stats(user_id):
     """获取用户统计数据"""
@@ -306,11 +316,11 @@ def get_user_stats(user_id):
         
         return success_response({
             'overview': {
-                'total_sessions': study_stats.total_sessions or 0,
-                'total_duration': int(study_stats.total_duration or 0),
-                'avg_score': float(study_stats.avg_score or 0),
-                'study_days': study_stats.study_days or 0,
-                'avg_daily_duration': int((study_stats.total_duration or 0) / max(study_stats.study_days or 1, 1))
+                'total_sessions': getattr(study_stats, 'total_sessions', 0) or 0,
+                'total_duration': int(getattr(study_stats, 'total_duration', 0) or 0),
+                'avg_score': float(getattr(study_stats, 'avg_score', 0) or 0),
+                'study_days': getattr(study_stats, 'study_days', 0) or 0,
+                'avg_daily_duration': int((getattr(study_stats, 'total_duration', 0) or 0) / max(getattr(study_stats, 'study_days', 0) or 1, 1))
             },
             'by_subject': [
                 {

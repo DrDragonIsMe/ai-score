@@ -1,8 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-国际化配置模块
-提供多语言支持的配置和管理功能
+AI智能学习系统 - 配置模块 - i18n.py
+
+Description:
+    国际化配置，定义多语言支持配置。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import os
 from typing import Dict, List, Optional, Any

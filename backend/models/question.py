@@ -1,11 +1,20 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-题目和试卷模型
+AI智能学习系统 - 数据模型 - question.py
+
+Description:
+    题目数据模型，定义题目信息、难度、标签等。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from utils.database import db
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 class QuestionType(db.Model):
@@ -13,8 +22,8 @@ class QuestionType(db.Model):
     
     __tablename__ = 'question_types'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tenants.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
     
     # 基本信息
     code = db.Column(db.String(20), nullable=False, comment='题型代码')
@@ -70,10 +79,10 @@ class Question(db.Model):
     
     __tablename__ = 'questions'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tenants.id'), nullable=False)
-    knowledge_point_id = db.Column(UUID(as_uuid=True), db.ForeignKey('knowledge_points.id'), nullable=False)
-    question_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('question_types.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
+    knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'), nullable=False)
+    question_type_id = db.Column(db.String(36), db.ForeignKey('question_types.id'), nullable=False)
     
     # 基本信息
     title = db.Column(db.Text, nullable=False, comment='题目标题')
@@ -188,13 +197,13 @@ class ExamPaper(db.Model):
     
     __tablename__ = 'exam_papers'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tenants.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
     
     # 基本信息
     name = db.Column(db.String(100), nullable=False, comment='试卷名称')
     description = db.Column(db.Text, comment='试卷描述')
-    subject_id = db.Column(UUID(as_uuid=True), db.ForeignKey('subjects.id'), nullable=False)
+    subject_id = db.Column(db.String(36), db.ForeignKey('subjects.id'), nullable=False)
     
     # 试卷属性
     total_score = db.Column(db.Integer, default=150, comment='总分')

@@ -1,10 +1,24 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-配置文件
+AI智能学习系统 - 配置文件
+
+Description:
+    系统配置管理，包括数据库、缓存、AI模型、多租户、
+    国际化等各种配置参数的定义和管理。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
 
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 class Config:
     """基础配置"""
@@ -14,7 +28,7 @@ class Config:
     
     # 数据库配置
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://aiscore:password@localhost/aiscore'
+        'sqlite:///ai_score.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_size': 10,

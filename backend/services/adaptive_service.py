@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-自适应出题服务 - 基于IRT模型的智能题目推荐
+AI智能学习系统 - 业务服务 - adaptive_service.py
+
+Description:
+    自适应服务，提供个性化学习适配功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import math
 import random

@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-学科管理API
+AI智能学习系统 - API接口 - subjects.py
+
+Description:
+    学科管理API接口，提供学科信息、知识点管理等功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from flask import request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity

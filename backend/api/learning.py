@@ -1,3 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AI智能学习系统 - API接口 - learning.py
+
+Description:
+    学习路径数据模型，定义个性化学习计划和进度。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
+"""
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from services.learning_path_service import LearningPathService
@@ -8,7 +22,7 @@ from models.knowledge import Subject, KnowledgePoint
 from models.question import Question
 from utils.logger import get_logger
 from utils.response import success_response, error_response
-from utils.validation import validate_required_fields
+from utils.validators import validate_required_fields
 from typing import List, Dict, Any
 
 logger = get_logger(__name__)

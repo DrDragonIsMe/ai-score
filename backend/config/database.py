@@ -1,8 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-数据库配置模块
-提供数据库连接配置和相关设置
+AI智能学习系统 - 配置模块 - database.py
+
+Description:
+    数据库配置，定义数据库连接和ORM配置。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import os
 from urllib.parse import quote_plus
@@ -10,7 +19,7 @@ from urllib.parse import quote_plus
 
 class DatabaseConfig:
     """数据库配置类"""
-    
+
     # 基础配置
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_RECORD_QUERIES = True
@@ -22,25 +31,25 @@ class DatabaseConfig:
         'max_overflow': 20,
         'echo': os.getenv('SQLALCHEMY_ECHO', 'False').lower() == 'true'
     }
-    
+
     @staticmethod
     def get_database_uri(env='development'):
         """获取数据库连接URI
-        
+
         Args:
             env: 环境名称 (development, testing, production)
-            
+
         Returns:
             str: 数据库连接URI
         """
         if env == 'testing':
             return os.getenv('TEST_DATABASE_URL', 'sqlite:///test.db')
-        
+
         # 从环境变量获取数据库URL
         database_url = os.getenv('DATABASE_URL')
         if database_url:
             return database_url
-        
+
         # 构建数据库URL
         db_type = os.getenv('DB_TYPE', 'mysql')
         db_host = os.getenv('DB_HOST', 'localhost')
@@ -48,11 +57,11 @@ class DatabaseConfig:
         db_name = os.getenv('DB_NAME', 'ai_score')
         db_user = os.getenv('DB_USER', 'root')
         db_password = os.getenv('DB_PASSWORD', '')
-        
+
         # URL编码密码中的特殊字符
         if db_password:
             db_password = quote_plus(db_password)
-        
+
         if db_type == 'mysql':
             driver = os.getenv('DB_DRIVER', 'pymysql')
             return f'mysql+{driver}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4'
@@ -64,18 +73,18 @@ class DatabaseConfig:
             return f'sqlite:///{db_path}'
         else:
             raise ValueError(f'不支持的数据库类型: {db_type}')
-    
+
     @staticmethod
     def get_redis_config():
         """获取Redis配置
-        
+
         Returns:
             dict: Redis配置字典
         """
         redis_url = os.getenv('REDIS_URL')
         if redis_url:
             return {'url': redis_url}
-        
+
         return {
             'host': os.getenv('REDIS_HOST', 'localhost'),
             'port': int(os.getenv('REDIS_PORT', 6379)),
@@ -87,16 +96,16 @@ class DatabaseConfig:
             'retry_on_timeout': True,
             'health_check_interval': 30
         }
-    
+
     @staticmethod
     def get_cache_config():
         """获取缓存配置
-        
+
         Returns:
             dict: 缓存配置字典
         """
         cache_type = os.getenv('CACHE_TYPE', 'redis')
-        
+
         if cache_type == 'redis':
             redis_config = DatabaseConfig.get_redis_config()
             if 'url' in redis_config:
@@ -135,7 +144,7 @@ class DatabaseConfig:
 
 class DevelopmentDatabaseConfig(DatabaseConfig):
     """开发环境数据库配置"""
-    
+
     SQLALCHEMY_DATABASE_URI = DatabaseConfig.get_database_uri('development')
     SQLALCHEMY_ENGINE_OPTIONS = {
         **DatabaseConfig.SQLALCHEMY_ENGINE_OPTIONS,
@@ -145,7 +154,7 @@ class DevelopmentDatabaseConfig(DatabaseConfig):
 
 class TestingDatabaseConfig(DatabaseConfig):
     """测试环境数据库配置"""
-    
+
     SQLALCHEMY_DATABASE_URI = DatabaseConfig.get_database_uri('testing')
     SQLALCHEMY_ENGINE_OPTIONS = {
         **DatabaseConfig.SQLALCHEMY_ENGINE_OPTIONS,
@@ -156,7 +165,7 @@ class TestingDatabaseConfig(DatabaseConfig):
 
 class ProductionDatabaseConfig(DatabaseConfig):
     """生产环境数据库配置"""
-    
+
     SQLALCHEMY_DATABASE_URI = DatabaseConfig.get_database_uri('production')
     SQLALCHEMY_ENGINE_OPTIONS = {
         **DatabaseConfig.SQLALCHEMY_ENGINE_OPTIONS,
@@ -176,14 +185,14 @@ DATABASE_CONFIGS = {
 
 def get_database_config(env=None):
     """获取数据库配置类
-    
+
     Args:
         env: 环境名称，如果为None则从环境变量获取
-        
+
     Returns:
         DatabaseConfig: 数据库配置类
     """
     if env is None:
         env = os.getenv('FLASK_ENV', 'development')
-    
+
     return DATABASE_CONFIGS.get(env, DevelopmentDatabaseConfig)

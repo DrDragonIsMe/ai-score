@@ -1,9 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-错题管理和解题辅导服务
+AI智能学习系统 - 业务服务 - mistake_service.py
 
-提供错题分析、管理和分层解题辅导功能
+Description:
+    错题服务，提供错题分析和推荐功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple

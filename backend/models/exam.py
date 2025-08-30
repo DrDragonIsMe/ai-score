@@ -1,9 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-应试优化数据模型
+AI智能学习系统 - 数据模型 - exam.py
 
-包含限时模拟、时间分配、得分策略等相关模型
+Description:
+    考试数据模型，定义考试信息、成绩等数据结构。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
@@ -62,18 +70,37 @@ class ExamSession(db.Model):
     actual_start_time = Column(DateTime)
     end_time = Column(DateTime)
     pause_duration = Column(Integer, default=0)  # 暂停总时长（秒）
-    time_extensions = Column(JSON, default=list)  # 时间延长记录
+    time_extensions = Column(JSON, nullable=True)  # 时间延长记录
     
     # 考试状态
     status = Column(String(20), nullable=False, default=ExamStatus.SCHEDULED.value)
     current_question_index = Column(Integer, default=0)
     completed_questions = Column(Integer, default=0)
     
-    # 答题记录
-    question_ids = Column(JSON, default=list)  # 题目ID列表
-    answers = Column(JSON, default=dict)  # 答案记录 {question_id: answer}
-    question_times = Column(JSON, default=dict)  # 每题用时 {question_id: seconds}
-    question_attempts = Column(JSON, default=dict)  # 每题尝试次数
+    # 题目和答案记录
+    question_ids = Column(JSON, nullable=True)  # 题目ID列表
+    answers = Column(JSON, nullable=True)  # 答案记录 {question_id: answer}
+    question_times = Column(JSON, nullable=True)  # 每题用时 {question_id: seconds}
+    question_attempts = Column(JSON, nullable=True)  # 每题尝试次数
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.question_ids is None:
+            self.question_ids = []
+        if self.answers is None:
+            self.answers = {}
+        if self.question_times is None:
+            self.question_times = {}
+        if self.question_attempts is None:
+            self.question_attempts = {}
+        if self.time_extensions is None:
+            self.time_extensions = []
+        if self.time_distribution is None:
+            self.time_distribution = {}
+        if self.strategy_analysis is None:
+            self.strategy_analysis = {}
+        if self.improvement_suggestions is None:
+            self.improvement_suggestions = []
     
     # 得分和分析
     total_score = Column(Float, default=0.0)
@@ -86,11 +113,11 @@ class ExamSession(db.Model):
     # 时间分析
     time_efficiency = Column(Float, default=0.0)  # 时间效率 0-1
     average_time_per_question = Column(Float, default=0.0)  # 平均每题用时
-    time_distribution = Column(JSON, default=dict)  # 时间分布分析
+    time_distribution = Column(JSON, nullable=True)  # 时间分布分析
     
     # 策略分析
-    strategy_analysis = Column(JSON, default=dict)  # 答题策略分析
-    improvement_suggestions = Column(JSON, default=list)  # 改进建议
+    strategy_analysis = Column(JSON, nullable=True)  # 答题策略分析
+    improvement_suggestions = Column(JSON, nullable=True)  # 改进建议
     
     # 元数据
     created_time = Column(DateTime, default=datetime.utcnow)
@@ -256,17 +283,17 @@ class TimeAllocation(db.Model):
     hard_question_time = Column(Float)  # 困难题目时间（分钟）
     review_time_percentage = Column(Float, default=10.0)  # 检查时间百分比
     
-    # 时间分布
-    time_distribution = Column(JSON, default=dict)  # 各部分时间分布
+    # 时间分配策略
+    time_distribution = Column(JSON, nullable=True)  # 各部分时间分布
     buffer_time = Column(Float, default=5.0)  # 缓冲时间（分钟）
     
     # 执行情况
-    actual_time_usage = Column(JSON, default=dict)  # 实际时间使用
+    actual_time_usage = Column(JSON, nullable=True)  # 实际时间使用
     adherence_score = Column(Float, default=0.0)  # 执行度评分 0-1
     
-    # 效果分析
+    # 效果评估
     effectiveness_score = Column(Float, default=0.0)  # 有效性评分 0-1
-    improvement_areas = Column(JSON, default=list)  # 改进领域
+    improvement_areas = Column(JSON, nullable=True)  # 改进领域
     
     # 元数据
     is_active = Column(Boolean, default=True)
@@ -378,8 +405,8 @@ class ScoringStrategy(db.Model):
     risk_tolerance = Column(Float, default=0.5)  # 风险容忍度 0-1
     certainty_threshold = Column(Float, default=0.7)  # 确定性阈值
     
-    # 策略参数
-    strategy_parameters = Column(JSON, default=dict)  # 其他策略参数
+    # 其他策略参数
+    strategy_parameters = Column(JSON, nullable=True)  # 其他策略参数
     
     # 效果统计
     usage_count = Column(Integer, default=0)  # 使用次数
@@ -493,28 +520,28 @@ class ExamAnalytics(db.Model):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     
     # 时间分析
-    time_analysis = Column(JSON, default=dict)  # 时间使用分析
+    time_analysis = Column(JSON, nullable=True)  # 时间使用分析
     time_efficiency_score = Column(Float, default=0.0)  # 时间效率评分
-    time_management_suggestions = Column(JSON, default=list)  # 时间管理建议
+    time_management_suggestions = Column(JSON, nullable=True)  # 时间管理建议
     
     # 答题分析
-    answer_pattern_analysis = Column(JSON, default=dict)  # 答题模式分析
-    accuracy_by_difficulty = Column(JSON, default=dict)  # 各难度准确率
-    accuracy_by_topic = Column(JSON, default=dict)  # 各主题准确率
+    answer_pattern_analysis = Column(JSON, nullable=True)  # 答题模式分析
+    accuracy_by_difficulty = Column(JSON, nullable=True)  # 各难度准确率
+    accuracy_by_topic = Column(JSON, nullable=True)  # 各主题准确率
     
     # 策略分析
-    strategy_effectiveness = Column(JSON, default=dict)  # 策略有效性
-    optimal_strategy_suggestions = Column(JSON, default=list)  # 最优策略建议
+    strategy_effectiveness = Column(JSON, nullable=True)  # 策略有效性
+    optimal_strategy_suggestions = Column(JSON, nullable=True)  # 最优策略建议
     
     # 改进建议
-    strengths = Column(JSON, default=list)  # 优势领域
-    weaknesses = Column(JSON, default=list)  # 薄弱领域
-    improvement_priorities = Column(JSON, default=list)  # 改进优先级
-    specific_recommendations = Column(JSON, default=list)  # 具体建议
+    strengths = Column(JSON, nullable=True)  # 优势领域
+    weaknesses = Column(JSON, nullable=True)  # 薄弱领域
+    improvement_priorities = Column(JSON, nullable=True)  # 改进优先级
+    specific_recommendations = Column(JSON, nullable=True)  # 具体建议
     
     # 预测分析
-    predicted_improvement = Column(JSON, default=dict)  # 预测改进幅度
-    next_exam_recommendations = Column(JSON, default=list)  # 下次考试建议
+    predicted_improvement = Column(JSON, nullable=True)  # 预测改进幅度
+    next_exam_recommendations = Column(JSON, nullable=True)  # 下次考试建议
     
     # 元数据
     analysis_version = Column(String(20), default='1.0')

@@ -1,3 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AI智能学习系统 - 业务服务 - content_generation_service.py
+
+Description:
+    内容生成服务，提供AI驱动的教学内容生成。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
+"""
+
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from models.knowledge import KnowledgePoint, Subject

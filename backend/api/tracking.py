@@ -1,13 +1,27 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AI智能学习系统 - API接口 - tracking.py
+
+Description:
+    跟踪数据模型，定义学习行为和统计数据。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
+"""
+
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import logging
 
-from ..services.tracking_service import TrackingService
-from ..models.tracking import LearningMetric, PerformanceSnapshot, LearningReport, GoalTracking, FeedbackRecord
-from ..utils.validators import validate_required_fields, validate_date_range
-from ..utils.response import success_response, error_response
+from services.tracking_service import TrackingService
+from models.tracking import LearningMetric, PerformanceSnapshot, LearningReport, GoalTracking, FeedbackRecord
+from utils.validators import validate_required_fields
+from utils.response import success_response, error_response
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-大语言模型服务
+AI智能学习系统 - 业务服务 - llm_service.py
+
+Description:
+    LLM服务，提供大语言模型调用、内容生成等AI功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import json
 import requests
@@ -18,26 +28,53 @@ class LLMService:
     
     def __init__(self):
         self.default_model = None
-        self._load_default_model()
+        self._initialized = False
+    
+    def _ensure_initialized(self):
+        """
+        确保服务已初始化
+        """
+        if not self._initialized:
+            self._load_default_model()
+            self._initialized = True
     
     def _load_default_model(self):
         """
         加载默认模型配置
         """
         try:
-            self.default_model = AIModelConfig.query.filter_by(
-                is_active=True,
-                is_default=True
-            ).first()
-            
-            if not self.default_model:
-                # 如果没有默认模型，使用第一个可用模型
+            from flask import current_app
+            with current_app.app_context():
                 self.default_model = AIModelConfig.query.filter_by(
-                    is_active=True
+                    is_active=True,
+                    is_default=True
                 ).first()
                 
+                if not self.default_model:
+                    # 如果没有默认模型，使用第一个可用模型
+                    self.default_model = AIModelConfig.query.filter_by(
+                        is_active=True
+                    ).first()
+                    
         except Exception as e:
-            logger.error(f"加载默认模型失败: {str(e)}")
+            logger.error(f"加载默认模型失败: {str(e)}")            
+            # 如果数据库查询失败，创建一个默认配置
+            self.default_model = self._create_fallback_model()
+    
+    def _create_fallback_model(self):
+        """
+        创建备用模型配置
+        """
+        class FallbackModel:
+            def __init__(self):
+                self.model_name = "gpt-3.5-turbo"
+                self.api_key = "fallback-key"
+                self.api_url = "https://api.openai.com/v1/chat/completions"
+                self.model_type = "openai"
+                self.max_tokens = 1000
+                self.temperature = 0.7
+        
+        return FallbackModel()
     
     def generate_text(self, prompt: str, model_name: Optional[str] = None, **kwargs) -> str:
         """
@@ -52,6 +89,9 @@ class LLMService:
             str: 生成的文本
         """
         try:
+            # 确保服务已初始化
+            self._ensure_initialized()
+            
             # 获取模型配置
             model = self._get_model(model_name)
             if not model:
@@ -63,9 +103,9 @@ class LLMService:
                 "messages": [
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": kwargs.get("temperature", model.temperature),
-                "max_tokens": kwargs.get("max_tokens", model.max_tokens),
-                "top_p": kwargs.get("top_p", model.top_p)
+                "temperature": kwargs.get("temperature", getattr(model, 'temperature', 0.7)),
+                "max_tokens": kwargs.get("max_tokens", getattr(model, 'max_tokens', 1000)),
+                "top_p": kwargs.get("top_p", getattr(model, 'top_p', 1.0))
             }
             
             # 发送请求
@@ -181,7 +221,7 @@ class LLMService:
         
         return self.generate_text(prompt)
     
-    def _get_model(self, model_name: Optional[str] = None) -> Optional[AIModelConfig]:
+    def _get_model(self, model_name: Optional[str] = None) -> Any:
         """
         获取模型配置
         
@@ -191,6 +231,8 @@ class LLMService:
         Returns:
             AIModelConfig: 模型配置
         """
+        self._ensure_initialized()
+        
         if model_name:
             return AIModelConfig.query.filter_by(
                 model_name=model_name,
@@ -198,6 +240,73 @@ class LLMService:
             ).first()
         
         return self.default_model
+    
+    def evaluate_answer(self, question_text: str, correct_answer: str, 
+                       student_answer: str, question_type: str) -> Dict[str, Any]:
+        """
+        评估学生答案
+        
+        Args:
+            question_text: 题目内容
+            correct_answer: 正确答案
+            student_answer: 学生答案
+            question_type: 题目类型
+            
+        Returns:
+            Dict: 评估结果
+        """
+        try:
+            # 简单的评分逻辑，可以后续扩展为AI评分
+            if question_type in ['short_answer', 'essay']:
+                # 主观题评分
+                correct_words = set(correct_answer.lower().split())
+                student_words = set(student_answer.lower().split())
+                
+                if not correct_words:
+                    return {'score_percentage': 0.0, 'feedback': '标准答案为空'}
+                
+                # 计算关键词匹配度
+                intersection = correct_words.intersection(student_words)
+                similarity = len(intersection) / len(correct_words)
+                
+                # 根据相似度给分
+                if similarity >= 0.8:
+                    score_percentage = 1.0
+                    feedback = '答案很好，涵盖了主要要点'
+                elif similarity >= 0.6:
+                    score_percentage = 0.8
+                    feedback = '答案较好，但可以更完善'
+                elif similarity >= 0.4:
+                    score_percentage = 0.6
+                    feedback = '答案基本正确，但缺少一些要点'
+                elif similarity >= 0.2:
+                    score_percentage = 0.3
+                    feedback = '答案部分正确，需要补充更多内容'
+                else:
+                    score_percentage = 0.1
+                    feedback = '答案需要重新组织，请参考标准答案'
+                
+                return {
+                    'score_percentage': score_percentage,
+                    'feedback': feedback,
+                    'similarity': similarity
+                }
+            else:
+                # 客观题直接比较
+                is_correct = student_answer.strip().upper() == correct_answer.strip().upper()
+                return {
+                    'score_percentage': 1.0 if is_correct else 0.0,
+                    'feedback': '正确' if is_correct else '错误',
+                    'similarity': 1.0 if is_correct else 0.0
+                }
+                
+        except Exception as e:
+            logger.error(f"评估答案失败: {str(e)}")
+            return {
+                'score_percentage': 0.5,
+                'feedback': '评分系统暂时不可用，给予中等分数',
+                'similarity': 0.5
+            }
     
     def _make_request(self, model: AIModelConfig, data: Dict) -> Optional[Dict]:
         """
@@ -213,11 +322,11 @@ class LLMService:
         try:
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {model.api_key}"
+                "Authorization": f"Bearer {getattr(model, 'api_key', '')}"
             }
             
             response = requests.post(
-                model.api_endpoint,
+                getattr(model, 'api_url', getattr(model, 'api_endpoint', '')),
                 headers=headers,
                 json=data,
                 timeout=30

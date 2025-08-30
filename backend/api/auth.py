@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-认证相关API
+AI智能学习系统 - API接口 - auth.py
+
+Description:
+    用户认证API接口，提供登录、注册、令牌刷新等认证相关功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from flask import request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, create_refresh_token
@@ -33,14 +43,22 @@ def register():
             return error_response('Invalid email format', 400)
         
         # 验证密码强度
-        if not validate_password(password):
-            return error_response('Password must be at least 8 characters long', 400)
+        is_valid, error_msg = validate_password(password)
+        if not is_valid:
+            return error_response(error_msg, 400)
         
         # 获取租户信息
         tenant_id = g.get('tenant_id', 'default')
         tenant = Tenant.query.filter_by(subdomain=tenant_id, is_active=True).first()
         if not tenant:
-            return error_response('Invalid tenant', 400)
+            # 如果找不到租户，创建默认租户
+            tenant = Tenant(
+                name='Default Tenant',
+                subdomain=tenant_id,
+                is_active=True
+            )
+            db.session.add(tenant)
+            db.session.commit()
         
         # 检查用户名和邮箱是否已存在
         existing_user = User.query.filter_by(

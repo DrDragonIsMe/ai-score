@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-数据库工具
+AI智能学习系统 - 工具模块 - database.py
+
+Description:
+    数据库配置，定义数据库连接和ORM配置。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate

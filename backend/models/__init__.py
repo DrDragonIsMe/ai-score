@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-数据库模型
+AI智能学习系统 - 数据模型 - __init__.py
+
+Description:
+    models模块初始化文件，定义模块导出接口和初始化逻辑。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from .tenant import Tenant
 from .user import User, UserProfile

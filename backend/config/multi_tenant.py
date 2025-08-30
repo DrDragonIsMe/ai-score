@@ -1,8 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-多租户配置模块
-提供多租户架构的配置和管理功能
+AI智能学习系统 - 配置模块 - multi_tenant.py
+
+Description:
+    多租户配置，定义租户隔离和管理配置。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 import os
 from typing import Dict, Any, Optional, List

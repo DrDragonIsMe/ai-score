@@ -1,9 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-记忆强化API端点
+AI智能学习系统 - API接口 - memory.py
 
-基于艾宾浩斯遗忘曲线的智能记忆系统API
+Description:
+    记忆数据模型，定义记忆强化相关数据结构。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime, timedelta
 from flask import request, jsonify, current_app
@@ -12,13 +20,13 @@ from sqlalchemy import and_, or_, func
 from sqlalchemy.orm import joinedload
 
 from . import api_bp
-from models.memory import MemoryCard, ReviewRecord, MemorySession, MemoryReminder
+from models.learning import MemoryCard
 from models.knowledge import KnowledgePoint
 from models.question import Question
 from services.memory_service import MemoryService
 from utils.database import db
 from utils.response import success_response, error_response
-from utils.validation import validate_required_fields
+from utils.validators import validate_required_fields
 
 # 初始化记忆服务
 memory_service = MemoryService()

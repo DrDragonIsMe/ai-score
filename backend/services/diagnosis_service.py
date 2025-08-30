@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-个性化诊断服务 - 三层诊断、AI自适应出题、学习画像
+AI智能学习系统 - 业务服务 - diagnosis_service.py
+
+Description:
+    诊断服务，提供智能学习诊断和能力评估功能。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional

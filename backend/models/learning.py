@@ -1,11 +1,20 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-学习路径和记忆强化模型
+AI智能学习系统 - 数据模型 - learning.py
+
+Description:
+    学习路径数据模型，定义个性化学习计划和进度。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime, timedelta
 from utils.database import db
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import math
 
@@ -14,9 +23,9 @@ class LearningPath(db.Model):
     
     __tablename__ = 'learning_paths'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
-    subject_id = db.Column(UUID(as_uuid=True), db.ForeignKey('subjects.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    subject_id = db.Column(db.String(36), db.ForeignKey('subjects.id'), nullable=False)
     
     # 基本信息
     name = db.Column(db.String(100), nullable=False, comment='学习路径名称')
@@ -183,11 +192,11 @@ class StudyRecord(db.Model):
     
     __tablename__ = 'study_records'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
-    learning_path_id = db.Column(UUID(as_uuid=True), db.ForeignKey('learning_paths.id'))
-    knowledge_point_id = db.Column(UUID(as_uuid=True), db.ForeignKey('knowledge_points.id'))
-    question_id = db.Column(UUID(as_uuid=True), db.ForeignKey('questions.id'))
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    learning_path_id = db.Column(db.String(36), db.ForeignKey('learning_paths.id'))
+    knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'))
+    question_id = db.Column(db.String(36), db.ForeignKey('questions.id'))
     
     # 学习内容
     study_type = db.Column(db.String(20), nullable=False, comment='学习类型：lecture/practice/review/exam')
@@ -258,9 +267,9 @@ class MemoryCard(db.Model):
     
     __tablename__ = 'memory_cards'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
-    knowledge_point_id = db.Column(UUID(as_uuid=True), db.ForeignKey('knowledge_points.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'), nullable=False)
     
     # 卡片内容
     front_content = db.Column(db.Text, nullable=False, comment='正面内容（记忆任务）')
@@ -404,7 +413,7 @@ class MemoryCard(db.Model):
             user_id=user_id,
             is_active=True,
             is_due=True
-        ).order_by(cls.next_review_at.asc()).limit(limit).all()
+        ).order_by(cls.next_review_at).limit(limit).all()
     
     @classmethod
     def update_due_status(cls):

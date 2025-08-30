@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-基础模型类
+AI智能学习系统 - 数据模型 - base.py
+
+Description:
+    数据模型基类，定义通用字段和方法。
+
+Author: Chang Xinglong
+Date: 2025-01-20
+Version: 1.0.0
+License: Apache License 2.0
 """
+
 
 from datetime import datetime
 from utils.database import db
