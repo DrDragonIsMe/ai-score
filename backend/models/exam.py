@@ -140,9 +140,9 @@ class ExamSession(db.Model):
             'total_time_minutes': self.total_time_minutes,
             'time_per_question': self.time_per_question,
             'difficulty_level': self.difficulty_level,
-            'scheduled_start_time': self.scheduled_start_time.isoformat() if self.scheduled_start_time else None,
-            'actual_start_time': self.actual_start_time.isoformat() if self.actual_start_time else None,
-            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'scheduled_start_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'scheduled_start_time', None)),
+            'actual_start_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'actual_start_time', None)),
+            'end_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'end_time', None)),
             'pause_duration': self.pause_duration,
             'time_extensions': self.time_extensions or [],
             'status': self.status,
@@ -163,24 +163,40 @@ class ExamSession(db.Model):
             'improvement_suggestions': self.improvement_suggestions or [],
             'remaining_time': self.get_remaining_time(),
             'is_expired': self.is_expired(),
-            'created_time': self.created_time.isoformat(),
-            'updated_time': self.updated_time.isoformat()
+            'created_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'created_time', None)),
+            'updated_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'updated_time', None))
         }
     
     def get_progress_percentage(self) -> float:
         """获取进度百分比"""
-        if self.total_questions == 0:
+        # 获取实际值而不是Column对象
+        total_questions_val = getattr(self, 'total_questions', None)
+        completed_questions_val = getattr(self, 'completed_questions', None)
+        
+        total = int(total_questions_val) if total_questions_val is not None else 0
+        completed = int(completed_questions_val) if completed_questions_val is not None else 0
+        
+        if total == 0:
             return 0.0
-        return (self.completed_questions / self.total_questions) * 100
+        return (completed / total) * 100
     
     def get_remaining_time(self) -> Optional[int]:
         """获取剩余时间（秒）"""
-        if not self.actual_start_time or self.status not in [ExamStatus.IN_PROGRESS.value, ExamStatus.PAUSED.value]:
+        # 获取实际值而不是Column对象
+        actual_start_time_val = getattr(self, 'actual_start_time', None)
+        status_val = getattr(self, 'status', None)
+        total_time_minutes_val = getattr(self, 'total_time_minutes', None)
+        pause_duration_val = getattr(self, 'pause_duration', None)
+        
+        if actual_start_time_val is None or status_val not in [ExamStatus.IN_PROGRESS.value, ExamStatus.PAUSED.value]:
             return None
         
-        total_seconds = self.total_time_minutes * 60
-        elapsed_seconds = (datetime.utcnow() - self.actual_start_time).total_seconds()
-        elapsed_seconds -= self.pause_duration  # 减去暂停时间
+        total_minutes = int(total_time_minutes_val) if total_time_minutes_val is not None else 0
+        pause_duration = int(pause_duration_val) if pause_duration_val is not None else 0
+        
+        total_seconds = total_minutes * 60
+        elapsed_seconds = (datetime.utcnow() - actual_start_time_val).total_seconds()
+        elapsed_seconds -= pause_duration  # 减去暂停时间
         
         remaining = total_seconds - elapsed_seconds
         return max(0, int(remaining))
@@ -198,13 +214,15 @@ class ExamSession(db.Model):
     
     def pause_exam(self):
         """暂停考试"""
-        if self.status == ExamStatus.IN_PROGRESS.value:
+        status_val = getattr(self, 'status', None)
+        if status_val == ExamStatus.IN_PROGRESS.value:
             self.status = ExamStatus.PAUSED.value
             self.updated_time = datetime.utcnow()
     
     def resume_exam(self):
         """恢复考试"""
-        if self.status == ExamStatus.PAUSED.value:
+        status_val = getattr(self, 'status', None)
+        if status_val == ExamStatus.PAUSED.value:
             self.status = ExamStatus.IN_PROGRESS.value
             self.updated_time = datetime.utcnow()
     
@@ -219,45 +237,76 @@ class ExamSession(db.Model):
     
     def _calculate_final_statistics(self):
         """计算最终统计数据"""
-        if not self.actual_start_time or not self.end_time:
+        # 获取实际值而不是Column对象
+        actual_start_time_val = getattr(self, 'actual_start_time', None)
+        end_time_val = getattr(self, 'end_time', None)
+        pause_duration_val = getattr(self, 'pause_duration', None)
+        completed_questions_val = getattr(self, 'completed_questions', None)
+        total_time_minutes_val = getattr(self, 'total_time_minutes', None)
+        max_possible_score_val = getattr(self, 'max_possible_score', None)
+        total_score_val = getattr(self, 'total_score', None)
+        
+        if actual_start_time_val is None or end_time_val is None:
             return
         
         # 计算总用时
-        total_duration = (self.end_time - self.actual_start_time).total_seconds() - self.pause_duration
+        pause_duration = int(pause_duration_val) if pause_duration_val is not None else 0
+        total_duration = (end_time_val - actual_start_time_val).total_seconds() - pause_duration
         
         # 计算平均每题用时
-        if self.completed_questions > 0:
-            self.average_time_per_question = total_duration / self.completed_questions / 60  # 转换为分钟
+        completed = int(completed_questions_val) if completed_questions_val is not None else 0
+        if completed > 0:
+            self.average_time_per_question = total_duration / completed / 60  # 转换为分钟
         
         # 计算时间效率
-        expected_time = self.total_time_minutes * 60
+        total_minutes = int(total_time_minutes_val) if total_time_minutes_val is not None else 0
+        expected_time = total_minutes * 60
         if expected_time > 0:
             self.time_efficiency = min(1.0, expected_time / total_duration)
         
         # 计算得分百分比
-        if self.max_possible_score > 0:
-            self.score_percentage = (self.total_score / self.max_possible_score) * 100
+        max_score = float(max_possible_score_val) if max_possible_score_val is not None else 0.0
+        total_score = float(total_score_val) if total_score_val is not None else 0.0
+        if max_score > 0:
+            self.score_percentage = (total_score / max_score) * 100
     
     def add_answer(self, question_id: int, answer: str, time_spent: int):
         """添加答案"""
-        if not self.answers:
+        # 获取实际值而不是Column对象
+        answers_val = getattr(self, 'answers', None)
+        question_times_val = getattr(self, 'question_times', None)
+        question_attempts_val = getattr(self, 'question_attempts', None)
+        completed_questions_val = getattr(self, 'completed_questions', None)
+        
+        if answers_val is None:
             self.answers = {}
-        if not self.question_times:
+            answers_val = {}
+        if question_times_val is None:
             self.question_times = {}
-        if not self.question_attempts:
+            question_times_val = {}
+        if question_attempts_val is None:
             self.question_attempts = {}
+            question_attempts_val = {}
         
-        self.answers[str(question_id)] = answer
-        self.question_times[str(question_id)] = time_spent
+        # 更新答案和时间
+        answers_dict = dict(answers_val) if answers_val else {}
+        question_times_dict = dict(question_times_val) if question_times_val else {}
+        question_attempts_dict = dict(question_attempts_val) if question_attempts_val else {}
         
-        # 更新尝试次数
         question_key = str(question_id)
-        self.question_attempts[question_key] = self.question_attempts.get(question_key, 0) + 1
+        answers_dict[question_key] = answer
+        question_times_dict[question_key] = time_spent
+        question_attempts_dict[question_key] = question_attempts_dict.get(question_key, 0) + 1
         
         # 更新完成题目数
-        if question_key not in self.answers or self.answers[question_key] != answer:
-            self.completed_questions += 1
+        if question_key not in answers_dict or answers_dict[question_key] != answer:
+            completed = int(completed_questions_val) if completed_questions_val is not None else 0
+            self.completed_questions = completed + 1
         
+        # 保存更新后的字典
+        self.answers = answers_dict
+        self.question_times = question_times_dict
+        self.question_attempts = question_attempts_dict
         self.updated_time = datetime.utcnow()
 
 class TimeAllocation(db.Model):
@@ -323,8 +372,8 @@ class TimeAllocation(db.Model):
             'effectiveness_score': self.effectiveness_score,
             'improvement_areas': self.improvement_areas or [],
             'is_active': self.is_active,
-            'created_time': self.created_time.isoformat(),
-            'updated_time': self.updated_time.isoformat()
+            'created_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'created_time', None)),
+            'updated_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'updated_time', None))
         }
     
     def calculate_total_time(self, question_distribution: Dict[str, int]) -> float:
@@ -332,26 +381,44 @@ class TimeAllocation(db.Model):
         total_time = 0.0
         
         # 各难度题目时间
-        total_time += question_distribution.get('easy', 0) * (self.easy_question_time or 0)
-        total_time += question_distribution.get('medium', 0) * (self.medium_question_time or 0)
-        total_time += question_distribution.get('hard', 0) * (self.hard_question_time or 0)
+        easy_question_time_val = getattr(self, 'easy_question_time', None)
+        medium_question_time_val = getattr(self, 'medium_question_time', None)
+        hard_question_time_val = getattr(self, 'hard_question_time', None)
+        
+        easy_time = float(easy_question_time_val) if easy_question_time_val is not None else 0.0
+        medium_time = float(medium_question_time_val) if medium_question_time_val is not None else 0.0
+        hard_time = float(hard_question_time_val) if hard_question_time_val is not None else 0.0
+        
+        total_time += question_distribution.get('easy', 0) * easy_time
+        total_time += question_distribution.get('medium', 0) * medium_time
+        total_time += question_distribution.get('hard', 0) * hard_time
         
         # 检查时间
-        review_time = total_time * (self.review_time_percentage / 100)
+        review_time_percentage_val = getattr(self, 'review_time_percentage', None)
+        review_percentage = float(review_time_percentage_val) if review_time_percentage_val is not None else 10.0
+        review_time = total_time * (review_percentage / 100)
         total_time += review_time
         
         # 缓冲时间
-        total_time += self.buffer_time or 0
+        buffer_time_val = getattr(self, 'buffer_time', None)
+        buffer_time = float(buffer_time_val) if buffer_time_val is not None else 0.0
+        total_time += buffer_time
         
         return total_time
     
     def get_time_allocation_plan(self, total_questions: int, total_time: int) -> Dict:
         """获取时间分配计划"""
+        review_time_percentage_val = getattr(self, 'review_time_percentage', None)
+        buffer_time_val = getattr(self, 'buffer_time', None)
+        
+        review_percentage = float(review_time_percentage_val) if review_time_percentage_val is not None else 10.0
+        buffer_time = float(buffer_time_val) if buffer_time_val is not None else 0.0
+        
         plan = {
             'total_time_minutes': total_time,
-            'question_time_minutes': total_time * (1 - self.review_time_percentage / 100) - (self.buffer_time or 0),
-            'review_time_minutes': total_time * (self.review_time_percentage / 100),
-            'buffer_time_minutes': self.buffer_time or 0,
+            'question_time_minutes': total_time * (1 - review_percentage / 100) - buffer_time,
+            'review_time_minutes': total_time * (review_percentage / 100),
+            'buffer_time_minutes': buffer_time,
             'average_time_per_question': 0,
             'time_checkpoints': []
         }
@@ -446,19 +513,20 @@ class ScoringStrategy(db.Model):
             'success_rate': self.success_rate,
             'is_default': self.is_default,
             'is_active': self.is_active,
-            'created_time': self.created_time.isoformat(),
-            'updated_time': self.updated_time.isoformat()
+            'created_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'created_time', None)),
+            'updated_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'updated_time', None))
         }
     
     def get_question_order(self, questions: List[Dict]) -> List[Dict]:
         """根据策略获取题目顺序"""
-        if self.answer_order_strategy == 'difficulty_ascending':
+        answer_order_strategy = getattr(self, 'answer_order_strategy', None)
+        if answer_order_strategy == 'difficulty_ascending':
             # 按难度递增排序
             return sorted(questions, key=lambda q: q.get('difficulty_score', 0.5))
-        elif self.answer_order_strategy == 'difficulty_descending':
+        elif answer_order_strategy == 'difficulty_descending':
             # 按难度递减排序
             return sorted(questions, key=lambda q: q.get('difficulty_score', 0.5), reverse=True)
-        elif self.answer_order_strategy == 'confidence_descending':
+        elif answer_order_strategy == 'confidence_descending':
             # 按信心度递减排序
             return sorted(questions, key=lambda q: q.get('confidence_score', 0.5), reverse=True)
         else:
@@ -467,20 +535,31 @@ class ScoringStrategy(db.Model):
     
     def should_skip_question(self, confidence: float, time_remaining_ratio: float) -> bool:
         """判断是否应该跳过题目"""
+        skip_threshold_val = getattr(self, 'skip_threshold', None)
+        time_pressure_threshold_val = getattr(self, 'time_pressure_threshold', None)
+        certainty_threshold_val = getattr(self, 'certainty_threshold', None)
+        
+        skip_threshold = float(skip_threshold_val) if skip_threshold_val is not None else 0.3
+        time_pressure_threshold = float(time_pressure_threshold_val) if time_pressure_threshold_val is not None else 0.8
+        certainty_threshold = float(certainty_threshold_val) if certainty_threshold_val is not None else 0.7
+        
         # 信心度过低
-        if confidence < self.skip_threshold:
+        if confidence < skip_threshold:
             return True
         
         # 时间压力过大且信心度不高
-        if time_remaining_ratio < self.time_pressure_threshold and confidence < self.certainty_threshold:
+        if time_remaining_ratio < time_pressure_threshold and confidence < certainty_threshold:
             return True
         
         return False
     
     def should_guess(self, confidence: float, time_remaining_ratio: float) -> bool:
         """判断是否应该猜题"""
+        guess_threshold_val = getattr(self, 'guess_threshold', None)
+        guess_threshold = float(guess_threshold_val) if guess_threshold_val is not None else 0.5
+        
         # 时间不足时降低猜题阈值
-        adjusted_threshold = self.guess_threshold
+        adjusted_threshold = guess_threshold
         if time_remaining_ratio < 0.2:  # 剩余时间不足20%
             adjusted_threshold *= 0.7
         
@@ -488,20 +567,28 @@ class ScoringStrategy(db.Model):
     
     def update_statistics(self, score: float, total_score: float):
         """更新策略统计"""
-        self.usage_count += 1
+        usage_count_val = getattr(self, 'usage_count', None)
+        average_score_val = getattr(self, 'average_score', None)
+        success_rate_val = getattr(self, 'success_rate', None)
+        
+        usage_count = int(usage_count_val) if usage_count_val is not None else 0
+        average_score = float(average_score_val) if average_score_val is not None else 0.0
+        
+        self.usage_count = usage_count + 1
         
         # 更新平均得分
         if self.usage_count == 1:
             self.average_score = score
         else:
-            self.average_score = (self.average_score * (self.usage_count - 1) + score) / self.usage_count
+            self.average_score = (average_score * usage_count + score) / self.usage_count
         
         # 更新成功率（假设60%以上为成功）
         success_threshold = total_score * 0.6
+        success_rate = float(success_rate_val) if success_rate_val is not None else 0.0
         if score >= success_threshold:
-            success_count = (self.success_rate * (self.usage_count - 1)) + 1
+            success_count = (success_rate * (self.usage_count - 1)) + 1
         else:
-            success_count = self.success_rate * (self.usage_count - 1)
+            success_count = success_rate * (self.usage_count - 1)
         
         self.success_rate = success_count / self.usage_count
         self.updated_time = datetime.utcnow()
@@ -573,6 +660,6 @@ class ExamAnalytics(db.Model):
             'predicted_improvement': self.predicted_improvement or {},
             'next_exam_recommendations': self.next_exam_recommendations or [],
             'analysis_version': self.analysis_version,
-            'created_time': self.created_time.isoformat(),
-            'updated_time': self.updated_time.isoformat()
+            'created_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'created_time', None)),
+            'updated_time': (lambda t: t.isoformat() if t and hasattr(t, 'isoformat') else None)(getattr(self, 'updated_time', None))
         }

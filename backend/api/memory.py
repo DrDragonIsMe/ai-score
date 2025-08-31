@@ -27,6 +27,66 @@ from services.memory_service import MemoryService
 from utils.database import db
 from utils.response import success_response, error_response
 from utils.validators import validate_required_fields
+import uuid
+
+# 临时模型定义（应该移到models目录下）
+class MemorySession(db.Model):
+    """记忆会话模型"""
+    __tablename__ = 'memory_sessions'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    session_type = db.Column(db.String(20), default='regular')
+    target_count = db.Column(db.Integer, default=10)
+    completed_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default='active')
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime)
+    total_duration = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'user_id': str(self.user_id),
+            'session_type': self.session_type,
+            'target_count': self.target_count,
+            'completed_count': self.completed_count,
+            'status': self.status,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'total_duration': self.total_duration,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class MemoryReminder(db.Model):
+    """记忆提醒模型"""
+    __tablename__ = 'memory_reminders'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    card_id = db.Column(db.String(36), db.ForeignKey('memory_cards.id'))
+    reminder_type = db.Column(db.String(20), default='daily')
+    reminder_time = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'user_id': str(self.user_id),
+            'card_id': str(self.card_id) if self.card_id else None,
+            'reminder_type': self.reminder_type,
+            'reminder_time': self.reminder_time.isoformat() if self.reminder_time else None,
+            'is_active': self.is_active,
+            'message': self.message,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
 
 # 初始化记忆服务
 memory_service = MemoryService()
@@ -66,16 +126,15 @@ def create_memory_card():
         card = memory_service.create_memory_card(
             user_id=user_id,
             knowledge_point_id=data['knowledge_point_id'],
-            content_type=data['content_type'],
             question_id=data.get('question_id'),
-            tags=data.get('tags', []),
-            difficulty_level=data.get('difficulty_level', 3)
+            content_type=data['content_type'],
+            custom_content=data.get('custom_content')
         )
         
         if not card:
             return error_response('创建记忆卡片失败', 500)
         
-        return success_response('记忆卡片创建成功', card.to_dict())
+        return success_response(card.to_dict(), '记忆卡片创建成功')
         
     except Exception as e:
         current_app.logger.error(f"创建记忆卡片失败: {str(e)}")
@@ -98,17 +157,20 @@ def batch_create_memory_cards():
             return error_response('请提供有效的卡片列表', 400)
         
         # 批量创建卡片
-        results = memory_service.batch_create_cards(user_id, data['cards'])
+        knowledge_point_ids = [card['knowledge_point_id'] for card in data['cards']]
+        content_types = [card.get('content_type', 'concept') for card in data['cards']]
         
-        return success_response('批量创建记忆卡片完成', {
+        results = memory_service.batch_create_cards(
+            user_id=user_id,
+            knowledge_point_ids=knowledge_point_ids,
+            content_types=content_types
+        )
+        
+        return success_response({
             'total_requested': len(data['cards']),
-            'created_count': len(results['created']),
-            'skipped_count': len(results['skipped']),
-            'failed_count': len(results['failed']),
-            'created_cards': [card.to_dict() for card in results['created']],
-            'skipped_cards': results['skipped'],
-            'failed_cards': results['failed']
-        })
+            'created_count': len(results) if results else 0,
+            'created_cards': [card.to_dict() for card in results] if results else []
+        }, '批量创建记忆卡片完成')
         
     except Exception as e:
         current_app.logger.error(f"批量创建记忆卡片失败: {str(e)}")
@@ -152,17 +214,13 @@ def get_due_cards():
         # 获取到期卡片
         cards = memory_service.get_due_cards(
             user_id=user_id,
-            limit=limit,
-            subject_id=subject_id,
-            min_difficulty=min_difficulty,
-            max_difficulty=max_difficulty,
-            content_types=content_type_list
+            limit=limit
         )
         
-        return success_response('获取到期卡片成功', {
+        return success_response({
             'cards': [card.to_dict() for card in cards],
             'total_count': len(cards)
-        })
+        }, '获取到期卡片成功')
         
     except Exception as e:
         current_app.logger.error(f"获取到期卡片失败: {str(e)}")
@@ -193,7 +251,7 @@ def review_card(card_id):
             return error_response('无效的表现评级', 400)
         
         # 复习卡片
-        result = memory_service.review_card(
+        success = memory_service.review_card(
             card_id=card_id,
             user_id=user_id,
             performance=data['performance'],
@@ -201,15 +259,19 @@ def review_card(card_id):
             user_feedback=data.get('user_feedback')
         )
         
-        if not result:
+        if not success:
             return error_response('复习卡片失败，卡片不存在或无权限', 404)
         
-        return success_response('复习记录成功', {
-            'card': result['card'].to_dict(),
-            'review_record': result['review_record'].to_dict(),
-            'memory_strength_change': result['memory_strength_change'],
-            'next_review_interval': result['next_review_interval']
-        })
+        # 获取更新后的卡片信息
+        updated_card = MemoryCard.query.get(card_id)
+        if not updated_card:
+            return error_response('卡片不存在', 404)
+        
+        return success_response({
+            'card': updated_card.to_dict(),
+            'performance': data['performance'],
+            'response_time': data.get('response_time')
+        }, '复习完成')
         
     except Exception as e:
         current_app.logger.error(f"复习卡片失败: {str(e)}")
@@ -317,7 +379,7 @@ def get_memory_cards():
         
         cards = pagination.items
         
-        return success_response('获取记忆卡片成功', {
+        return success_response({
             'cards': [card.to_dict() for card in cards],
             'pagination': {
                 'page': page,
@@ -327,7 +389,7 @@ def get_memory_cards():
                 'has_prev': pagination.has_prev,
                 'has_next': pagination.has_next
             }
-        })
+        }, '获取记忆卡片成功')
         
     except Exception as e:
         current_app.logger.error(f"获取记忆卡片失败: {str(e)}")
@@ -353,17 +415,15 @@ def get_memory_card(card_id):
         if not card:
             return error_response('记忆卡片不存在', 404)
         
-        # 获取复习记录
-        review_records = ReviewRecord.query.filter_by(
-            memory_card_id=card_id
-        ).order_by(ReviewRecord.review_time.desc()).limit(10).all()
+        # 获取复习记录（暂时返回空列表，等待ReviewRecord模型实现）
+        review_records = []
         
         card_data = card.to_dict()
         card_data['recent_reviews'] = [record.to_dict() for record in review_records]
         card_data['review_status'] = card.get_review_status()
         card_data['memory_level'] = card.get_memory_level()
         
-        return success_response('获取记忆卡片详情成功', card_data)
+        return success_response(card_data, '获取记忆卡片详情成功')
         
     except Exception as e:
         current_app.logger.error(f"获取记忆卡片详情失败: {str(e)}")
@@ -411,7 +471,7 @@ def update_memory_card(card_id):
         card.updated_time = datetime.utcnow()
         db.session.commit()
         
-        return success_response('记忆卡片更新成功', card.to_dict())
+        return success_response(card.to_dict(), '记忆卡片更新成功')
         
     except Exception as e:
         current_app.logger.error(f"更新记忆卡片失败: {str(e)}")
@@ -437,7 +497,7 @@ def delete_memory_card(card_id):
         db.session.delete(card)
         db.session.commit()
         
-        return success_response('记忆卡片删除成功')
+        return success_response(None, '记忆卡片删除成功')
         
     except Exception as e:
         current_app.logger.error(f"删除记忆卡片失败: {str(e)}")
@@ -462,11 +522,10 @@ def get_memory_statistics():
         # 获取统计信息
         stats = memory_service.get_review_statistics(
             user_id=user_id,
-            days=days,
-            subject_id=subject_id
+            days=days
         )
         
-        return success_response('获取记忆统计成功', stats)
+        return success_response(stats, '获取记忆统计成功')
         
     except Exception as e:
         current_app.logger.error(f"获取记忆统计失败: {str(e)}")
@@ -484,7 +543,7 @@ def get_memory_recommendations():
         # 获取个性化建议
         recommendations = memory_service.get_personalized_recommendations(user_id)
         
-        return success_response('获取记忆建议成功', recommendations)
+        return success_response(recommendations, '获取记忆建议成功')
         
     except Exception as e:
         current_app.logger.error(f"获取记忆建议失败: {str(e)}")
@@ -522,7 +581,7 @@ def start_memory_session():
         db.session.add(session)
         db.session.commit()
         
-        return success_response('记忆会话开始成功', session.to_dict())
+        return success_response(session.to_dict(), '记忆会话开始成功')
         
     except Exception as e:
         current_app.logger.error(f"开始记忆会话失败: {str(e)}")
@@ -558,7 +617,7 @@ def complete_memory_session(session_id):
         
         db.session.commit()
         
-        return success_response('记忆会话完成', session.to_dict())
+        return success_response(session.to_dict(), '记忆会话完成')
         
     except Exception as e:
         current_app.logger.error(f"完成记忆会话失败: {str(e)}")
@@ -576,9 +635,9 @@ def get_memory_reminders():
         
         reminders = MemoryReminder.query.filter_by(user_id=user_id).all()
         
-        return success_response('获取记忆提醒设置成功', {
+        return success_response({
             'reminders': [reminder.to_dict() for reminder in reminders]
-        })
+        }, '获取记忆提醒设置成功')
         
     except Exception as e:
         current_app.logger.error(f"获取记忆提醒设置失败: {str(e)}")
@@ -633,7 +692,7 @@ def create_memory_reminder():
         db.session.add(reminder)
         db.session.commit()
         
-        return success_response('记忆提醒创建成功', reminder.to_dict())
+        return success_response(reminder.to_dict(), '记忆提醒创建成功')
         
     except Exception as e:
         current_app.logger.error(f"创建记忆提醒失败: {str(e)}")
@@ -682,7 +741,7 @@ def update_memory_reminder(reminder_id):
         reminder.updated_time = datetime.utcnow()
         db.session.commit()
         
-        return success_response('记忆提醒更新成功', reminder.to_dict())
+        return success_response(reminder.to_dict(), '记忆提醒更新成功')
         
     except Exception as e:
         current_app.logger.error(f"更新记忆提醒失败: {str(e)}")
@@ -708,7 +767,7 @@ def delete_memory_reminder(reminder_id):
         db.session.delete(reminder)
         db.session.commit()
         
-        return success_response('记忆提醒删除成功')
+        return success_response(None, '记忆提醒删除成功')
         
     except Exception as e:
         current_app.logger.error(f"删除记忆提醒失败: {str(e)}")

@@ -113,8 +113,8 @@ class MistakeRecord(db.Model):
             'knowledge_point_id': self.knowledge_point_id,
             'user_answer': self.user_answer,
             'correct_answer': self.correct_answer,
-            'mistake_type': self.mistake_type.value if self.mistake_type else None,
-            'mistake_level': self.mistake_level.value if self.mistake_level else None,
+            'mistake_type': self.mistake_type.value if self.mistake_type is not None else None,
+            'mistake_level': self.mistake_level.value if self.mistake_level is not None else None,
             'error_analysis': self.error_analysis,
             'solution_steps': self.solution_steps or [],
             'key_concepts': self.key_concepts or [],
@@ -123,14 +123,14 @@ class MistakeRecord(db.Model):
             'practice_recommendations': self.practice_recommendations or [],
             'review_count': self.review_count,
             'mastery_level': self.mastery_level,
-            'last_review_time': self.last_review_time.isoformat() if self.last_review_time else None,
-            'next_review_time': self.next_review_time.isoformat() if self.next_review_time else None,
+            'last_review_time': self.last_review_time.isoformat() if self.last_review_time is not None else None,
+            'next_review_time': self.next_review_time.isoformat() if self.next_review_time is not None else None,
             'is_resolved': self.is_resolved,
             'is_archived': self.is_archived,
             'priority_score': self.priority_score,
-            'created_time': self.created_time.isoformat() if self.created_time else None,
-            'updated_time': self.updated_time.isoformat() if self.updated_time else None,
-            'resolved_time': self.resolved_time.isoformat() if self.resolved_time else None,
+            'created_time': self.created_time.isoformat() if self.created_time is not None else None,
+            'updated_time': self.updated_time.isoformat() if self.updated_time is not None else None,
+            'resolved_time': self.resolved_time.isoformat() if self.resolved_time is not None else None,
             'question_content': self.question.content if self.question else None,
             'knowledge_point_name': self.knowledge_point.name if self.knowledge_point else None,
             'subject_name': self.knowledge_point.subject.name if self.knowledge_point and self.knowledge_point.subject else None
@@ -138,35 +138,53 @@ class MistakeRecord(db.Model):
     
     def get_difficulty_assessment(self):
         """获取难度评估"""
-        if self.mastery_level >= 0.8:
+        # 获取实际值而不是Column对象
+        mastery_level_val = getattr(self, 'mastery_level', None)
+        if mastery_level_val is None:
+            return 'unknown'
+        
+        mastery = float(mastery_level_val)
+        if mastery >= 0.8:
             return 'easy'
-        elif self.mastery_level >= 0.6:
+        elif mastery >= 0.6:
             return 'medium'
-        elif self.mastery_level >= 0.4:
+        elif mastery >= 0.4:
             return 'hard'
         else:
             return 'very_hard'
     
     def get_review_urgency(self):
         """获取复习紧急程度"""
-        if self.is_resolved:
+        # 获取实际值而不是Column对象
+        is_resolved_val = getattr(self, 'is_resolved', None)
+        next_review_time_val = getattr(self, 'next_review_time', None)
+        mistake_level_val = getattr(self, 'mistake_level', None)
+        priority_score_val = getattr(self, 'priority_score', None)
+        
+        if is_resolved_val:
             return 'low'
         
         now = datetime.utcnow()
-        if self.next_review_time and self.next_review_time <= now:
-            if self.mistake_level in [MistakeLevel.HIGH, MistakeLevel.CRITICAL]:
+        if next_review_time_val is not None and next_review_time_val <= now:
+            if mistake_level_val in [MistakeLevel.HIGH, MistakeLevel.CRITICAL]:
                 return 'urgent'
             else:
                 return 'high'
-        elif self.priority_score >= 0.8:
+        elif priority_score_val is not None and priority_score_val >= 0.8:
             return 'high'
-        elif self.priority_score >= 0.6:
+        elif priority_score_val is not None and priority_score_val >= 0.6:
             return 'medium'
         else:
             return 'low'
     
     def calculate_priority_score(self):
         """计算优先级分数"""
+        # 获取实际值而不是Column对象
+        mistake_level_val = getattr(self, 'mistake_level', None)
+        mastery_level_val = getattr(self, 'mastery_level', None)
+        review_count_val = getattr(self, 'review_count', None)
+        next_review_time_val = getattr(self, 'next_review_time', None)
+        
         score = 0.0
         
         # 错误严重程度权重
@@ -176,19 +194,22 @@ class MistakeRecord(db.Model):
             MistakeLevel.HIGH: 0.7,
             MistakeLevel.CRITICAL: 1.0
         }
-        score += level_weights.get(self.mistake_level, 0.4) * 0.4
+        if mistake_level_val is not None:
+            score += level_weights.get(mistake_level_val, 0.4) * 0.4
         
         # 掌握程度权重（掌握程度越低，优先级越高）
-        score += (1.0 - self.mastery_level) * 0.3
+        if mastery_level_val is not None:
+            score += (1.0 - float(mastery_level_val)) * 0.3
         
         # 复习次数权重（复习次数越少，优先级越高）
-        review_factor = max(0, 1.0 - self.review_count * 0.1)
-        score += review_factor * 0.2
+        if review_count_val is not None:
+            review_factor = max(0, 1.0 - float(review_count_val) * 0.1)
+            score += review_factor * 0.2
         
         # 时间因素权重
-        if self.next_review_time:
+        if next_review_time_val is not None:
             now = datetime.utcnow()
-            if self.next_review_time <= now:
+            if next_review_time_val <= now:
                 score += 0.1  # 已到复习时间
         
         self.priority_score = min(1.0, score)
@@ -248,29 +269,35 @@ class MistakeReviewSession(db.Model):
             'hint_count': self.hint_count,
             'user_feedback': self.user_feedback,
             'difficulty_rating': self.difficulty_rating,
-            'review_time': self.review_time.isoformat() if self.review_time else None,
+            'review_time': (lambda rt: rt.isoformat() if rt and hasattr(rt, 'isoformat') else None)(getattr(self, 'review_time', None)),
             'session_duration': self.session_duration
         }
     
     def get_performance_score(self):
         """获取表现分数"""
-        if self.is_correct is None:
+        # 获取实际值而不是Column对象
+        is_correct_val = getattr(self, 'is_correct', None)
+        confidence_level_val = getattr(self, 'confidence_level', None)
+        help_used_val = getattr(self, 'help_used', None)
+        hint_count_val = getattr(self, 'hint_count', None)
+        
+        if is_correct_val is None:
             return 0.0
         
-        base_score = 100 if self.is_correct else 0
+        base_score = 100.0 if bool(is_correct_val) else 0.0
         
         # 信心程度调整
-        if self.confidence_level:
-            confidence_factor = self.confidence_level / 5.0
+        if confidence_level_val is not None:
+            confidence_factor = float(confidence_level_val) / 5.0
             base_score *= confidence_factor
         
         # 帮助使用调整
-        if self.help_used:
+        if help_used_val is not None and bool(help_used_val):
             base_score *= 0.8
         
         # 提示次数调整
-        if self.hint_count > 0:
-            hint_penalty = min(0.5, self.hint_count * 0.1)
+        if hint_count_val is not None and int(hint_count_val) > 0:
+            hint_penalty = min(0.5, float(hint_count_val) * 0.1)
             base_score *= (1.0 - hint_penalty)
         
         return min(100.0, base_score)
@@ -344,24 +371,33 @@ class MistakePattern(db.Model):
             'recommended_resources': self.recommended_resources or [],
             'is_active': self.is_active,
             'improvement_progress': self.improvement_progress,
-            'first_detected': self.first_detected.isoformat() if self.first_detected else None,
-            'last_updated': self.last_updated.isoformat() if self.last_updated else None
+            'first_detected': (lambda fd: fd.isoformat() if fd and hasattr(fd, 'isoformat') else None)(getattr(self, 'first_detected', None)),
+            'last_updated': (lambda lu: lu.isoformat() if lu and hasattr(lu, 'isoformat') else None)(getattr(self, 'last_updated', None))
         }
     
     def get_severity_level(self):
         """获取严重程度"""
-        if self.frequency >= 10 and self.confidence_score >= 0.8:
+        # 获取实际值而不是Column对象
+        frequency_val = getattr(self, 'frequency', None)
+        confidence_score_val = getattr(self, 'confidence_score', None)
+        
+        freq = int(frequency_val) if frequency_val is not None else 0
+        conf = float(confidence_score_val) if confidence_score_val is not None else 0.0
+        
+        if freq >= 10 and conf >= 0.8:
             return 'critical'
-        elif self.frequency >= 5 and self.confidence_score >= 0.6:
+        elif freq >= 5 and conf >= 0.6:
             return 'high'
-        elif self.frequency >= 3 and self.confidence_score >= 0.4:
+        elif freq >= 3 and conf >= 0.4:
             return 'medium'
         else:
             return 'low'
     
     def update_frequency(self):
         """更新频率"""
-        self.frequency += 1
+        # 获取实际值而不是Column对象
+        frequency_val = getattr(self, 'frequency', 0)
+        self.frequency = frequency_val + 1
         self.last_updated = datetime.utcnow()
         
         # 重新计算置信度
@@ -442,60 +478,72 @@ class TutoringSession(db.Model):
             'help_effectiveness': self.help_effectiveness,
             'status': self.status,
             'completion_rate': self.completion_rate,
-            'start_time': self.start_time.isoformat() if self.start_time else None,
-            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'start_time': (lambda st: st.isoformat() if st and hasattr(st, 'isoformat') else None)(getattr(self, 'start_time', None)),
+            'end_time': (lambda et: et.isoformat() if et and hasattr(et, 'isoformat') else None)(getattr(self, 'end_time', None)),
             'total_duration': self.total_duration
         }
     
-    def add_guidance_step(self, step_type: str, content: str, user_response: str = None):
+    def add_guidance_step(self, step_type: str, content: str, user_response: str = ""):
         """添加辅导步骤"""
+        guidance_list = getattr(self, 'guidance_history', None)
+        if not isinstance(guidance_list, list):
+            guidance_list = []
+        
         step = {
-            'step_number': len(self.guidance_history) + 1,
+            'step_number': len(guidance_list) + 1,
             'step_type': step_type,
             'content': content,
             'timestamp': datetime.utcnow().isoformat(),
-            'user_response': user_response
+            'user_response': user_response or ''
         }
         
-        if not self.guidance_history:
-            self.guidance_history = []
-        self.guidance_history.append(step)
+        guidance_list.append(step)
+        self.guidance_history = guidance_list
         
-        self.current_step = len(self.guidance_history)
-        self.completion_rate = self.current_step / max(1, self.total_steps)
+        self.current_step = len(guidance_list)
+        total_steps_val = getattr(self, 'total_steps', None)
+        total_steps = int(total_steps_val) if total_steps_val is not None else 1
+        current_step_val = getattr(self, 'current_step', 0)
+        self.completion_rate = float(current_step_val) / max(1, total_steps)
     
-    def add_hint(self, hint_type: str, hint_content: str, effectiveness: float = None):
+    def add_hint(self, hint_type: str, hint_content: str, effectiveness: float = 0.0):
         """添加提示"""
         hint = {
             'hint_type': hint_type,
             'content': hint_content,
             'timestamp': datetime.utcnow().isoformat(),
-            'effectiveness': effectiveness
+            'effectiveness': effectiveness or 0.0
         }
         
-        if not self.hints_used:
-            self.hints_used = []
-        self.hints_used.append(hint)
+        hints_list = getattr(self, 'hints_used', None)
+        if not isinstance(hints_list, list):
+            hints_list = []
+        hints_list.append(hint)
+        self.hints_used = hints_list
     
-    def update_understanding_progress(self, concept: str, progress: float):
+    def update_understanding_progress(self, concept: str, progress: float = 0.0):
         """更新理解进度"""
-        if not self.understanding_progress:
-            self.understanding_progress = {}
+        progress_dict = getattr(self, 'understanding_progress', None)
+        if not isinstance(progress_dict, dict):
+            progress_dict = {}
         
-        self.understanding_progress[concept] = {
-            'progress': progress,
+        progress_dict[concept] = {
+            'progress': progress or 0.0,
             'timestamp': datetime.utcnow().isoformat()
         }
+        self.understanding_progress = progress_dict
     
-    def complete_session(self, final_understanding: float = None):
+    def complete_session(self, final_understanding: float = 0.0):
         """完成会话"""
         self.status = 'completed'
         self.end_time = datetime.utcnow()
         self.completion_rate = 1.0
         
-        if self.start_time:
-            duration = self.end_time - self.start_time
+        start_time_val = getattr(self, 'start_time', None)
+        end_time_val = getattr(self, 'end_time', None)
+        if start_time_val and end_time_val:
+            duration = end_time_val - start_time_val
             self.total_duration = int(duration.total_seconds())
         
         if final_understanding is not None:
-            self.help_effectiveness = final_understanding
+            self.help_effectiveness = final_understanding or 0.0

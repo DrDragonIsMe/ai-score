@@ -187,3 +187,19 @@ def validate_pagination_params(page: Any = None, per_page: Any = None) -> tuple[
         return page, per_page, ""
     except (ValueError, TypeError):
         return 1, 20, "分页参数必须是数字"
+
+def validate_date_range(start_date, end_date) -> bool:
+    """
+    验证日期范围
+    
+    Args:
+        start_date: 开始日期
+        end_date: 结束日期
+        
+    Returns:
+        bool: 是否有效
+    """
+    if not start_date or not end_date:
+        return False
+    
+    return start_date <= end_date

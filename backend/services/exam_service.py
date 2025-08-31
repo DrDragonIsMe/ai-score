@@ -164,24 +164,35 @@ class ExamService:
             if not exam_session:
                 raise ValueError("考试会话不存在")
 
-            if exam_session.status != ExamStatus.SCHEDULED.value:
+            status_val = getattr(exam_session, 'status', None)
+            if status_val != ExamStatus.SCHEDULED.value:
                 raise ValueError("考试状态不正确")
 
             # 更新状态和开始时间
-            exam_session.status = ExamStatus.IN_PROGRESS.value
-            exam_session.actual_start_time = datetime.utcnow()
-            exam_session.current_question_index = 0
-            exam_session.updated_time = datetime.utcnow()
+            db.session.execute(
+                update(ExamSession)
+                .where(ExamSession.id == session_id)
+                .values(
+                    status=ExamStatus.IN_PROGRESS.value,
+                    actual_start_time=datetime.utcnow(),
+                    current_question_index=0,
+                    updated_time=datetime.utcnow()
+                )
+            )
 
             db.session.commit()
 
             # 获取第一题
             first_question = self._get_question_by_index(exam_session, 0)
 
+            # 获取实际开始时间
+            actual_start_time = getattr(exam_session, 'actual_start_time', None)
+            start_time_iso = actual_start_time.isoformat() if actual_start_time else None
+            
             return {
                 'session_id': session_id,
                 'status': ExamStatus.IN_PROGRESS.value,
-                'start_time': exam_session.actual_start_time.isoformat() if exam_session.actual_start_time else None,
+                'start_time': start_time_iso,
                 'total_time_minutes': exam_session.total_time_minutes,
                 'current_question': first_question,
                 'progress': {
@@ -211,7 +222,8 @@ class ExamService:
             if not exam_session:
                 raise ValueError("考试会话不存在")
 
-            if exam_session.status != ExamStatus.IN_PROGRESS.value:
+            status_val = getattr(exam_session, 'status', None)
+            if status_val != ExamStatus.IN_PROGRESS.value:
                 raise ValueError("考试未在进行中")
 
             # 检查题目是否属于当前考试
@@ -228,9 +240,9 @@ class ExamService:
             is_correct, score = self._check_answer(question, answer)
 
             # 更新答案记录
-            current_answers = exam_session.answers or {}
-            current_times = exam_session.question_times or {}
-            current_attempts = exam_session.question_attempts or {}
+            current_answers = getattr(exam_session, 'answers', None) or {}
+            current_times = getattr(exam_session, 'question_times', None) or {}
+            current_attempts = getattr(exam_session, 'question_attempts', None) or {}
 
             # 检查是否是新答案
             is_new_answer = str(question_id) not in current_answers
@@ -247,8 +259,9 @@ class ExamService:
             current_attempts[str(question_id)] = current_attempts.get(str(question_id), 0) + 1
 
             # 更新完成题目数（只有新答案才增加）
+            completed_count = getattr(exam_session, 'completed_questions', 0) or 0
             if is_new_answer:
-                exam_session.completed_questions = (exam_session.completed_questions or 0) + 1
+                completed_count += 1
 
             # 更新当前题目索引
             current_index = exam_session.current_question_index or 0
@@ -264,7 +277,7 @@ class ExamService:
                     question_attempts=current_attempts,
                     current_question_index=next_index,
                     updated_time=datetime.utcnow(),
-                    completed_questions=exam_session.completed_questions
+                    completed_questions=completed_count
                 )
             )
 
@@ -272,14 +285,15 @@ class ExamService:
 
             # 获取下一题
             next_question = None
-            total_questions_count = exam_session.total_questions
-            if next_index < total_questions_count:
-                next_question = self._get_question_by_index(exam_session, next_index)
+            total_questions_count = getattr(exam_session, 'total_questions', 0) or 0
+            # 确保next_index是整数类型
+            next_index_int = int(next_index) if isinstance(next_index, (int, float)) else 0
+            if next_index_int < total_questions_count:
+                next_question = self._get_question_by_index(exam_session, next_index_int)
 
             # 计算统计信息
             correct_count = sum(1 for ans in current_answers.values() if ans.get('is_correct', False))
             total_score = sum(ans.get('score', 0) for ans in current_answers.values())
-            completed_count = exam_session.completed_questions or 0
 
             return {
                 'is_correct': is_correct,
@@ -358,7 +372,8 @@ class ExamService:
     def _get_question_by_index(self, exam_session: ExamSession, index: int) -> Optional[Dict[str, Any]]:
         """根据索引获取题目"""
         try:
-            question_ids_list = exam_session.question_ids or []
+            question_ids_list = getattr(exam_session, 'question_ids', None)
+            question_ids_list = question_ids_list if isinstance(question_ids_list, list) else []
             if index >= len(question_ids_list):
                 return None
 
@@ -394,7 +409,8 @@ class ExamService:
             if not exam_session:
                 raise ValueError("考试会话不存在")
 
-            if exam_session.status != ExamStatus.IN_PROGRESS.value:
+            status_val = getattr(exam_session, 'status', None)
+            if status_val != ExamStatus.IN_PROGRESS.value:
                 raise ValueError("考试未在进行中")
 
             # 计算最终统计
@@ -424,14 +440,16 @@ class ExamService:
 
     def _calculate_final_statistics(self, exam_session: ExamSession) -> Dict[str, Any]:
         """计算最终统计信息"""
-        answers = exam_session.answers or {}
-        question_times = exam_session.question_times or {}
+        answers = getattr(exam_session, 'answers', None)
+        answers = answers if isinstance(answers, dict) else {}
+        question_times = getattr(exam_session, 'question_times', None)
+        question_times = question_times if isinstance(question_times, dict) else {}
 
         total_questions = len(answers)
         correct_count = sum(1 for ans in answers.values() if ans.get('is_correct', False))
         wrong_count = total_questions - correct_count
         total_score = sum(ans.get('score', 0) for ans in answers.values())
-        max_score = exam_session.max_possible_score or 100
+        max_score = getattr(exam_session, 'max_possible_score', None) or 100
         score_percentage = (total_score / max_score * 100) if max_score > 0 else 0
         accuracy = (correct_count / total_questions * 100) if total_questions > 0 else 0
         total_time = sum(question_times.values())
@@ -448,7 +466,7 @@ class ExamService:
             'average_time_per_question': total_time / total_questions if total_questions > 0 else 0
         }
 
-    def get_exam_session(self, session_id: int, user_id: str = None) -> Optional[ExamSession]:
+    def get_exam_session(self, session_id: int, user_id: Optional[str] = None) -> Optional[ExamSession]:
         """获取考试会话"""
         try:
             query = db.session.query(ExamSession).filter(ExamSession.id == session_id)
@@ -468,11 +486,21 @@ class ExamService:
             if not session or str(session.user_id) != str(user_id):
                 return False
             
+            # 检查是否暂停
+            is_paused_val = getattr(session, 'is_paused', False)
+            if is_paused_val:
+                return False
+            
             # 重置考试状态
             db.session.execute(
                 update(ExamSession)
                 .where(ExamSession.id == session_id)
-                .values(current_question_index=0)
+                .values(
+                    status=ExamStatus.IN_PROGRESS.value,
+                    actual_start_time=datetime.utcnow(),
+                    current_question_index=0,
+                    updated_time=datetime.utcnow()
+                )
             )
             db.session.commit()
             return True
@@ -492,10 +520,12 @@ class ExamService:
                 return None
             
             # 获取当前答案字典
-            answers = session.answers if isinstance(session.answers, dict) else {}
+            answers = getattr(session, 'answers', None)
+            answers = answers if isinstance(answers, dict) else {}
             
             # 检查答案正确性
-            question_ids = session.question_ids if isinstance(session.question_ids, list) else []
+            question_ids = getattr(session, 'question_ids', None)
+            question_ids = question_ids if isinstance(question_ids, list) else []
             if question_index >= len(question_ids):
                 return None
                 
@@ -507,27 +537,30 @@ class ExamService:
             is_correct, score = self._check_answer(question, answer)
             
             # 更新答案
-            answers[str(question_index)] = {
+            current_answers = getattr(session, 'answers', None) or {}
+            current_answers[str(question_index)] = {
                 'answer': answer,
                 'is_correct': is_correct,
                 'timestamp': datetime.utcnow().isoformat()
             }
             
-            # 使用update方法更新数据库
+            # 更新完成题目数
+            completed_count = getattr(session, 'completed_questions', 0) or 0
             db.session.execute(
                 update(ExamSession)
                 .where(ExamSession.id == session_id)
                 .values(
-                    answers=answers,
-                    completed_questions=ExamSession.completed_questions + 1
+                    answers=current_answers,
+                    completed_questions=completed_count + 1
                 )
             )
             
             # 移动到下一题
+            current_index = getattr(session, 'current_question_index', 0) or 0
             db.session.execute(
                 update(ExamSession)
                 .where(ExamSession.id == session_id)
-                .values(current_question_index=ExamSession.current_question_index + 1)
+                .values(current_question_index=current_index + 1)
             )
             
             db.session.commit()
@@ -538,14 +571,20 @@ class ExamService:
                 return None
                 
             # 检查是否完成所有题目
-            question_ids = session.question_ids if isinstance(session.question_ids, list) else []
-            if session.current_question_index >= len(question_ids):
-                return self._get_question_by_index(session, session.current_question_index)
+            question_ids = getattr(session, 'question_ids', None)
+            question_ids = question_ids if isinstance(question_ids, list) else []
+            current_index = getattr(session, 'current_question_index', 0) or 0
+            if current_index >= len(question_ids):
+                return self._get_question_by_index(session, current_index)
+            
+            # 获取下一题
+            next_question_index = getattr(session, 'current_question_index', 0) or 0
+            next_question = self._get_question_by_index(session, next_question_index)
             
             return {
                 'is_correct': is_correct,
                 'score': score,
-                'next_question': self._get_question_by_index(session, session.current_question_index)
+                'next_question': next_question
             }
             
         except Exception as e:
@@ -562,7 +601,8 @@ class ExamService:
             if not session or str(session.user_id) != str(user_id):
                 return None
             
-            return self._get_question_by_index(session, session.current_question_index)
+            current_index = getattr(session, 'current_question_index', 0) or 0
+            return self._get_question_by_index(session, current_index)
             
         except Exception:
             return None
@@ -578,14 +618,60 @@ class ExamService:
                 return None
             
             # 检查考试是否已结束或题目索引是否有效
-            question_ids = session.question_ids if isinstance(session.question_ids, list) else []
-            if session.status == 'completed' or index >= len(question_ids):
+            question_ids = getattr(session, 'question_ids', None)
+            question_ids = question_ids if isinstance(question_ids, list) else []
+            status = getattr(session, 'status', None)
+            if status == 'completed' or index >= len(question_ids):
                 return None
             
             return self._get_question_by_index(session, index)
             
         except Exception:
             return None
+
+    def pause_exam(self, session_id: int, user_id: str) -> bool:
+        """暂停考试"""
+        try:
+            session = self.get_exam_session(session_id, user_id)
+            is_paused_val = getattr(session, 'is_paused', False)
+            if not session or is_paused_val:
+                return False
+            
+            db.session.execute(
+                update(ExamSession)
+                .where(ExamSession.id == session_id)
+                .values(
+                    is_paused=True,
+                    pause_time=datetime.utcnow()
+                )
+            )
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            return False
+
+    def resume_exam(self, session_id: int, user_id: str) -> bool:
+        """恢复考试"""
+        try:
+            session = self.get_exam_session(session_id, user_id)
+            is_paused_val = getattr(session, 'is_paused', False)
+            if not session or not is_paused_val:
+                return False
+            
+            db.session.execute(
+                update(ExamSession)
+                .where(ExamSession.id == session_id)
+                .values(
+                    is_paused=False,
+                    resume_time=datetime.utcnow()
+                )
+            )
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            return False
 
     def get_exam_statistics(self, session_id: int, user_id: str) -> Optional[Dict[str, Any]]:
         """获取考试统计信息"""
@@ -597,17 +683,22 @@ class ExamService:
             if not session or str(session.user_id) != str(user_id):
                 return None
             
-            question_ids = session.question_ids if isinstance(session.question_ids, list) else []
-            answers = session.answers if isinstance(session.answers, dict) else {}
+            question_ids = getattr(session, 'question_ids', None)
+            question_ids = question_ids if isinstance(question_ids, list) else []
+            answers = getattr(session, 'answers', None)
+            answers = answers if isinstance(answers, dict) else {}
+            question_times = getattr(session, 'question_times', None)
+            question_times = question_times if isinstance(question_times, dict) else {}
             
             total_questions = len(question_ids)
             
             # 计算正确答案数
             correct_answers = sum(1 for answer in answers.values() if answer.get('is_correct', False))
+            completed_questions = getattr(session, 'completed_questions', 0) or 0
             
             return {
                 'total_questions': total_questions,
-                'completed_questions': session.completed_questions or 0,
+                'completed_questions': completed_questions,
                 'correct_answers': correct_answers,
                 'accuracy': (correct_answers / len(answers)) * 100 if answers else 0
             }

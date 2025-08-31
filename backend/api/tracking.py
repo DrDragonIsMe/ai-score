@@ -20,7 +20,7 @@ import logging
 
 from services.tracking_service import TrackingService
 from models.tracking import LearningMetric, PerformanceSnapshot, LearningReport, GoalTracking, FeedbackRecord
-from utils.validators import validate_required_fields
+from utils.validators import validate_required_fields, validate_date_range
 from utils.response import success_response, error_response
 
 logger = logging.getLogger(__name__)
@@ -50,8 +50,9 @@ def collect_metrics():
         
         # 验证必需字段
         required_fields = ['period_start', 'period_end']
-        if not validate_required_fields(data, required_fields):
-            return error_response('缺少必需字段', 400)
+        is_valid, error_msg = validate_required_fields(data, required_fields)
+        if not is_valid:
+            return error_response(error_msg, 400)
         
         # 解析时间
         try:
@@ -70,8 +71,7 @@ def collect_metrics():
         metrics = tracking_service.collect_learning_metrics(
             user_id=user_id,
             period_start=period_start,
-            period_end=period_end,
-            force_recalculate=force_recalculate
+            period_end=period_end
         )
         
         if not metrics:
@@ -181,8 +181,9 @@ def create_snapshot():
         
         # 验证必需字段
         required_fields = ['period_start', 'period_end']
-        if not validate_required_fields(data, required_fields):
-            return error_response('缺少必需字段', 400)
+        is_valid, error_msg = validate_required_fields(data, required_fields)
+        if not is_valid:
+            return error_response(error_msg, 400)
         
         # 解析时间
         try:
@@ -200,9 +201,10 @@ def create_snapshot():
         # 创建快照
         snapshot = tracking_service.create_performance_snapshot(
             user_id=user_id,
+            tenant_id=1,  # 临时使用默认值
+            period_type=snapshot_type,
             period_start=period_start,
-            period_end=period_end,
-            snapshot_type=snapshot_type
+            period_end=period_end
         )
         
         if not snapshot:
@@ -355,8 +357,9 @@ def generate_report():
         
         # 验证必需字段
         required_fields = ['report_type', 'period_start', 'period_end']
-        if not validate_required_fields(data, required_fields):
-            return error_response('缺少必需字段', 400)
+        is_valid, error_msg = validate_required_fields(data, required_fields)
+        if not is_valid:
+            return error_response(error_msg, 400)
         
         # 解析时间
         try:
@@ -375,10 +378,10 @@ def generate_report():
         # 生成报告
         report = tracking_service.generate_learning_report(
             user_id=user_id,
+            tenant_id=1,  # 临时使用默认值
             report_type=report_type,
             period_start=period_start,
-            period_end=period_end,
-            include_charts=include_charts
+            period_end=period_end
         )
         
         if not report:
@@ -532,8 +535,9 @@ def create_goal():
         
         # 验证必需字段
         required_fields = ['goal_type', 'goal_title', 'target_value', 'target_date']
-        if not validate_required_fields(data, required_fields):
-            return error_response('缺少必需字段', 400)
+        is_valid, error_msg = validate_required_fields(data, required_fields)
+        if not is_valid:
+            return error_response(error_msg, 400)
         
         # 解析目标日期
         try:
@@ -544,6 +548,7 @@ def create_goal():
         # 创建目标
         goal = tracking_service.create_learning_goal(
             user_id=user_id,
+            tenant_id=1,  # 临时使用默认值
             goal_data={
                 'goal_type': data['goal_type'],
                 'goal_title': data['goal_title'],
@@ -601,11 +606,7 @@ def get_goals():
         # 获取目标列表
         goals = tracking_service.get_user_goals(
             user_id=user_id,
-            goal_type=goal_type,
-            is_active=is_active,
-            is_completed=is_completed,
-            subject_id=subject_id,
-            limit=limit
+            is_active=is_active
         )
         
         # 格式化返回数据
@@ -705,12 +706,14 @@ def create_feedback():
         
         # 验证必需字段
         required_fields = ['feedback_type', 'feedback_category', 'feedback_title', 'feedback_content', 'source_type']
-        if not validate_required_fields(data, required_fields):
-            return error_response('缺少必需字段', 400)
+        is_valid, error_msg = validate_required_fields(data, required_fields)
+        if not is_valid:
+            return error_response(error_msg, 400)
         
         # 创建反馈
         feedback = tracking_service.create_feedback(
             user_id=user_id,
+            tenant_id=1,  # 临时使用默认值
             feedback_data={
                 'feedback_type': data['feedback_type'],
                 'feedback_category': data['feedback_category'],
@@ -785,7 +788,7 @@ def get_feedback():
                 'is_read': feedback.is_read,
                 'is_urgent': feedback.is_urgent(),
                 'created_time': feedback.created_time.isoformat(),
-                'read_time': feedback.read_time.isoformat() if feedback.read_time else None
+                'read_time': (lambda rt: rt.isoformat() if rt and hasattr(rt, 'isoformat') else None)(getattr(feedback, 'read_time', None))
             })
         
         return success_response({

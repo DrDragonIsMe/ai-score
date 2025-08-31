@@ -369,23 +369,36 @@ def get_exam_session(session_id: int):
         user_id = user_info['user_id'] if isinstance(user_info, dict) else user_info
         
         try:
-            exam_session = exam_service.get_exam_session(str(user_id), session_id)
+            exam_session = exam_service.get_exam_session(session_id, str(user_id))
             if not exam_session:
                 return error_response('考试会话不存在', 404)
+            
+            # 安全地获取datetime字段
+            start_time = None
+            if hasattr(exam_session, 'start_time') and exam_session.start_time is not None:
+                start_time = exam_session.start_time.isoformat() if hasattr(exam_session.start_time, 'isoformat') else str(exam_session.start_time)
+            
+            end_time = None
+            if hasattr(exam_session, 'end_time') and exam_session.end_time is not None:
+                end_time = exam_session.end_time.isoformat() if hasattr(exam_session.end_time, 'isoformat') else str(exam_session.end_time)
+            
+            created_time = None
+            if hasattr(exam_session, 'created_time') and exam_session.created_time is not None:
+                created_time = exam_session.created_time.isoformat() if hasattr(exam_session.created_time, 'isoformat') else str(exam_session.created_time)
             
             return success_response(
                 message='获取成功',
                 data={
                     'session_id': exam_session.id,
-                    'exam_name': exam_session.exam_name,
+                    'exam_name': getattr(exam_session, 'exam_name', getattr(exam_session, 'title', '')),
                     'status': exam_session.status,
-                    'exam_type': exam_session.exam_type,
+                    'exam_type': getattr(exam_session, 'exam_type', ''),
                     'subject_id': exam_session.subject_id,
                     'total_questions': exam_session.total_questions,
                     'completed_questions': exam_session.completed_questions or 0,
-                    'start_time': exam_session.start_time.isoformat() if hasattr(exam_session.start_time, 'isoformat') and exam_session.start_time else None,
-                     'end_time': exam_session.end_time.isoformat() if hasattr(exam_session.end_time, 'isoformat') and exam_session.end_time else None,
-                     'created_time': exam_session.created_time.isoformat() if hasattr(exam_session.created_time, 'isoformat') and exam_session.created_time else None
+                    'start_time': start_time,
+                    'end_time': end_time,
+                    'created_time': created_time
                 }
             )
         except AttributeError:

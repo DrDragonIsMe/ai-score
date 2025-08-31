@@ -113,13 +113,13 @@ class LearningMetric(db.Model):
             'subject_id': self.subject_id,
             'knowledge_point_id': self.knowledge_point_id,
             'difficulty_level': self.difficulty_level,
-            'record_date': self.record_date.isoformat() if self.record_date else None,
+            'record_date': self.record_date.isoformat() if self.record_date is not None else None,
             'period_type': self.period_type,
-            'period_start': self.period_start.isoformat() if self.period_start else None,
-            'period_end': self.period_end.isoformat() if self.period_end else None,
+            'period_start': self.period_start.isoformat() if self.period_start is not None else None,
+            'period_end': self.period_end.isoformat() if self.period_end is not None else None,
             'context_data': self.context_data,
             'tags': self.tags,
-            'created_time': self.created_time.isoformat() if self.created_time else None
+            'created_time': self.created_time.isoformat() if self.created_time is not None else None
         }
 
 class PerformanceSnapshot(db.Model):
@@ -183,10 +183,10 @@ class PerformanceSnapshot(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
-            'snapshot_date': self.snapshot_date.isoformat() if self.snapshot_date else None,
+            'snapshot_date': self.snapshot_date.isoformat() if self.snapshot_date is not None else None,
             'period_type': self.period_type,
-            'period_start': self.period_start.isoformat() if self.period_start else None,
-            'period_end': self.period_end.isoformat() if self.period_end else None,
+            'period_start': self.period_start.isoformat() if self.period_start is not None else None,
+            'period_end': self.period_end.isoformat() if self.period_end is not None else None,
             'overall_score': self.overall_score,
             'learning_efficiency': self.learning_efficiency,
             'knowledge_growth': self.knowledge_growth,
@@ -199,7 +199,7 @@ class PerformanceSnapshot(db.Model):
             'improvement_rate': self.improvement_rate,
             'predicted_next_score': self.predicted_next_score,
             'confidence_level': self.confidence_level,
-            'created_time': self.created_time.isoformat() if self.created_time else None
+            'created_time': self.created_time.isoformat() if self.created_time is not None else None
         }
     
     def calculate_improvement_rate(self) -> Optional[float]:
@@ -207,7 +207,9 @@ class PerformanceSnapshot(db.Model):
         if not self.previous_snapshot:
             return None
         
-        if self.previous_snapshot.overall_score == 0:
+        if (self.previous_snapshot.overall_score is None or 
+            self.overall_score is None or 
+            self.previous_snapshot.overall_score == 0):
             return None
         
         return (self.overall_score - self.previous_snapshot.overall_score) / self.previous_snapshot.overall_score
@@ -234,9 +236,11 @@ class PerformanceSnapshot(db.Model):
     def _get_trend_description(self, trend: str, improvement: Optional[float]) -> str:
         """获取趋势描述"""
         if trend == 'improving':
-            return f"学习表现持续提升，相比上期提高了{improvement*100:.1f}%"
+            improvement_val = improvement if improvement is not None else 0
+            return f"学习表现持续提升，相比上期提高了{improvement_val*100:.1f}%"
         elif trend == 'declining':
-            return f"学习表现有所下降，相比上期降低了{abs(improvement)*100:.1f}%"
+            improvement_val = improvement if improvement is not None else 0
+            return f"学习表现有所下降，相比上期降低了{abs(improvement_val)*100:.1f}%"
         elif trend == 'stable':
             return "学习表现保持稳定"
         else:
@@ -304,8 +308,8 @@ class LearningReport(db.Model):
             'report_type': self.report_type,
             'report_title': self.report_title,
             'report_period': self.report_period,
-            'period_start': self.period_start.isoformat() if self.period_start else None,
-            'period_end': self.period_end.isoformat() if self.period_end else None,
+            'period_start': self.period_start.isoformat() if self.period_start is not None else None,
+            'period_end': self.period_end.isoformat() if self.period_end is not None else None,
             'summary': self.summary,
             'key_insights': self.key_insights,
             'performance_data': self.performance_data,
@@ -316,10 +320,10 @@ class LearningReport(db.Model):
             'charts_data': self.charts_data,
             'is_generated': self.is_generated,
             'is_sent': self.is_sent,
-            'generation_time': self.generation_time.isoformat() if self.generation_time else None,
-            'send_time': self.send_time.isoformat() if self.send_time else None,
+            'generation_time': self.generation_time.isoformat() if self.generation_time is not None else None,
+            'send_time': self.send_time.isoformat() if self.send_time is not None else None,
             'recipients': self.recipients,
-            'created_time': self.created_time.isoformat() if self.created_time else None
+            'created_time': self.created_time.isoformat() if self.created_time is not None else None
         }
     
     def mark_as_generated(self):
@@ -334,14 +338,24 @@ class LearningReport(db.Model):
     
     def get_report_summary(self) -> Dict:
         """获取报告摘要"""
+        period_start = getattr(self, 'period_start', None)
+        period_end = getattr(self, 'period_end', None)
+        period_str = "未知时间段"
+        if period_start is not None and period_end is not None:
+            period_str = f"{period_start.strftime('%Y-%m-%d')} 至 {period_end.strftime('%Y-%m-%d')}"
+        
+        is_generated = getattr(self, 'is_generated', False)
+        key_insights = getattr(self, 'key_insights', None)
+        recommendations = getattr(self, 'recommendations', None)
+        
         return {
             'report_id': self.id,
             'title': self.report_title,
             'type': self.report_type,
-            'period': f"{self.period_start.strftime('%Y-%m-%d')} 至 {self.period_end.strftime('%Y-%m-%d')}",
-            'status': 'generated' if self.is_generated else 'pending',
-            'key_insights_count': len(self.key_insights) if self.key_insights else 0,
-            'recommendations_count': len(self.recommendations) if self.recommendations else 0
+            'period': period_str,
+            'status': 'generated' if is_generated else 'pending',
+            'key_insights_count': len(key_insights) if key_insights else 0,
+            'recommendations_count': len(recommendations) if recommendations else 0
         }
 
 class GoalTracking(db.Model):
@@ -410,59 +424,83 @@ class GoalTracking(db.Model):
             'target_value': self.target_value,
             'current_value': self.current_value,
             'unit': self.unit,
-            'start_date': self.start_date.isoformat() if self.start_date else None,
-            'target_date': self.target_date.isoformat() if self.target_date else None,
-            'completion_date': self.completion_date.isoformat() if self.completion_date else None,
+            'start_date': self.start_date.isoformat() if self.start_date is not None else None,
+            'target_date': self.target_date.isoformat() if self.target_date is not None else None,
+            'completion_date': self.completion_date.isoformat() if self.completion_date is not None else None,
             'progress_percentage': self.progress_percentage,
             'is_completed': self.is_completed,
             'is_active': self.is_active,
             'milestones': self.milestones,
             'subject_id': self.subject_id,
             'knowledge_point_id': self.knowledge_point_id,
-            'created_time': self.created_time.isoformat() if self.created_time else None
+            'created_time': self.created_time.isoformat() if self.created_time is not None else None
         }
     
     def update_progress(self, new_value: float):
         """更新进度"""
         self.current_value = new_value
-        self.progress_percentage = min(100, (new_value / self.target_value) * 100)
+        target_value = getattr(self, 'target_value', None)
+        if target_value is not None and target_value > 0:
+            self.progress_percentage = min(100, (new_value / target_value) * 100)
+        else:
+            self.progress_percentage = 0
         
-        if self.progress_percentage >= 100 and not self.is_completed:
+        progress_percentage = getattr(self, 'progress_percentage', 0)
+        is_completed = getattr(self, 'is_completed', False)
+        if progress_percentage >= 100 and not is_completed:
             self.is_completed = True
             self.completion_date = datetime.now()
     
     def get_remaining_days(self) -> int:
         """获取剩余天数"""
-        if self.is_completed:
+        is_completed = getattr(self, 'is_completed', False)
+        if is_completed:
             return 0
         
-        remaining = self.target_date - datetime.now()
+        target_date = getattr(self, 'target_date', None)
+        if target_date is None:
+            return 0
+        
+        remaining = target_date - datetime.now()
         return max(0, remaining.days)
     
     def get_daily_required_progress(self) -> float:
         """获取每日所需进度"""
-        if self.is_completed:
+        is_completed = getattr(self, 'is_completed', False)
+        if is_completed:
             return 0
         
         remaining_days = self.get_remaining_days()
         if remaining_days == 0:
-            return self.target_value - self.current_value
+            target_value = getattr(self, 'target_value', None)
+            current_value = getattr(self, 'current_value', None)
+            if target_value is not None and current_value is not None:
+                return target_value - current_value
+            return 0
         
-        remaining_value = self.target_value - self.current_value
-        return remaining_value / remaining_days
+        target_value = getattr(self, 'target_value', None)
+        current_value = getattr(self, 'current_value', None)
+        if target_value is not None and current_value is not None:
+            remaining_value = target_value - current_value
+            return remaining_value / remaining_days
+        return 0
     
     def get_status(self) -> Dict:
         """获取目标状态"""
-        if self.is_completed:
+        is_completed = getattr(self, 'is_completed', False)
+        target_date = getattr(self, 'target_date', None)
+        progress_percentage = getattr(self, 'progress_percentage', None)
+        
+        if is_completed:
             status = 'completed'
             status_text = '已完成'
-        elif datetime.now() > self.target_date:
+        elif target_date is not None and datetime.now() > target_date:
             status = 'overdue'
             status_text = '已逾期'
-        elif self.progress_percentage >= 80:
+        elif progress_percentage is not None and progress_percentage >= 80:
             status = 'on_track'
             status_text = '进展良好'
-        elif self.progress_percentage >= 50:
+        elif progress_percentage is not None and progress_percentage >= 50:
             status = 'moderate'
             status_text = '进展一般'
         else:
@@ -472,7 +510,7 @@ class GoalTracking(db.Model):
         return {
             'status': status,
             'status_text': status_text,
-            'progress_percentage': self.progress_percentage,
+            'progress_percentage': progress_percentage,
             'remaining_days': self.get_remaining_days(),
             'daily_required_progress': self.get_daily_required_progress()
         }
@@ -546,20 +584,21 @@ class FeedbackRecord(db.Model):
             'source_id': self.source_id,
             'is_read': self.is_read,
             'is_acknowledged': self.is_acknowledged,
-            'read_time': self.read_time.isoformat() if self.read_time else None,
-            'acknowledge_time': self.acknowledge_time.isoformat() if self.acknowledge_time else None,
+            'read_time': self.read_time.isoformat() if self.read_time is not None else None,
+            'acknowledge_time': self.acknowledge_time.isoformat() if self.acknowledge_time is not None else None,
             'priority': self.priority,
             'importance_score': self.importance_score,
             'related_subject_id': self.related_subject_id,
             'related_report_id': self.related_report_id,
             'user_response': self.user_response,
-            'response_time': self.response_time.isoformat() if self.response_time else None,
-            'created_time': self.created_time.isoformat() if self.created_time else None
+            'response_time': self.response_time.isoformat() if self.response_time is not None else None,
+            'created_time': self.created_time.isoformat() if self.created_time is not None else None
         }
     
     def mark_as_read(self):
         """标记为已读"""
-        if not self.is_read:
+        is_read = getattr(self, 'is_read', False)
+        if not is_read:
             self.is_read = True
             self.read_time = datetime.now()
     
@@ -573,11 +612,17 @@ class FeedbackRecord(db.Model):
     
     def get_age_in_hours(self) -> float:
         """获取反馈的年龄（小时）"""
-        return (datetime.now() - self.created_time).total_seconds() / 3600
+        created_time = getattr(self, 'created_time', None)
+        if created_time is None:
+            return 0.0
+        return (datetime.now() - created_time).total_seconds() / 3600
     
     def is_urgent(self) -> bool:
         """判断是否紧急"""
-        return (self.priority == 'high' and 
-                self.importance_score > 0.7 and 
-                not self.is_acknowledged and 
+        priority = getattr(self, 'priority', None)
+        importance_score = getattr(self, 'importance_score', None)
+        is_acknowledged = getattr(self, 'is_acknowledged', False)
+        return (priority == 'high' and 
+                importance_score is not None and importance_score > 0.7 and 
+                not is_acknowledged and 
                 self.get_age_in_hours() > 24)
