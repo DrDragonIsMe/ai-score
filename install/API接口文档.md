@@ -6,10 +6,12 @@
 
 ### 基础信息
 
-- **Base URL**: `http://localhost:5000/api`
+- **Base URL**: `http://localhost:5001/api` (更新后的端口)
 - **认证方式**: JWT Bearer Token
 - **内容类型**: `application/json`
 - **字符编码**: UTF-8
+- **版本**: v1.1.0
+- **最后更新**: 2025-08-31
 
 ### 通用响应格式
 
