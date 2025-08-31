@@ -7,7 +7,7 @@ Description:
     知识点数据模型，定义学科知识体系结构。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

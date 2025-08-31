@@ -7,7 +7,7 @@ Description:
     数据模型基类，定义通用字段和方法。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

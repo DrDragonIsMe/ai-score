@@ -7,7 +7,7 @@ Description:
     内容生成服务，提供AI驱动的教学内容生成。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

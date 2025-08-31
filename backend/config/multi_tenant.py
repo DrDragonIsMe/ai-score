@@ -7,7 +7,7 @@ Description:
     多租户配置，定义租户隔离和管理配置。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

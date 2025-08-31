@@ -7,7 +7,7 @@ Description:
     诊断服务，提供智能学习诊断和能力评估功能。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

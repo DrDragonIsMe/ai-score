@@ -7,7 +7,7 @@ Description:
     日志工具，提供结构化日志记录和管理功能。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

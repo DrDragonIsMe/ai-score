@@ -7,7 +7,7 @@ Description:
     租户数据模型，支持多租户架构的数据隔离。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

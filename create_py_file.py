@@ -8,7 +8,7 @@ Description:
     使用方法: python create_py_file.py <文件路径> [模块描述]
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

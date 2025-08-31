@@ -7,7 +7,7 @@ Description:
     学习路径服务，提供个性化学习路径生成和优化。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

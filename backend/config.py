@@ -8,7 +8,7 @@ Description:
     国际化等各种配置参数的定义和管理。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """

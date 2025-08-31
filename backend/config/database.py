@@ -7,7 +7,7 @@ Description:
     数据库配置，定义数据库连接和ORM配置。
 
 Author: Chang Xinglong
-Date: 2025-08-31
+Date: 2025-08-30
 Version: 1.0.0
 License: Apache License 2.0
 """
