@@ -8,7 +8,7 @@ Description:
     蓝图注册和中间件设置等核心功能。
 
 Author: Chang Xinglong
-Date: 2025-01-20
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

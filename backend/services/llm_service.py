@@ -7,7 +7,7 @@ Description:
     LLM服务，提供大语言模型调用、内容生成等AI功能。
 
 Author: Chang Xinglong
-Date: 2025-01-20
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

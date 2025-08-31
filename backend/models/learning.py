@@ -7,7 +7,7 @@ Description:
     学习路径数据模型，定义个性化学习计划和进度。
 
 Author: Chang Xinglong
-Date: 2025-01-20
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

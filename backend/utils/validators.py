@@ -7,7 +7,7 @@ Description:
     数据验证工具，提供各种数据格式和业务规则验证。
 
 Author: Chang Xinglong
-Date: 2025-01-20
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

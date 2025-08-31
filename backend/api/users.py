@@ -7,7 +7,7 @@ Description:
     用户管理API接口，提供用户信息查询、更新、权限管理等功能。
 
 Author: Chang Xinglong
-Date: 2025-01-20
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

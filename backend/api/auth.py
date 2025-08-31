@@ -7,7 +7,7 @@ Description:
     用户认证API接口，提供登录、注册、令牌刷新等认证相关功能。
 
 Author: Chang Xinglong
-Date: 2025-01-20
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """
