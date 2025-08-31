@@ -21,7 +21,7 @@
 **作者**: Chang Xinglong
 **日期**: 2025-08-30
 **版本**: 1.0.0
-**许可证**: Apache License 2.0
+**许可证**: Apache License 2.0，且注意不能用于多租户环境，不能去掉相关的版本或logo信息。
 
 ## 文件结构
 
@@ -55,7 +55,7 @@ Description:
 Author: Chang Xinglong
 Date: 2024-01-20
 Version: 1.0.0
-License: MIT
+License: Apache License 2.0
 """
 ```
 
