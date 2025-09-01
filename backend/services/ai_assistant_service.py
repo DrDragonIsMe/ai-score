@@ -26,6 +26,7 @@ from models.diagnosis import DiagnosisReport, WeaknessPoint
 from models.knowledge import KnowledgePoint, Subject
 from services.llm_service import llm_service
 from services.diagnosis_service import DiagnosisService
+from services.document_service import get_document_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -56,7 +57,9 @@ class AIAssistantService:
                 "试题分析解答",
                 "个性化学习建议",
                 "学习进度跟踪",
-                "知识点推荐"
+                "知识点推荐",
+                "PDF文档分析",
+                "文档内容问答"
             ]
         }
     
@@ -260,6 +263,146 @@ class AIAssistantService:
             return {
                 "success": False,
                 "message": "获取建议失败，请重试。",
+                "error": str(e)
+            }
+    
+    def analyze_document_content(self, user_id: str, document_id: str, question: Optional[str] = None) -> Dict[str, Any]:
+        """
+        分析PDF文档内容并回答相关问题
+        
+        Args:
+            user_id: 用户ID
+            document_id: 文档ID
+            question: 用户问题（可选）
+        
+        Returns:
+            文档分析结果
+        """
+        try:
+            document_service = get_document_service()
+            
+            # 获取文档信息
+            document_info = document_service.get_document_info(document_id)
+            if not document_info:
+                return {
+                    "success": False,
+                    "message": "文档不存在或已被删除"
+                }
+            
+            # 获取文档内容
+            document_content = document_service.get_document_content(document_id)
+            if not document_content:
+                return {
+                    "success": False,
+                    "message": "无法获取文档内容"
+                }
+            
+            # 获取用户学习档案
+            user_profile = self._get_user_learning_profile(user_id)
+            
+            # 构建分析提示词
+            if question:
+                # 基于问题的文档问答
+                analysis_prompt = self._build_document_qa_prompt(
+                    document_info, document_content, question, user_profile
+                )
+            else:
+                # 文档内容总结分析
+                analysis_prompt = self._build_document_analysis_prompt(
+                    document_info, document_content, user_profile
+                )
+            
+            # 调用大模型进行分析
+            analysis_result = llm_service.generate_text(
+                prompt=analysis_prompt,
+                max_tokens=1000,
+                temperature=0.3
+            )
+            
+            # 生成学习建议
+            learning_suggestions = self._generate_document_learning_suggestions(
+                user_id, document_info, document_content
+            )
+            
+            return {
+                "success": True,
+                "document_info": {
+                    "title": document_info.get('title', ''),
+                    "category": document_info.get('category', ''),
+                    "upload_time": document_info.get('upload_time', '')
+                },
+                "analysis": analysis_result,
+                "learning_suggestions": learning_suggestions,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"文档分析失败: {str(e)}")
+            return {
+                "success": False,
+                "message": "文档分析失败，请重试。",
+                "error": str(e)
+            }
+    
+    def search_documents_by_content(self, user_id: str, query: str) -> Dict[str, Any]:
+        """
+        根据内容搜索用户的PDF文档
+        
+        Args:
+            user_id: 用户ID
+            query: 搜索查询
+        
+        Returns:
+            搜索结果
+        """
+        try:
+            document_service = get_document_service()
+            
+            # 搜索文档
+            search_results = document_service.search_documents(
+                query=query,
+                user_id=user_id,
+                tenant_id="default"
+            )
+            
+            if not search_results:
+                return {
+                    "success": True,
+                    "results": [],
+                    "message": "没有找到相关文档，建议上传更多学习资料。",
+                    "suggestions": [
+                        "尝试使用不同的关键词搜索",
+                        "上传更多相关的PDF文档",
+                        "检查搜索词的拼写"
+                    ]
+                }
+            
+            # 为每个结果生成简要说明
+            enhanced_results = []
+            for doc in search_results[:5]:  # 限制返回前5个结果
+                doc_summary = self._generate_document_summary(doc)
+                enhanced_results.append({
+                    "document_id": doc.get('id'),
+                    "title": doc.get('title', ''),
+                    "category": doc.get('category', ''),
+                    "relevance_score": doc.get('relevance_score', 0),
+                    "summary": doc_summary,
+                    "upload_time": doc.get('upload_time', '')
+                })
+            
+            return {
+                "success": True,
+                "results": enhanced_results,
+                "total_found": len(search_results),
+                "message": f"找到 {len(search_results)} 个相关文档",
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"文档搜索失败: {str(e)}")
+            return {
+                "success": False,
+                "message": "文档搜索失败，请重试。",
                 "error": str(e)
             }
     
@@ -597,6 +740,110 @@ class AIAssistantService:
         """
         # 简单实现，实际应该基于诊断数据分析
         return ["数学", "物理"] if reports else []
+    
+    def _build_document_qa_prompt(self, document_info: Dict, document_content: str, 
+                                question: str, user_profile: Dict) -> str:
+        """
+        构建文档问答提示词
+        """
+        return f"""
+你是高小分，一个专业的学习助手。用户上传了一个PDF文档，现在想要询问相关问题。
+
+文档信息：
+- 标题：{document_info.get('title', '未知')}
+- 分类：{document_info.get('category', '未知')}
+
+文档内容（前2000字符）：
+{document_content[:2000]}...
+
+用户问题：{question}
+
+用户学习情况：
+- 年级：{user_profile.get('grade_level', '未知')}
+- 强势学科：{', '.join(user_profile.get('strong_subjects', []))}
+- 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
+
+请基于文档内容回答用户的问题，并结合用户的学习情况给出个性化的学习建议。
+回答要求：
+1. 直接回答用户问题
+2. 引用文档中的相关内容
+3. 提供学习建议
+4. 语言要友善、鼓励性
+"""
+    
+    def _build_document_analysis_prompt(self, document_info: Dict, document_content: str, 
+                                      user_profile: Dict) -> str:
+        """
+        构建文档分析提示词
+        """
+        return f"""
+你是高小分，一个专业的学习助手。用户上传了一个PDF文档，请帮助分析文档内容。
+
+文档信息：
+- 标题：{document_info.get('title', '未知')}
+- 分类：{document_info.get('category', '未知')}
+
+文档内容（前2000字符）：
+{document_content[:2000]}...
+
+用户学习情况：
+- 年级：{user_profile.get('grade_level', '未知')}
+- 强势学科：{', '.join(user_profile.get('strong_subjects', []))}
+- 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
+
+请分析这个文档的内容，包括：
+1. 文档主要内容概述
+2. 涉及的知识点
+3. 难度等级评估
+4. 对用户的学习价值
+5. 个性化学习建议
+
+回答要友善、专业，并具有鼓励性。
+"""
+    
+    def _generate_document_learning_suggestions(self, user_id: str, document_info: Dict, 
+                                             document_content: str) -> List[str]:
+        """
+        生成基于文档的学习建议
+        """
+        suggestions = []
+        
+        # 基于文档类别的建议
+        category = document_info.get('category', '')
+        if '数学' in category:
+            suggestions.extend([
+                "建议先理解基本概念，再练习相关题目",
+                "可以制作思维导图整理知识点"
+            ])
+        elif '语文' in category:
+            suggestions.extend([
+                "建议多读几遍，理解文章结构和主旨",
+                "可以摘抄好词好句，积累写作素材"
+            ])
+        elif '英语' in category:
+            suggestions.extend([
+                "建议先掌握生词，再理解文章内容",
+                "可以朗读文章，提高语感"
+            ])
+        
+        # 通用建议
+        suggestions.extend([
+            "建议制定学习计划，分阶段掌握内容",
+            "遇到不懂的地方可以随时问我",
+            "学习后可以做相关练习巩固知识"
+        ])
+        
+        return suggestions[:5]  # 返回前5个建议
+    
+    def _generate_document_summary(self, document: Dict) -> str:
+        """
+        生成文档摘要
+        """
+        title = document.get('title', '未知文档')
+        category = document.get('category', '未分类')
+        content_preview = document.get('content', '')[:100] + '...' if document.get('content') else '暂无内容预览'
+        
+        return f"《{title}》- {category}类文档。{content_preview}"
 
 # 创建全局实例
 ai_assistant_service = AIAssistantService()

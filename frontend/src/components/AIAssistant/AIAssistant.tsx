@@ -25,7 +25,11 @@ import {
   BulbOutlined,
   BookOutlined,
   HeartOutlined,
-  CloseOutlined
+  CloseOutlined,
+  SearchOutlined,
+  FileTextOutlined,
+  FilePdfOutlined,
+  PaperClipOutlined
 } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import './AIAssistant.css';
@@ -40,6 +44,9 @@ interface Message {
   timestamp: Date;
   isImage?: boolean;
   imageUrl?: string;
+  isPdf?: boolean;
+  pdfName?: string;
+  documentId?: string;
   questionAnalysis?: {
     solution: string;
     explanation: string;
@@ -58,15 +65,19 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
     {
       id: '1',
       type: 'assistant',
-      content: '你好！我是高小分，你的AI学习助手。我可以帮你：\n\n📸 拍照识别试题并提供详细解析\n💡 回答学习问题和疑惑\n📚 制定个性化学习计划\n🎯 分析薄弱知识点\n\n有什么可以帮助你的吗？',
+      content: '你好！我是高小分，你的AI学习助手。我可以帮你：\n\n📸 拍照识别试题并提供详细解析\n📄 上传PDF文档进行智能分析\n💡 回答学习问题和疑惑\n📚 制定个性化学习计划\n🎯 分析薄弱知识点\n\n有什么可以帮助你的吗？',
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   // 滚动到底部
   const scrollToBottom = () => {
@@ -212,8 +223,91 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
         throw new Error(result.message || '图片识别失败');
       }
     } catch (error) {
-      console.error('图片上传失败:', error);
+      console.error('图片识别失败:', error);
       message.error('图片识别失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理PDF上传
+  const handlePdfUpload = async (file: File) => {
+    setLoading(true);
+
+    try {
+      // 创建FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('user_id', '1'); // 暂时使用固定用户ID
+      formData.append('tenant_id', '1'); // 暂时使用固定租户ID
+      formData.append('title', file.name);
+
+      // 添加用户上传的PDF消息
+      const pdfMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: `上传了PDF文件：${file.name}`,
+        timestamp: new Date(),
+        isPdf: true,
+        pdfName: file.name
+      };
+      setMessages(prev => [...prev, pdfMessage]);
+
+      // 调用PDF上传API
+      const response = await fetch('/api/document/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('API响应:', result);
+
+      if (result.success) {
+        console.log('PDF上传成功:', result);
+        
+        // 更新消息，添加文档ID
+        setMessages(prev => prev.map(msg => 
+          msg.id === pdfMessage.id 
+            ? { ...msg, documentId: result.data.document_id }
+            : msg
+        ));
+        
+        // 自动分析PDF内容
+        const analysisResponse = await fetch('/api/ai-assistant/analyze-document', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            document_id: result.data.document_id
+          })
+        });
+
+        const analysisResult = await analysisResponse.json();
+
+        if (analysisResult.success) {
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'assistant',
+            content: analysisResult.data.analysis || '我已经成功分析了你上传的PDF文档。有什么具体问题想要了解的吗？',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+        } else {
+          throw new Error(analysisResult.message || 'PDF分析失败');
+        }
+        
+        message.success('PDF上传并分析成功！');
+      } else {
+        throw new Error(result.message || 'PDF上传失败');
+      }
+    } catch (error) {
+      console.error('PDF上传失败:', error);
+      message.error('PDF上传失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -354,6 +448,80 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
     }
   };
 
+  // 搜索文档
+  const handleSearchDocuments = async () => {
+    if (!searchQuery.trim()) {
+      message.warning('请输入搜索内容');
+      return;
+    }
+
+    setSearchLoading(true);
+    
+    try {
+      const response = await fetch('/api/ai-assistant/search-documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: searchQuery })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSearchResults(result.data.results || []);
+        if (result.data.results?.length === 0) {
+          message.info('没有找到相关文档');
+        }
+      } else {
+        throw new Error(result.message || '搜索失败');
+      }
+    } catch (error) {
+      console.error('文档搜索失败:', error);
+      message.error('搜索失败，请重试');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // 分析文档
+  const handleAnalyzeDocument = async (documentId: string, question?: string) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch('/api/ai-assistant/analyze-document', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          document_id: documentId,
+          question: question 
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const analysisMessage: Message = {
+          id: Date.now().toString(),
+          type: 'assistant',
+          content: `📄 **文档分析结果**\n\n**文档：** ${result.data.document_info?.title}\n\n**分析内容：**\n${result.data.analysis}\n\n**学习建议：**\n${result.data.learning_suggestions?.join('\n') || ''}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, analysisMessage]);
+        setActiveTab('chat'); // 切换到对话标签页显示结果
+      } else {
+        throw new Error(result.message || '文档分析失败');
+      }
+    } catch (error) {
+      console.error('文档分析失败:', error);
+      message.error('文档分析失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 渲染消息
   const renderMessage = (msg: Message) => {
     const isUser = msg.type === 'user';
@@ -377,6 +545,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
             {msg.isImage && msg.imageUrl ? (
               <div className="image-message">
                 <img src={msg.imageUrl} alt="上传的图片" style={{ maxWidth: '200px', borderRadius: '8px' }} />
+                <Text>{msg.content}</Text>
+              </div>
+            ) : msg.isPdf && msg.pdfName ? (
+              <div className="pdf-message">
+                <div style={{ display: 'flex', alignItems: 'center', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '8px', marginBottom: '8px' }}>
+                  <FilePdfOutlined style={{ fontSize: '24px', color: '#ff4d4f', marginRight: '12px' }} />
+                  <div>
+                    <Text strong>{msg.pdfName}</Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: '12px' }}>PDF文档已上传</Text>
+                  </div>
+                </div>
                 <Text>{msg.content}</Text>
               </div>
             ) : (
@@ -492,7 +672,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                       <TextArea
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="输入你的问题，或点击相机图标拍照识别题目..."
+                        placeholder="输入你的问题，或点击相机图标拍照识别题目，点击回形针上传PDF文档..."
                         autoSize={{ minRows: 1, maxRows: 4 }}
                         onPressEnter={(e) => {
                           if (!e.shiftKey) {
@@ -514,10 +694,28 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                             }
                           }}
                         />
+                        <input
+                          ref={pdfInputRef}
+                          type="file"
+                          accept=".pdf"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handlePdfUpload(file);
+                            }
+                          }}
+                        />
                         <Button
                           type="text"
                           icon={<CameraOutlined />}
                           onClick={() => fileInputRef.current?.click()}
+                          disabled={loading}
+                        />
+                        <Button
+                          type="text"
+                          icon={<PaperClipOutlined />}
+                          onClick={() => pdfInputRef.current?.click()}
                           disabled={loading}
                         />
                         <Button
@@ -551,6 +749,58 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                     >
                       获取学习建议
                     </Button>
+                  </Card>
+                </div>
+              )
+            },
+            {
+              key: 'documents',
+              label: '文档搜索',
+              children: (
+                <div className="documents-container">
+                  <Card>
+                    <Title level={4}>文档搜索与分析</Title>
+                    <Text type="secondary">
+                      搜索相关学习资料并获得AI分析。
+                    </Text>
+                    <Divider />
+                    
+                    <div style={{ marginBottom: '16px' }}>
+                      <Input.Search
+                        placeholder="输入关键词搜索文档..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onSearch={handleSearchDocuments}
+                        loading={searchLoading}
+                        enterButton={<SearchOutlined />}
+                      />
+                    </div>
+
+                    {searchResults.length > 0 && (
+                      <List
+                        dataSource={searchResults}
+                        renderItem={(item: any) => (
+                          <List.Item
+                            actions={[
+                              <Button
+                                key="analyze"
+                                type="link"
+                                icon={<FileTextOutlined />}
+                                onClick={() => handleAnalyzeDocument(item.id)}
+                                loading={loading}
+                              >
+                                分析文档
+                              </Button>
+                            ]}
+                          >
+                            <List.Item.Meta
+                              title={item.title}
+                              description={item.summary || item.content?.substring(0, 100) + '...'}
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    )}
                   </Card>
                 </div>
               )

@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import Settings from './pages/Settings';
 import SubjectManagement from './pages/SubjectManagement';
 import StatisticsAnalysis from './components/StatisticsAnalysis';
+import DocumentManager from './components/DocumentManager';
 import { useAuthStore } from './stores/authStore';
 
 // 受保护的路由组件
@@ -65,6 +66,7 @@ const App: React.FC = () => {
                                         <Route path="/diagnosis" element={<Diagnosis />} />
                                         <Route path="/subjects" element={<SubjectManagement />} />
                                         <Route path="/exam-papers" element={<ExamPaperManagement />} />
+                                        <Route path="/documents" element={<DocumentManager />} />
                                         <Route path="/learning-path" element={<LearningPath />} />
                                         <Route path="/memory-cards" element={<Memory />} />
                                         <Route path="/mistake-book" element={<MistakeBook />} />

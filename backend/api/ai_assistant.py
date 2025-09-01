@@ -250,6 +250,64 @@ def get_conversation_history():
     
     return success_response(history, "获取对话历史成功")
 
+@ai_assistant_bp.route('/analyze-document', methods=['POST'])
+def analyze_document():
+    """
+    分析PDF文档内容
+    
+    请求参数:
+    - document_id: 文档ID
+    - question: 用户问题（可选）
+    """
+    data = request.get_json()
+    
+    if not data or 'document_id' not in data:
+        return error_response("缺少必要参数：document_id", 400)
+    
+    document_id = data['document_id']
+    question = data.get('question')
+    
+    # 调用文档分析服务（暂时使用固定用户ID）
+    result = ai_assistant_service.analyze_document_content(
+        user_id="1",
+        document_id=document_id,
+        question=question
+    )
+    
+    if result['success']:
+        return success_response(result, "文档分析成功")
+    else:
+        return error_response(result.get('message', '文档分析失败'), 500)
+
+@ai_assistant_bp.route('/search-documents', methods=['POST'])
+def search_documents():
+    """
+    搜索PDF文档
+    
+    请求参数:
+    - query: 搜索查询
+    """
+    data = request.get_json()
+    
+    if not data or 'query' not in data:
+        return error_response("缺少必要参数：query", 400)
+    
+    query = data['query']
+    
+    if not query.strip():
+        return error_response("搜索内容不能为空", 400)
+    
+    # 调用文档搜索服务（暂时使用固定用户ID）
+    result = ai_assistant_service.search_documents_by_content(
+        user_id="1",
+        query=query
+    )
+    
+    if result['success']:
+        return success_response(result, "文档搜索成功")
+    else:
+        return error_response(result.get('message', '文档搜索失败'), 500)
+
 # 错误处理
 @ai_assistant_bp.errorhandler(400)
 def bad_request(error):

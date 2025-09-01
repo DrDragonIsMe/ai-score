@@ -25,6 +25,7 @@ from .ai_model import AIModelConfig
 from .mistake import MistakeRecord, TutoringSession
 from .exam import ExamSession, TimeAllocation, ScoringStrategy, ExamAnalytics
 from .tracking import LearningMetric, PerformanceSnapshot, LearningReport, GoalTracking, FeedbackRecord
+from .document import Document, DocumentCategory, DocumentPage, DocumentAnnotation, DocumentAnalysis
 
 __all__ = [
     'Tenant', 'User', 'UserProfile',
@@ -36,5 +37,6 @@ __all__ = [
     'AIModelConfig',
     'MistakeRecord', 'TutoringSession',
     'ExamSession', 'TimeAllocation', 'ScoringStrategy', 'ExamAnalytics',
-    'LearningMetric', 'PerformanceSnapshot', 'LearningReport', 'GoalTracking', 'FeedbackRecord'
+    'LearningMetric', 'PerformanceSnapshot', 'LearningReport', 'GoalTracking', 'FeedbackRecord',
+    'Document', 'DocumentCategory', 'DocumentPage', 'DocumentAnnotation', 'DocumentAnalysis'
 ]

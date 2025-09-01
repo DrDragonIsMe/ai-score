@@ -83,9 +83,11 @@ def create_app(config_class=Config):
     from api import api_bp
     from api.subject_initializer import subject_initializer_bp
     from api.settings import settings_bp
+    from api.document import document_bp
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(subject_initializer_bp)
     app.register_blueprint(settings_bp, url_prefix='/api')
+    app.register_blueprint(document_bp)
     
     return app
 
