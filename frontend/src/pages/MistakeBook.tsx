@@ -42,7 +42,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+// const { TabPane } = Tabs; // 已弃用，改用items属性
 
 // 学习分析数据类型
 interface AnalysisData {
@@ -386,182 +386,196 @@ const MistakeBookPage: React.FC = () => {
         <BookOutlined /> 错题本与学习分析
       </Title>
 
-      <Tabs defaultActiveKey="mistakes">
-        <TabPane tab="错题管理" key="mistakes">
-          {/* 统计卡片 */}
-          <Row gutter={16} style={{ marginBottom: 24 }}>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="总错题数"
-                  value={analysisData.totalMistakes}
-                  prefix={<ExclamationCircleOutlined />}
-                  valueStyle={{ color: '#cf1322' }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="已解决"
-                  value={analysisData.resolvedMistakes}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="平均复习次数"
-                  value={analysisData.averageReviewCount}
-                  precision={1}
-                  prefix={<ClockCircleOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="掌握率"
-                  value={analysisData.masteryRate}
-                  precision={1}
-                  suffix="%"
-                  prefix={<TrophyOutlined />}
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* 筛选器 */}
-          <Card style={{ marginBottom: 24 }}>
-            <Space wrap>
-              <Select
-                placeholder="选择学科"
-                style={{ width: 120 }}
-                allowClear
-                onChange={setSelectedSubject}
-              >
-                {mockSubjects.map(subject => (
-                  <Option key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </Option>
-                ))}
-              </Select>
-              <Select
-                placeholder="错误类型"
-                style={{ width: 120 }}
-                allowClear
-                onChange={setMistakeType}
-              >
-                <Option value="概念理解错误">概念理解错误</Option>
-                <Option value="计算错误">计算错误</Option>
-                <Option value="知识点混淆">知识点混淆</Option>
-                <Option value="审题不仔细">审题不仔细</Option>
-              </Select>
-              <Select
-                placeholder="解决状态"
-                style={{ width: 120 }}
-                allowClear
-                onChange={setResolvedFilter}
-              >
-                <Option value={true}>已解决</Option>
-                <Option value={false}>未解决</Option>
-              </Select>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setAddModalVisible(true)}
-              >
-                添加错题
-              </Button>
-            </Space>
-          </Card>
-
-          {/* 错题表格 */}
-          <Card>
-            <Table
-              columns={columns}
-              dataSource={filteredRecords}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total) => `共 ${total} 条记录`
-              }}
-            />
-          </Card>
-        </TabPane>
-
-        <TabPane tab="学习分析" key="analysis">
-           <Row gutter={16}>
-             <Col span={12}>
-               <Card title="学科错题分布" extra={<BarChartOutlined />}>
-                 <List
-                   dataSource={subjectChartData}
-                   renderItem={item => (
-                     <List.Item>
-                       <List.Item.Meta
-                         avatar={<Avatar style={{ backgroundColor: item.color }}>{item.count}</Avatar>}
-                         title={item.subject}
-                         description={`${item.count}题 (${item.percentage}%)`}
-                       />
-                       <Progress percent={item.percentage} size="small" strokeColor={item.color} />
-                     </List.Item>
-                   )}
-                 />
-               </Card>
-             </Col>
-             <Col span={12}>
-               <Card title="每周解决进度">
-                 <List
-                   dataSource={weeklyChartData}
-                   renderItem={item => (
-                     <List.Item>
-                       <List.Item.Meta
-                         title={new Date(item.date).toLocaleDateString()}
-                         description={`解决 ${item.resolved}题，新增 ${item.added}题`}
-                       />
-                       <div>
-                         <Text type="success">+{item.resolved}</Text>
-                         <Text type="secondary" style={{ marginLeft: 8 }}>-{item.added}</Text>
-                       </div>
-                     </List.Item>
-                   )}
-                 />
-               </Card>
-             </Col>
-           </Row>
-
-          <Row gutter={16} style={{ marginTop: 16 }}>
-            <Col span={24}>
-              <Card title="错题类型分析">
-                <List
-                  dataSource={[
-                    { type: '概念理解错误', count: 6, percentage: 40 },
-                    { type: '计算错误', count: 4, percentage: 27 },
-                    { type: '知识点混淆', count: 3, percentage: 20 },
-                    { type: '审题不仔细', count: 2, percentage: 13 }
-                  ]}
-                  renderItem={item => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<Avatar style={{ backgroundColor: '#1890ff' }}>{item.count}</Avatar>}
-                        title={item.type}
-                        description={`占比 ${item.percentage}%`}
+      <Tabs 
+        defaultActiveKey="mistakes"
+        items={[
+          {
+            key: 'mistakes',
+            label: '错题管理',
+            children: (
+              <div>
+                {/* 统计卡片 */}
+                <Row gutter={16} style={{ marginBottom: 24 }}>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="总错题数"
+                        value={analysisData.totalMistakes}
+                        prefix={<ExclamationCircleOutlined />}
+                        valueStyle={{ color: '#cf1322' }}
                       />
-                      <Progress percent={item.percentage} size="small" />
-                    </List.Item>
-                  )}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
-      </Tabs>
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="已解决"
+                        value={analysisData.resolvedMistakes}
+                        prefix={<CheckCircleOutlined />}
+                        valueStyle={{ color: '#3f8600' }}
+                      />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="平均复习次数"
+                        value={analysisData.averageReviewCount}
+                        precision={1}
+                        prefix={<ClockCircleOutlined />}
+                        valueStyle={{ color: '#1890ff' }}
+                      />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="掌握率"
+                        value={analysisData.masteryRate}
+                        precision={1}
+                        suffix="%"
+                        prefix={<TrophyOutlined />}
+                        valueStyle={{ color: '#722ed1' }}
+                      />
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* 筛选器 */}
+                <Card style={{ marginBottom: 24 }}>
+                  <Space wrap>
+                    <Select
+                      placeholder="选择学科"
+                      style={{ width: 120 }}
+                      allowClear
+                      onChange={setSelectedSubject}
+                    >
+                      {mockSubjects.map(subject => (
+                        <Option key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </Option>
+                      ))}
+                    </Select>
+                    <Select
+                      placeholder="错误类型"
+                      style={{ width: 120 }}
+                      allowClear
+                      onChange={setMistakeType}
+                    >
+                      <Option value="概念理解错误">概念理解错误</Option>
+                      <Option value="计算错误">计算错误</Option>
+                      <Option value="知识点混淆">知识点混淆</Option>
+                      <Option value="审题不仔细">审题不仔细</Option>
+                    </Select>
+                    <Select
+                      placeholder="解决状态"
+                      style={{ width: 120 }}
+                      allowClear
+                      onChange={setResolvedFilter}
+                    >
+                      <Option value={true}>已解决</Option>
+                      <Option value={false}>未解决</Option>
+                    </Select>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => setAddModalVisible(true)}
+                    >
+                      添加错题
+                    </Button>
+                  </Space>
+                </Card>
+
+                {/* 错题表格 */}
+                <Card>
+                  <Table
+                    columns={columns}
+                    dataSource={filteredRecords}
+                    rowKey="id"
+                    pagination={{
+                      pageSize: 10,
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      showTotal: (total) => `共 ${total} 条记录`
+                    }}
+                  />
+                </Card>
+              </div>
+            )
+          },
+          {
+             key: 'analysis',
+             label: '学习分析',
+             children: (
+               <div>
+                 <Row gutter={16}>
+                   <Col span={12}>
+                     <Card title="学科错题分布" extra={<BarChartOutlined />}>
+                       <List
+                         dataSource={subjectChartData}
+                         renderItem={item => (
+                           <List.Item>
+                             <List.Item.Meta
+                               avatar={<Avatar style={{ backgroundColor: item.color }}>{item.count}</Avatar>}
+                               title={item.subject}
+                               description={`${item.count}题 (${item.percentage}%)`}
+                             />
+                             <Progress percent={item.percentage} size="small" strokeColor={item.color} />
+                           </List.Item>
+                         )}
+                       />
+                     </Card>
+                   </Col>
+                   <Col span={12}>
+                     <Card title="每周解决进度">
+                       <List
+                         dataSource={weeklyChartData}
+                         renderItem={item => (
+                           <List.Item>
+                             <List.Item.Meta
+                               title={new Date(item.date).toLocaleDateString()}
+                               description={`解决 ${item.resolved}题，新增 ${item.added}题`}
+                             />
+                             <div>
+                               <Text type="success">+{item.resolved}</Text>
+                               <Text type="secondary" style={{ marginLeft: 8 }}>-{item.added}</Text>
+                             </div>
+                           </List.Item>
+                         )}
+                       />
+                     </Card>
+                   </Col>
+                 </Row>
+
+                 <Row gutter={16} style={{ marginTop: 16 }}>
+                   <Col span={24}>
+                     <Card title="错题类型分析">
+                       <List
+                         dataSource={[
+                           { type: '概念理解错误', count: 6, percentage: 40 },
+                           { type: '计算错误', count: 4, percentage: 27 },
+                           { type: '知识点混淆', count: 3, percentage: 20 },
+                           { type: '审题不仔细', count: 2, percentage: 13 }
+                         ]}
+                         renderItem={item => (
+                           <List.Item>
+                             <List.Item.Meta
+                               avatar={<Avatar style={{ backgroundColor: '#1890ff' }}>{item.count}</Avatar>}
+                               title={item.type}
+                               description={`占比 ${item.percentage}%`}
+                             />
+                             <Progress percent={item.percentage} size="small" />
+                           </List.Item>
+                         )}
+                       />
+                     </Card>
+                   </Col>
+                 </Row>
+               </div>
+             )
+           }
+         ]}
+       />
 
       {/* 错题详情模态框 */}
       <Modal
@@ -572,7 +586,7 @@ const MistakeBookPage: React.FC = () => {
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             关闭
           </Button>,
-          selectedRecord && !selectedRecord.is_mastered && (
+          ...(selectedRecord && !selectedRecord.is_mastered ? [
             <Button
               key="review"
               type="primary"
@@ -583,7 +597,7 @@ const MistakeBookPage: React.FC = () => {
             >
               开始复习
             </Button>
-          )
+          ] : [])
         ]}
         width={800}
       >

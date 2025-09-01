@@ -44,7 +44,7 @@ import {
 import type { LearningPath, StudyRecord } from '../types';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
+// const { TabPane } = Tabs; // 已弃用，改用items属性
 const { Option } = Select;
 const { Step } = Steps;
 const { TextArea } = Input;
@@ -497,14 +497,22 @@ const LearningPathPage: React.FC = () => {
         </Text>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="我的路径" key="paths">
-          {renderPathList()}
-        </TabPane>
-        <TabPane tab="智能推荐" key="recommendations">
-          {renderRecommendations()}
-        </TabPane>
-      </Tabs>
+      <Tabs 
+        activeKey={activeTab} 
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'paths',
+            label: '我的路径',
+            children: renderPathList()
+          },
+          {
+            key: 'recommendations',
+            label: '智能推荐',
+            children: renderRecommendations()
+          }
+        ]}
+      />
 
       {/* 创建路径模态框 */}
       <Modal

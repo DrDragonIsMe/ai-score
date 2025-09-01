@@ -28,7 +28,7 @@ from models import (
     DiagnosisReport, WeaknessPoint, LearningProfile, AIModelConfig,
     MistakeRecord, TutoringSession, ExamSession, TimeAllocation, ScoringStrategy,
     ExamAnalytics, LearningMetric, PerformanceSnapshot, LearningReport,
-    GoalTracking, FeedbackRecord
+    GoalTracking, FeedbackRecord, ExamKnowledgeMapping, ExamKnowledgeStatistics
 )
 
 # 创建扩展实例
@@ -81,7 +81,11 @@ def create_app(config_class=Config):
     
     # 注册蓝图
     from api import api_bp
+    from api.subject_initializer import subject_initializer_bp
+    from api.settings import settings_bp
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(subject_initializer_bp)
+    app.register_blueprint(settings_bp, url_prefix='/api')
     
     return app
 

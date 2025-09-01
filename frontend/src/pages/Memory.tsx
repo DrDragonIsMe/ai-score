@@ -39,7 +39,7 @@ import {
 import type { MemoryCard, ReviewReminder, MemoryStats } from '../types';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+// const { TabPane } = Tabs; // 已弃用，改用items属性
 const { Option } = Select;
 
 // 扩展的记忆卡片类型，包含计算属性
@@ -437,17 +437,27 @@ const Memory: React.FC = () => {
         </Text>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="记忆卡片" key="cards">
-          {renderMemoryCards()}
-        </TabPane>
-        <TabPane tab="复习提醒" key="reminders">
-          {renderReminders()}
-        </TabPane>
-        <TabPane tab="学习统计" key="stats">
-          {renderStats()}
-        </TabPane>
-      </Tabs>
+      <Tabs 
+        activeKey={activeTab} 
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'cards',
+            label: '记忆卡片',
+            children: renderMemoryCards()
+          },
+          {
+            key: 'reminders',
+            label: '复习提醒',
+            children: renderReminders()
+          },
+          {
+            key: 'stats',
+            label: '学习统计',
+            children: renderStats()
+          }
+        ]}
+      />
 
       {/* 复习模态框 */}
       <Modal

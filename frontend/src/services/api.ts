@@ -42,4 +42,63 @@ api.interceptors.response.use(
   }
 );
 
+// 试卷管理API
+export const examPaperApi = {
+  // 获取试卷列表
+  getExamPapers: (token: string, subjectId?: string) => {
+    const params = subjectId ? { subject_id: subjectId } : {};
+    return api.get('/exam-papers', {
+      headers: { Authorization: `Bearer ${token}` },
+      params
+    });
+  },
+
+  // 获取科目列表
+  getSubjects: (token: string) => {
+    return api.get('/subjects', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+
+  // 上传试卷
+  uploadExamPaper: (token: string, file: File, formData: any) => {
+    const data = new FormData();
+    data.append('file', file);
+    Object.keys(formData).forEach(key => {
+      data.append(key, formData[key]);
+    });
+    
+    return api.post('/exam-papers/upload', data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  // 下载科目试卷
+  downloadSubjectPapers: (token: string, subjectId: string, years: number) => {
+    return api.post(`/subjects/${subjectId}/download-papers`, 
+      { years },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+  },
+
+  // 删除试卷
+  deleteExamPaper: (token: string, paperId: string) => {
+    return api.delete(`/exam-papers/${paperId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+
+  // 获取试卷解析状态
+  getParseStatus: (token: string, paperId: string) => {
+    return api.get(`/exam-papers/${paperId}/parse-status`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+};
+
 export default api;

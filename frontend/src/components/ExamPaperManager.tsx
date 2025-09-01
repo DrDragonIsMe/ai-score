@@ -7,6 +7,7 @@ import {
     FileTextOutlined,
     PictureOutlined,
     PlusOutlined,
+    StarOutlined,
     SyncOutlined,
     UploadOutlined
 } from '@ant-design/icons';
@@ -36,7 +37,8 @@ import {
 } from 'antd';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api, { examPaperApi } from '../services/api';
+import ExamPaperStarMap from './ExamPaperStarMap';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -88,23 +90,77 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
     const [loading, setLoading] = useState(false);
     const [uploadModalVisible, setUploadModalVisible] = useState(false);
     const [paperDetailModalVisible, setPaperDetailModalVisible] = useState(false);
+    const [starMapModalVisible, setStarMapModalVisible] = useState(false);
     const [selectedPaper, setSelectedPaper] = useState<ExamPaper | null>(null);
+    const [starMapData, setStarMapData] = useState<any>(null);
+    const [starMapLoading, setStarMapLoading] = useState(false);
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [downloadModalVisible, setDownloadModalVisible] = useState(false);
     const [downloadLoading, setDownloadLoading] = useState(false);
     const [form] = Form.useForm();
     const [downloadForm] = Form.useForm();
+    
+    // 筛选相关状态
+    const [filters, setFilters] = useState<{
+        year?: number;
+        exam_type?: string;
+        difficulty?: number;
+        parse_status?: string;
+        source?: string;
+    }>({});
+    const [searchText, setSearchText] = useState('');
+    const [filteredPapers, setFilteredPapers] = useState<ExamPaper[]>([]);
 
     useEffect(() => {
         fetchPapers();
     }, [subjectId]);
 
+    // 筛选逻辑
+    useEffect(() => {
+        let filtered = papers;
+        
+        // 搜索文本筛选
+        if (searchText) {
+            filtered = filtered.filter(paper => 
+                paper.title.toLowerCase().includes(searchText.toLowerCase()) ||
+                paper.description.toLowerCase().includes(searchText.toLowerCase())
+            );
+        }
+        
+        if (filters.year) {
+            filtered = filtered.filter(paper => paper.year === filters.year);
+        }
+        
+        if (filters.exam_type) {
+            filtered = filtered.filter(paper => paper.exam_type === filters.exam_type);
+        }
+        
+        if (filters.difficulty) {
+            filtered = filtered.filter(paper => paper.difficulty === filters.difficulty);
+        }
+        
+        if (filters.parse_status) {
+            filtered = filtered.filter(paper => paper.parse_status === filters.parse_status);
+        }
+        
+        if (filters.source) {
+            filtered = filtered.filter(paper => paper.source && paper.source.includes(filters.source!));
+        }
+        
+        setFilteredPapers(filtered);
+    }, [papers, filters, searchText]);
+
     const fetchPapers = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/exam-papers?subject_id=${subjectId}`);
-            setPapers(response.data.data);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                message.error('请先登录');
+                return;
+            }
+            const response = await examPaperApi.getExamPapers(token, subjectId);
+            setPapers(response.data.papers || []);
         } catch (error) {
             message.error('获取试卷列表失败');
         } finally {
@@ -119,6 +175,24 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
         } catch (error) {
             message.error('获取题目列表失败');
         }
+    };
+
+    const fetchStarMapData = async (paperId: string) => {
+        setStarMapLoading(true);
+        try {
+            const response = await api.get(`/knowledge-graph/exam-papers/${paperId}/star-map`);
+            setStarMapData(response.data.data);
+        } catch (error) {
+            message.error('获取星图数据失败');
+        } finally {
+            setStarMapLoading(false);
+        }
+    };
+
+    const handleViewStarMap = async (paper: ExamPaper) => {
+        setSelectedPaper(paper);
+        setStarMapModalVisible(true);
+        await fetchStarMapData(paper.id);
     };
 
     const handleUpload = async (values: any) => {
@@ -209,7 +283,12 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
 
     const handleDelete = async (paperId: string) => {
         try {
-            await api.delete(`/exam-papers/${paperId}`);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                message.error('请先登录');
+                return;
+            }
+            await examPaperApi.deleteExamPaper(token, paperId);
             message.success('删除成功');
             fetchPapers();
         } catch (error) {
@@ -245,13 +324,16 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
     const handleDownloadPapers = async (values: any) => {
         setDownloadLoading(true);
         try {
-            const response = await api.post(`/exam-papers/subjects/${subjectId}/download-papers`, {
-                years: values.years
-            });
+            const token = localStorage.getItem('token');
+            if (!token) {
+                message.error('请先登录');
+                return;
+            }
+            const response = await examPaperApi.downloadSubjectPapers(token, subjectId, values.years);
 
-            if (response.data.success) {
+            if (response && response.data) {
                 message.success(
-                    `成功下载真题！找到 ${response.data.data.total_found} 份试卷，保存 ${response.data.data.saved_count} 份`
+                    `成功下载真题！找到 ${response.data.total_found || 0} 份试卷，保存 ${response.data.saved_count || 0} 份`
                 );
                 setDownloadModalVisible(false);
                 fetchPapers(); // 刷新试卷列表
@@ -398,6 +480,14 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
                             onClick={() => handleViewDetail(record)}
                         />
                     </Tooltip>
+                    <Tooltip title="知识点星图">
+                        <Button
+                            type="text"
+                            icon={<StarOutlined />}
+                            onClick={() => handleViewStarMap(record)}
+                            disabled={record.parse_status !== 'completed'}
+                        />
+                    </Tooltip>
                     <Tooltip title="下载文件">
                         <Button
                             type="text"
@@ -455,7 +545,7 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
                             description={
                                 <div>
                                     <Text>{question.content.substring(0, 200)}...</Text>
-                                    {question.knowledge_points.length > 0 && (
+                                    {question.knowledge_points && question.knowledge_points.length > 0 && (
                                         <div style={{ marginTop: 8 }}>
                                             <Text strong>关联知识点: </Text>
                                             {question.knowledge_points.map((kp, idx) => (
@@ -465,7 +555,7 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
                                             ))}
                                         </div>
                                     )}
-                                    {question.image_paths.length > 0 && (
+                                    {question.image_paths && question.image_paths.length > 0 && (
                                         <div style={{ marginTop: 8 }}>
                                             <Text strong>题目图片: </Text>
                                             <Image.PreviewGroup>
@@ -524,16 +614,110 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
                     </Space>
                 }
             >
+                {/* 搜索框 */}
+                <Row style={{ marginBottom: 16 }}>
+                    <Col span={8}>
+                        <Input.Search
+                            placeholder="搜索试卷标题或描述"
+                            allowClear
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            onSearch={(value) => setSearchText(value)}
+                            style={{ width: '100%' }}
+                        />
+                    </Col>
+                </Row>
+                
+                {/* 筛选控件 */}
+                <Row gutter={16} style={{ marginBottom: 16 }}>
+                    <Col span={4}>
+                        <Select
+                            placeholder="选择年份"
+                            allowClear
+                            style={{ width: '100%' }}
+                            value={filters.year}
+                            onChange={(value) => setFilters({ ...filters, year: value })}
+                        >
+                            {Array.from(new Set(papers.map(p => p.year))).sort((a, b) => b - a).map(year => (
+                                <Option key={year} value={year}>{year}年</Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={4}>
+                        <Select
+                            placeholder="考试类型"
+                            allowClear
+                            style={{ width: '100%' }}
+                            value={filters.exam_type}
+                            onChange={(value) => setFilters({ ...filters, exam_type: value })}
+                        >
+                            {Array.from(new Set(papers.map(p => p.exam_type))).map(type => (
+                                <Option key={type} value={type}>{type}</Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={4}>
+                        <Select
+                            placeholder="难度等级"
+                            allowClear
+                            style={{ width: '100%' }}
+                            value={filters.difficulty}
+                            onChange={(value) => setFilters({ ...filters, difficulty: value })}
+                        >
+                            <Option value={1}>简单</Option>
+                            <Option value={2}>中等</Option>
+                            <Option value={3}>困难</Option>
+                        </Select>
+                    </Col>
+                    <Col span={4}>
+                        <Select
+                            placeholder="解析状态"
+                            allowClear
+                            style={{ width: '100%' }}
+                            value={filters.parse_status}
+                            onChange={(value) => setFilters({ ...filters, parse_status: value })}
+                        >
+                            <Option value="pending">待解析</Option>
+                            <Option value="processing">解析中</Option>
+                            <Option value="completed">已完成</Option>
+                            <Option value="failed">解析失败</Option>
+                        </Select>
+                    </Col>
+                    <Col span={4}>
+                        <Select
+                            placeholder="试卷来源"
+                            allowClear
+                            style={{ width: '100%' }}
+                            value={filters.source}
+                            onChange={(value) => setFilters({ ...filters, source: value })}
+                        >
+                            {Array.from(new Set(papers.map(p => p.source).filter(Boolean))).map(source => (
+                                <Option key={source} value={source}>{source}</Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={4}>
+                        <Button
+                            onClick={() => {
+                                setFilters({});
+                                setSearchText('');
+                            }}
+                            style={{ width: '100%' }}
+                        >
+                            清除筛选
+                        </Button>
+                    </Col>
+                </Row>
                 <Table
                     columns={columns}
-                    dataSource={papers}
+                    dataSource={filteredPapers}
                     rowKey="id"
                     loading={loading}
                     pagination={{
                         pageSize: 10,
                         showSizeChanger: true,
                         showQuickJumper: true,
-                        showTotal: (total) => `共 ${total} 份试卷`
+                        showTotal: (total) => `共 ${total} 份试卷 (总计 ${papers.length} 份)`
                     }}
                 />
             </Card>
@@ -762,6 +946,25 @@ const ExamPaperManager: React.FC<ExamPaperManagerProps> = ({ subjectId }) => {
                         <p>• 重复的试卷将自动跳过</p>
                     </div>
                 </Form>
+            </Modal>
+
+            {/* 星图模态框 */}
+            <Modal
+                title={`知识点分布星图 - ${selectedPaper?.title || ''}`}
+                open={starMapModalVisible}
+                onCancel={() => {
+                    setStarMapModalVisible(false);
+                    setSelectedPaper(null);
+                    setStarMapData(null);
+                }}
+                footer={null}
+                width={1200}
+                style={{ top: 20 }}
+            >
+                <ExamPaperStarMap 
+                    data={starMapData} 
+                    loading={starMapLoading} 
+                />
             </Modal>
         </div>
     );

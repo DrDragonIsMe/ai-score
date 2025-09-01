@@ -64,6 +64,10 @@ def get_auth_headers():
 
 def test_create_exam_session():
     """测试创建考试会话"""
+    # 确保有认证token
+    if not auth_token:
+        get_auth_token()
+    
     url = f'{BASE_URL}/api/exam/sessions'
     data = {
         'exam_name': '数学练习测试',
@@ -89,8 +93,14 @@ def test_create_exam_session():
         print(f"请求失败: {str(e)}")
         return None
 
-def test_start_exam(session_id):
+def test_start_exam():
     """测试开始考试"""
+    # 确保有认证token
+    if not auth_token:
+        get_auth_token()
+    
+    # 首先创建一个考试会话
+    session_id = test_create_exam_session()
     if not session_id:
         print("没有有效的会话ID，跳过开始考试测试")
         return
@@ -111,6 +121,10 @@ def test_start_exam(session_id):
 
 def test_api_validation():
     """测试API参数验证"""
+    # 确保有认证token
+    if not auth_token:
+        get_auth_token()
+    
     print("=== 测试API参数验证 ===")
     
     # 测试缺少必填参数
@@ -150,7 +164,7 @@ def main():
     session_id = test_create_exam_session()
     
     # 测试开始考试
-    test_start_exam(session_id)
+    test_start_exam()
     
     print("\n=== 测试完成 ===")
 

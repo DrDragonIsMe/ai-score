@@ -39,6 +39,7 @@ def chat_with_assistant():
     请求参数:
     - message: 用户消息
     - context: 对话上下文（可选）
+    - model_id: 指定使用的AI模型ID（可选）
     """
     data = request.get_json()
     
@@ -47,6 +48,7 @@ def chat_with_assistant():
     
     message = data['message']
     context = data.get('context')
+    model_id = data.get('model_id')
     
     if not message.strip():
         return error_response("消息内容不能为空", 400)
@@ -55,7 +57,8 @@ def chat_with_assistant():
     result = ai_assistant_service.chat_with_user(
         user_id="1",
         message=message,
-        context=context
+        context=context,
+        model_id=model_id
     )
     
     if result['success']:

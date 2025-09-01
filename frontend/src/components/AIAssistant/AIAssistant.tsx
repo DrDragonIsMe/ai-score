@@ -32,7 +32,6 @@ import './AIAssistant.css';
 
 const { TextArea } = Input;
 const { Text, Title } = Typography;
-const { TabPane } = Tabs;
 
 interface Message {
   id: string;
@@ -173,18 +172,42 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
       const result = await response.json();
 
       if (result.success) {
-        const analysisMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: `我识别到了以下题目：\n\n${result.data.question_text}\n\n让我为你分析这道题...`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, analysisMessage]);
+        console.log('图片识别结果:', result);
+        
+        // 检查是否为题目
+        if (result.is_question && result.question_analysis) {
+          // 这是一道题目，进行解题
+          const questionAnalysis = result.question_analysis;
+          const questionText = questionAnalysis.cleaned_question || result.extracted_text;
+          
+          console.log('识别到题目:', questionText);
+          
+          const analysisMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'assistant',
+            content: `我识别到了以下题目：\n\n${questionText}\n\n让我为你分析这道题...`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, analysisMessage]);
 
-        // 自动分析题目
-        setTimeout(() => {
-          analyzeQuestion(result.data.question_text);
-        }, 1000);
+          // 自动分析题目
+          setTimeout(() => {
+            analyzeQuestion(questionText);
+          }, 1000);
+        } else {
+          // 不是题目，显示图片内容描述
+          const description = result.description || '这张图片不包含题目内容。';
+          
+          console.log('图片内容描述:', description);
+          
+          const descriptionMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'assistant',
+            content: description,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, descriptionMessage]);
+        }
       } else {
         throw new Error(result.message || '图片识别失败');
       }
@@ -199,6 +222,16 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
   // 分析题目
   const analyzeQuestion = async (questionText: string, userAnswer?: string) => {
     setLoading(true);
+
+    // 参数验证
+    if (!questionText || !questionText.trim()) {
+      console.error('题目文本为空:', questionText);
+      message.error('题目文本不能为空');
+      setLoading(false);
+      return;
+    }
+
+    console.log('开始分析题目:', questionText);
 
     try {
       const response = await fetch('/api/ai-assistant/analyze-question', {
@@ -259,6 +292,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
+      console.log('发送快速帮助请求:', helpType);
       const response = await fetch('/api/ai-assistant/quick-help', {
         method: 'POST',
         headers: {
@@ -269,13 +303,43 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
         })
       });
 
-      const result = await response.json();
+      console.log('响应状态:', response.status, response.statusText);
+      console.log('响应头:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        console.error('响应不正常:', response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Response text:', text);
+        throw new Error('Invalid JSON response from server');
+      }
 
       if (result.success) {
+        let helpContent = result.data.help_content;
+        
+        // 如果返回的是对象，格式化为字符串
+        if (typeof helpContent === 'object' && helpContent !== null) {
+          if (result.data.type === 'study_plan') {
+            helpContent = `📚 个性化学习计划\n\n🌅 上午：${helpContent.morning}\n\n🌞 下午：${helpContent.afternoon}\n\n🌙 晚上：${helpContent.evening}\n\n⏰ 建议时长：${helpContent.duration}`;
+          } else {
+            helpContent = JSON.stringify(helpContent, null, 2);
+          }
+        }
+        
         const helpMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'assistant',
-          content: result.data.help_content,
+          content: helpContent,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, helpMessage]);
@@ -368,120 +432,131 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
       closeIcon={<CloseOutlined />}
     >
       <div className="ai-assistant-container">
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="智能对话" key="chat">
-            <div className="chat-container">
-              <div className="messages-container">
-                {messages.map(renderMessage)}
-                {loading && (
-                  <div className="loading-message">
-                    <Avatar icon={<RobotOutlined />} style={{ backgroundColor: '#52c41a' }} />
-                    <div className="loading-content">
-                      <Spin size="small" />
-                      <Text style={{ marginLeft: '8px' }}>高小分正在思考...</Text>
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'chat',
+              label: '智能对话',
+              children: (
+                <div className="chat-container">
+                  <div className="messages-container">
+                    {messages.map(renderMessage)}
+                    {loading && (
+                      <div className="loading-message">
+                        <Avatar icon={<RobotOutlined />} style={{ backgroundColor: '#52c41a' }} />
+                        <div className="loading-content">
+                          <Spin size="small" />
+                          <Text style={{ marginLeft: '8px' }}>高小分正在思考...</Text>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                  
+                  <div className="input-container">
+                    <div className="quick-actions">
+                      <Space>
+                        <Tooltip title="制定学习计划">
+                          <Button 
+                            size="small" 
+                            icon={<BookOutlined />}
+                            onClick={() => handleQuickHelp('study_plan')}
+                          >
+                            学习计划
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="分析薄弱点">
+                          <Button 
+                            size="small" 
+                            icon={<BulbOutlined />}
+                            onClick={() => handleQuickHelp('weak_points')}
+                          >
+                            薄弱分析
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="学习鼓励">
+                          <Button 
+                            size="small" 
+                            icon={<HeartOutlined />}
+                            onClick={() => handleQuickHelp('motivation')}
+                          >
+                            加油鼓励
+                          </Button>
+                        </Tooltip>
+                      </Space>
+                    </div>
+                    
+                    <div className="message-input">
+                      <TextArea
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder="输入你的问题，或点击相机图标拍照识别题目..."
+                        autoSize={{ minRows: 1, maxRows: 4 }}
+                        onPressEnter={(e) => {
+                          if (!e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                      />
+                      <div className="input-actions">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleImageUpload(file);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="text"
+                          icon={<CameraOutlined />}
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={loading}
+                        />
+                        <Button
+                          type="primary"
+                          icon={<SendOutlined />}
+                          onClick={handleSendMessage}
+                          disabled={loading || !inputValue.trim()}
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-              
-              <div className="input-container">
-                <div className="quick-actions">
-                  <Space>
-                    <Tooltip title="制定学习计划">
-                      <Button 
-                        size="small" 
-                        icon={<BookOutlined />}
-                        onClick={() => handleQuickHelp('study_plan')}
-                      >
-                        学习计划
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="分析薄弱点">
-                      <Button 
-                        size="small" 
-                        icon={<BulbOutlined />}
-                        onClick={() => handleQuickHelp('weak_points')}
-                      >
-                        薄弱分析
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="学习鼓励">
-                      <Button 
-                        size="small" 
-                        icon={<HeartOutlined />}
-                        onClick={() => handleQuickHelp('motivation')}
-                      >
-                        加油鼓励
-                      </Button>
-                    </Tooltip>
-                  </Space>
                 </div>
-                
-                <div className="message-input">
-                  <TextArea
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="输入你的问题，或点击相机图标拍照识别题目..."
-                    autoSize={{ minRows: 1, maxRows: 4 }}
-                    onPressEnter={(e) => {
-                      if (!e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                  <div className="input-actions">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleImageUpload(file);
-                        }
-                      }}
-                    />
-                    <Button
-                      type="text"
-                      icon={<CameraOutlined />}
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={loading}
-                    />
-                    <Button
-                      type="primary"
-                      icon={<SendOutlined />}
-                      onClick={handleSendMessage}
-                      disabled={loading || !inputValue.trim()}
-                    />
-                  </div>
+              )
+            },
+            {
+              key: 'recommendations',
+              label: '学习建议',
+              children: (
+                <div className="recommendations-container">
+                  <Card>
+                    <Title level={4}>个性化学习建议</Title>
+                    <Text type="secondary">
+                      基于你的学习情况，高小分为你准备了专属的学习建议。
+                    </Text>
+                    <Divider />
+                    <Button 
+                      type="primary" 
+                      block 
+                      onClick={() => handleQuickHelp('study_plan')}
+                      loading={loading}
+                    >
+                      获取学习建议
+                    </Button>
+                  </Card>
                 </div>
-              </div>
-            </div>
-          </TabPane>
-          
-          <TabPane tab="学习建议" key="recommendations">
-            <div className="recommendations-container">
-              <Card>
-                <Title level={4}>个性化学习建议</Title>
-                <Text type="secondary">
-                  基于你的学习情况，高小分为你准备了专属的学习建议。
-                </Text>
-                <Divider />
-                <Button 
-                  type="primary" 
-                  block 
-                  onClick={() => handleQuickHelp('study_plan')}
-                  loading={loading}
-                >
-                  获取学习建议
-                </Button>
-              </Card>
-            </div>
-          </TabPane>
-        </Tabs>
+              )
+            }
+          ]}
+        />
       </div>
     </Modal>
   );

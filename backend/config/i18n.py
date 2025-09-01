@@ -369,6 +369,11 @@ class I18nConfig:
         if not language_info:
             language_info = I18nConfig.get_language_info(I18nConfig.get_default_language())
         
+        # 确保language_info不为None
+        if not language_info:
+            # 如果仍然为None，使用默认的中文配置
+            language_info = I18nConfig.LANGUAGE_INFO['zh']
+        
         return {
             'language': language_code,
             'locale': language_info['locale'],

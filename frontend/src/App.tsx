@@ -8,11 +8,13 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Diagnosis from './pages/Diagnosis';
 import Exam from './pages/Exam';
+import ExamPaperManagement from './pages/ExamPaperManagement';
 import LearningPath from './pages/LearningPath';
 import Login from './pages/Login';
 import Memory from './pages/Memory';
 import MistakeBook from './pages/MistakeBook';
 import Register from './pages/Register';
+import Settings from './pages/Settings';
 import SubjectManagement from './pages/SubjectManagement';
 import StatisticsAnalysis from './components/StatisticsAnalysis';
 import { useAuthStore } from './stores/authStore';
@@ -62,13 +64,14 @@ const App: React.FC = () => {
                                         <Route path="/dashboard" element={<Dashboard />} />
                                         <Route path="/diagnosis" element={<Diagnosis />} />
                                         <Route path="/subjects" element={<SubjectManagement />} />
+                                        <Route path="/exam-papers" element={<ExamPaperManagement />} />
                                         <Route path="/learning-path" element={<LearningPath />} />
                                         <Route path="/memory-cards" element={<Memory />} />
                                         <Route path="/mistake-book" element={<MistakeBook />} />
                                         <Route path="/exam" element={<Exam />} />
                                         <Route path="/analytics" element={<StatisticsAnalysis />} />
                                         <Route path="/profile" element={<div>个人资料页面开发中...</div>} />
-                                        <Route path="/settings" element={<div>设置页面开发中...</div>} />
+                                        <Route path="/settings" element={<Settings />} />
                                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                     </Routes>

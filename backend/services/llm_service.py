@@ -51,15 +51,43 @@ class LLMService:
                 ).first()
                 
                 if not self.default_model:
-                    # 如果没有默认模型，使用第一个可用模型
-                    self.default_model = AIModelConfig.query.filter_by(
-                        is_active=True
-                    ).first()
+                    logger.warning("未找到默认AI模型，创建备用模型")
+                    self.default_model = self._create_fallback_model()
                     
         except Exception as e:
-            logger.error(f"加载默认模型失败: {str(e)}")            
-            # 如果数据库查询失败，创建一个默认配置
+            logger.error(f"加载默认模型失败: {str(e)}")
             self.default_model = self._create_fallback_model()
+    
+    def get_available_models(self) -> List[AIModelConfig]:
+        """
+        获取所有可用的AI模型
+        """
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                return AIModelConfig.query.filter_by(is_active=True).all()
+        except Exception as e:
+            logger.error(f"获取可用模型失败: {str(e)}")
+            return []
+    
+    def get_model_by_id(self, model_id: str) -> Optional[AIModelConfig]:
+        """
+        根据ID获取AI模型配置
+        """
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                return AIModelConfig.query.filter_by(id=model_id, is_active=True).first()
+        except Exception as e:
+            logger.error(f"获取模型配置失败: {str(e)}")
+            return None
+    
+    def refresh_default_model(self):
+        """
+        刷新默认模型配置
+        """
+        self._initialized = False
+        self._ensure_initialized()
     
     def _create_fallback_model(self):
         """
@@ -325,8 +353,21 @@ class LLMService:
                 "Authorization": f"Bearer {getattr(model, 'api_key', '')}"
             }
             
+            # 构建完整的API URL
+            base_url = getattr(model, 'api_base_url', '')
+            if not base_url:
+                base_url = getattr(model, 'api_url', getattr(model, 'api_endpoint', ''))
+            
+            # 对于Azure OpenAI，需要添加特定的路径和参数
+            if 'azure.com' in base_url:
+                api_url = f"{base_url}/openai/deployments/{model.model_id}/chat/completions?api-version=2024-02-15-preview"
+                headers["api-key"] = model.api_key
+                del headers["Authorization"]  # Azure使用api-key而不是Authorization
+            else:
+                api_url = base_url if base_url.endswith('/chat/completions') else f"{base_url}/chat/completions"
+            
             response = requests.post(
-                getattr(model, 'api_url', getattr(model, 'api_endpoint', '')),
+                api_url,
                 headers=headers,
                 json=data,
                 timeout=30

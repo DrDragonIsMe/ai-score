@@ -100,32 +100,19 @@ const StarMapViewer: React.FC<StarMapViewerProps> = ({ subjectId }) => {
     const fetchStarMapData = async () => {
         setLoading(true);
         try {
-            // 获取知识图谱数据
-            const graphResponse = await api.get(`/knowledge-graph/${subjectId}?type=exam_scope`);
-            const graphData = graphResponse.data.data;
-            
-            // 获取考试频率数据
-            const examResponse = await api.get(`/subjects/${subjectId}/exam-frequency`);
-            const examData = examResponse.data.data;
-            
-            // 合并数据，添加考试频率信息
-            const enhancedNodes = graphData.nodes.map((node: any) => {
-                const examInfo = examData.find((item: any) => item.knowledge_point_id === node.id);
-                return {
-                    ...node,
-                    examFrequency: examInfo ? examInfo.frequency : 0,
-                    examYears: examInfo ? examInfo.years : []
-                };
-            });
+            // 使用新的试卷知识点映射API获取星图数据
+            const response = await api.get(`/exam-knowledge/star-map/${subjectId}`);
+            const starMapData = response.data.data;
             
             setStarMapData({
-                id: graphData.id,
-                subject_id: graphData.subject_id,
-                nodes: enhancedNodes,
-                edges: graphData.edges
+                id: starMapData.metadata.subject_id,
+                subject_id: starMapData.metadata.subject_id,
+                nodes: starMapData.nodes,
+                edges: starMapData.edges
             });
         } catch (error) {
-            message.error('获取星图数据失败');
+            console.error('获取星图数据失败:', error);
+            message.error('获取星图数据失败，使用模拟数据');
             // 使用模拟数据作为后备
             setStarMapData(generateMockStarMapData());
         } finally {
@@ -169,10 +156,12 @@ const StarMapViewer: React.FC<StarMapViewerProps> = ({ subjectId }) => {
 
     const fetchRelatedQuestions = async (knowledgePointId: string) => {
         try {
-            const response = await api.get(`/knowledge-graph/knowledge-points/${knowledgePointId}/questions`);
+            // 使用新的试卷知识点映射API获取相关题目
+            const response = await api.get(`/exam-knowledge/knowledge-points/${knowledgePointId}/questions`);
             setRelatedQuestions(response.data.data);
             setQuestionsModalVisible(true);
         } catch (error) {
+            console.error('获取相关题目失败:', error);
             message.error('获取相关题目失败');
         }
     };

@@ -50,7 +50,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+// const { TabPane } = Tabs; // 已弃用，改用items属性
 const { Step } = Steps;
 
 // 扩展考试会话类型
@@ -403,120 +403,132 @@ const ExamPage: React.FC = () => {
         <Text type="secondary">在线考试系统，支持练习和正式考试</Text>
       </div>
 
-      <Tabs defaultActiveKey="exams">
-        <TabPane tab="考试记录" key="exams">
-          <Card>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Space>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={handleCreateExam}
-                >
-                  开始新考试
-                </Button>
-              </Space>
-            </div>
-            
-            <Table
-              columns={examColumns}
-              dataSource={examSessions}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total) => `共 ${total} 条记录`
-              }}
-            />
-          </Card>
-        </TabPane>
-
-        <TabPane tab="成绩分析" key="analysis">
-          <Row gutter={16}>
-            <Col span={6}>
+      <Tabs 
+        defaultActiveKey="exams"
+        items={[
+          {
+            key: 'exams',
+            label: '考试记录',
+            children: (
               <Card>
-                <Statistic
-                  title="总考试次数"
-                  value={examStats.totalExams}
-                  prefix={<BookOutlined />}
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={handleCreateExam}
+                    >
+                      开始新考试
+                    </Button>
+                  </Space>
+                </div>
+                
+                <Table
+                  columns={examColumns}
+                  dataSource={examSessions}
+                  rowKey="id"
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total) => `共 ${total} 条记录`
+                  }}
                 />
               </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="完成考试"
-                  value={examStats.completedExams}
-                  prefix={<CheckCircleOutlined />}
-                  suffix={`/ ${examStats.totalExams}`}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="平均分数"
-                  value={examStats.averageScore}
-                  precision={1}
-                  prefix={<StarOutlined />}
-                  suffix="分"
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="通过率"
-                  value={examStats.passRate}
-                  prefix={<TrophyOutlined />}
-                  suffix="%"
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          <Row gutter={16} style={{ marginTop: 16 }}>
-            <Col span={12}>
-              <Card title="学科表现" extra={<BarChartOutlined />}>
-                <List
-                  dataSource={examStats.subjectPerformance}
-                  renderItem={item => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<Avatar style={{ backgroundColor: '#1890ff' }}>{item.count}</Avatar>}
-                        title={item.subject}
-                        description={`平均分：${item.score}分，考试${item.count}次`}
+            )
+          },
+          {
+            key: 'analysis',
+            label: '成绩分析',
+            children: (
+              <>
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="总考试次数"
+                        value={examStats.totalExams}
+                        prefix={<BookOutlined />}
                       />
-                      <Progress percent={item.score} size="small" />
-                    </List.Item>
-                  )}
-                />
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card title="最近考试">
-                <List
-                  dataSource={examStats.recentExams}
-                  renderItem={item => (
-                    <List.Item>
-                      <List.Item.Meta
-                        title={new Date(item.date).toLocaleDateString()}
-                        description={item.subject}
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="完成考试"
+                        value={examStats.completedExams}
+                        prefix={<CheckCircleOutlined />}
+                        suffix={`/ ${examStats.totalExams}`}
                       />
-                      <div>
-                        <Text strong style={{ color: item.score >= 60 ? '#52c41a' : '#ff4d4f' }}>
-                          {item.score}分
-                        </Text>
-                      </div>
-                    </List.Item>
-                  )}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
-      </Tabs>
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="平均分数"
+                        value={examStats.averageScore}
+                        precision={1}
+                        prefix={<StarOutlined />}
+                        suffix="分"
+                      />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic
+                        title="通过率"
+                        value={examStats.passRate}
+                        prefix={<TrophyOutlined />}
+                        suffix="%"
+                      />
+                    </Card>
+                  </Col>
+                </Row>
+
+                <Row gutter={16} style={{ marginTop: 16 }}>
+                  <Col span={12}>
+                    <Card title="学科表现" extra={<BarChartOutlined />}>
+                      <List
+                        dataSource={examStats.subjectPerformance}
+                        renderItem={item => (
+                          <List.Item>
+                            <List.Item.Meta
+                              avatar={<Avatar style={{ backgroundColor: '#1890ff' }}>{item.count}</Avatar>}
+                              title={item.subject}
+                              description={`平均分：${item.score}分，考试${item.count}次`}
+                            />
+                            <Progress percent={item.score} size="small" />
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card title="最近考试">
+                      <List
+                        dataSource={examStats.recentExams}
+                        renderItem={item => (
+                          <List.Item>
+                            <List.Item.Meta
+                              title={new Date(item.date).toLocaleDateString()}
+                              description={item.subject}
+                            />
+                            <div>
+                              <Text strong style={{ color: item.score >= 60 ? '#52c41a' : '#ff4d4f' }}>
+                                {item.score}分
+                              </Text>
+                            </div>
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Col>
+                </Row>
+              </>
+            )
+          }
+        ]}
+      />
 
       {/* 创建考试模态框 */}
       <Modal

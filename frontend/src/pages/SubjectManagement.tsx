@@ -37,7 +37,7 @@ import ExamPaperManager from '../components/ExamPaperManager.tsx';
 import StarMapViewer from '../components/StarMapViewer.tsx';
 import { useAuthStore } from '../stores/authStore';
 
-const { TabPane } = Tabs;
+// const { TabPane } = Tabs; // 已弃用，改用items属性
 const { Option } = Select;
 
 interface Subject {
@@ -79,6 +79,10 @@ const SubjectManagement: React.FC = () => {
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
+  const [initializationProgress, setInitializationProgress] = useState<any>(null);
+  const [initializationTaskId, setInitializationTaskId] = useState<string | null>(null);
+  const [conflictModalVisible, setConflictModalVisible] = useState(false);
+  const [conflicts, setConflicts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('list');
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -113,15 +117,99 @@ const SubjectManagement: React.FC = () => {
   };
 
   const initializeDefaultSubjects = async () => {
-    setLoading(true);
+    Modal.confirm({
+      title: '初始化九大学科',
+      content: '此操作将从互联网抓取真题、知识点和考试范围数据，可能需要较长时间。确定要继续吗？',
+      onOk: async () => {
+        try {
+          const response = await api.post('/subjects/initialize-with-crawling', {
+            subject_codes: [],
+            overwrite_conflicts: false
+          });
+          const taskId = response.data.task_id;
+          setInitializationTaskId(taskId);
+          message.success('初始化任务已启动，正在抓取数据...');
+          
+          // 开始轮询进度
+          pollInitializationProgress(taskId);
+        } catch (error) {
+          console.error('初始化失败:', error);
+          message.error('启动初始化失败');
+        }
+      }
+    });
+  };
+
+  const pollInitializationProgress = async (taskId: string) => {
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const poll = async () => {
+      try {
+        const response = await api.get(`/subjects/initialization-progress/${taskId}`);
+        const progress = response.data;
+        setInitializationProgress(progress);
+        retryCount = 0; // 重置重试计数
+        
+        if (progress.status === 'completed') {
+          message.success('学科初始化完成！');
+          fetchSubjects();
+          // 保持进度显示3秒后清除
+          setTimeout(() => {
+            setInitializationProgress(null);
+            setInitializationTaskId(null);
+          }, 3000);
+        } else if (progress.status === 'conflicts_pending') {
+          setConflicts(progress.conflicts);
+          setConflictModalVisible(true);
+        } else if (progress.status === 'failed') {
+          message.error(`初始化失败: ${progress.message}`);
+          // 保持错误状态显示，不自动清除
+        } else if (progress.status === 'running') {
+          // 继续轮询
+          setTimeout(poll, 2000);
+        }
+      } catch (error) {
+        console.error('获取进度失败:', error);
+        retryCount++;
+        
+        if (retryCount <= maxRetries) {
+          // 重试，延长轮询间隔
+          setTimeout(poll, 5000);
+        } else {
+          // 超过最大重试次数，显示错误并停止轮询
+          message.error('获取初始化进度失败，请刷新页面重试');
+          setInitializationProgress({
+            status: 'failed',
+            message: '网络连接超时，无法获取进度信息'
+          });
+        }
+      }
+    };
+    
+    poll();
+  };
+
+  const clearInitializationProgress = () => {
+    setInitializationProgress(null);
+    setInitializationTaskId(null);
+  };
+
+  const handleSubmit = async (values: any) => {
     try {
-      const response = await api.post('/subjects/initialize-default');
-      message.success(response.data?.message || '初始化成功');
+      if (editingSubject) {
+        await api.put(`/subjects/${editingSubject.id}`, values);
+        message.success('更新成功');
+      } else {
+        await api.post('/subjects', values);
+        message.success('创建成功');
+      }
+      setModalVisible(false);
+      setEditingSubject(null);
+      form.resetFields();
       fetchSubjects();
     } catch (error) {
-      message.error('初始化学科失败');
-    } finally {
-      setLoading(false);
+      message.error(editingSubject ? '更新失败' : '创建失败');
     }
   };
 
@@ -145,24 +233,6 @@ const SubjectManagement: React.FC = () => {
         }
       }
     });
-  };
-
-  const handleSubmit = async (values: any) => {
-    try {
-      if (editingSubject) {
-        await api.put(`/subjects/${editingSubject.id}`, values);
-        message.success('更新成功');
-      } else {
-        await api.post('/subjects', values);
-        message.success('创建成功');
-      }
-      setModalVisible(false);
-      setEditingSubject(null);
-      form.resetFields();
-      fetchSubjects();
-    } catch (error) {
-      message.error(editingSubject ? '更新失败' : '创建失败');
-    }
   };
 
   const handleViewKnowledgeGraph = (subject: Subject) => {
@@ -195,64 +265,68 @@ const SubjectManagement: React.FC = () => {
     return colors[category as keyof typeof colors] || 'default';
   };
 
-  const getCategoryName = (category: string) => {
-    const names = {
-      science: '理科',
-      liberal_arts: '文科',
-      language: '语言'
-    };
-    return names[category as keyof typeof names] || category;
-  };
-
   const columns = [
     {
       title: '学科名称',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Subject) => (
-        <Space>
-          <strong>{text}</strong>
-          <Tag color={getCategoryColor(record.category)}>
-            {getCategoryName(record.category)}
-          </Tag>
-        </Space>
+        <div>
+          <div style={{ fontWeight: 500 }}>{text}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>{record.name_en}</div>
+        </div>
       )
     },
     {
-      title: '英文名称',
-      dataIndex: 'name_en',
-      key: 'name_en'
+      title: '学科代码',
+      dataIndex: 'code',
+      key: 'code',
+      render: (text: string) => <Tag color="blue">{text}</Tag>
+    },
+    {
+      title: '类别',
+      dataIndex: 'category',
+      key: 'category',
+      render: (category: string) => {
+        const categoryNames = {
+          science: '理科',
+          liberal_arts: '文科',
+          language: '语言'
+        };
+        return (
+          <Tag color={getCategoryColor(category)}>
+            {categoryNames[category as keyof typeof categoryNames] || category}
+          </Tag>
+        );
+      }
     },
     {
       title: '总分',
       dataIndex: 'total_score',
-      key: 'total_score',
-      render: (score: number) => `${score}分`
+      key: 'total_score'
     },
     {
       title: '章节数',
       dataIndex: 'chapter_count',
-      key: 'chapter_count'
-    },
-    {
-      title: '知识点数',
-      key: 'knowledge_point_count',
-      render: (record: Subject) => record.stats?.knowledge_point_count || 0
+      key: 'chapter_count',
+      render: (count: number) => count || 0
     },
     {
       title: '试卷数',
+      dataIndex: 'paper_count',
       key: 'paper_count',
-      render: (record: Subject) => (
-        <Badge count={record.stats?.exam_paper_count || 0} showZero>
-          <FileTextOutlined />
-        </Badge>
-      )
+      render: (count: number) => count || 0
     },
     {
-      title: '最新真题年份',
-      dataIndex: 'last_paper_year',
-      key: 'last_paper_year',
-      render: (year: number) => year || '-'
+      title: '状态',
+      dataIndex: 'is_active',
+      key: 'is_active',
+      render: (isActive: boolean) => (
+        <Badge
+          status={isActive ? 'success' : 'default'}
+          text={isActive ? '启用' : '禁用'}
+        />
+      )
     },
     {
       title: '操作',
@@ -266,14 +340,14 @@ const SubjectManagement: React.FC = () => {
               onClick={() => handleViewKnowledgeGraph(record)}
             />
           </Tooltip>
-          <Tooltip title="管理试卷">
+          <Tooltip title="查看试卷">
             <Button
               type="text"
               icon={<FileTextOutlined />}
               onClick={() => handleViewExamPapers(record)}
             />
           </Tooltip>
-          <Tooltip title="查看统计">
+          <Tooltip title="统计分析">
             <Button
               type="text"
               icon={<BarChartOutlined />}
@@ -287,17 +361,21 @@ const SubjectManagement: React.FC = () => {
               onClick={() => handleViewStarMap(record)}
             />
           </Tooltip>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          />
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-          />
+          {isAdmin && (
+            <>
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+              />
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record.id)}
+              />
+            </>
+          )}
         </Space>
       )
     }
@@ -348,7 +426,7 @@ const SubjectManagement: React.FC = () => {
               {statistics.knowledge_point_by_difficulty.map(item => (
                 <div key={item.difficulty} style={{ marginBottom: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>难度{item.difficulty}</span>
+                    <span>难度 {item.difficulty}</span>
                     <span>{item.count}个</span>
                   </div>
                   <Progress
@@ -368,68 +446,175 @@ const SubjectManagement: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="学科管理" key="list">
-            {isAdmin && (
-              <div style={{ marginBottom: 16 }}>
-                <Space>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                      setEditingSubject(null);
-                      form.resetFields();
-                      setModalVisible(true);
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'list',
+              label: '学科管理',
+              children: (
+                <>
+                  {isAdmin && (
+                    <div style={{ marginBottom: 16 }}>
+                      <Space>
+                        <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
+                          onClick={() => {
+                            setEditingSubject(null);
+                            form.resetFields();
+                            setModalVisible(true);
+                          }}
+                        >
+                          添加学科
+                        </Button>
+                        <Button
+                          icon={<StarOutlined />}
+                          onClick={initializeDefaultSubjects}
+                          loading={!!initializationProgress && initializationProgress.status === 'running'}
+                          disabled={!!initializationProgress && initializationProgress.status === 'running'}
+                          type={initializationProgress ? 'default' : 'primary'}
+                        >
+                          {initializationProgress 
+                            ? (initializationProgress.status === 'running' ? '正在初始化...' : '初始化完成') 
+                            : '初始化九大学科'
+                          }
+                        </Button>
+                        {initializationProgress && (
+                          <div style={{ marginTop: 16, minWidth: 400 }}>
+                            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 500 }}>初始化进度</span>
+                              <span style={{ fontSize: 14, color: '#666' }}>
+                                {initializationProgress.progress_percent}%
+                              </span>
+                            </div>
+                            <Progress 
+                              percent={initializationProgress.progress_percent} 
+                              status={
+                                initializationProgress.status === 'failed' ? 'exception' : 
+                                initializationProgress.status === 'completed' ? 'success' : 'active'
+                              }
+                              strokeColor={
+                                initializationProgress.status === 'completed' ? '#52c41a' : 
+                                initializationProgress.status === 'failed' ? '#ff4d4f' : '#1890ff'
+                              }
+                              showInfo={false}
+                            />
+                            <div style={{ 
+                              fontSize: 13, 
+                              color: initializationProgress.status === 'failed' ? '#ff4d4f' : '#666', 
+                              marginTop: 8,
+                              minHeight: 20
+                            }}>
+                              {initializationProgress.message}
+                              {initializationProgress.current_subject && (
+                                <span style={{ fontWeight: 500, marginLeft: 8 }}>
+                                  当前学科: {initializationProgress.current_subject}
+                                </span>
+                              )}
+                            </div>
+                            {initializationProgress.status === 'completed' && (
+                               <div style={{ 
+                                 marginTop: 12, 
+                                 padding: 8, 
+                                 backgroundColor: '#f6ffed', 
+                                 border: '1px solid #b7eb8f',
+                                 borderRadius: 4,
+                                 fontSize: 13,
+                                 color: '#389e0d',
+                                 display: 'flex',
+                                 justifyContent: 'space-between',
+                                 alignItems: 'center'
+                               }}>
+                                 <span>✅ 九大学科初始化完成！数据已成功导入系统。</span>
+                                 <Button 
+                                   size="small" 
+                                   type="text" 
+                                   onClick={clearInitializationProgress}
+                                   style={{ color: '#389e0d' }}
+                                 >
+                                   清除
+                                 </Button>
+                               </div>
+                             )}
+                             {initializationProgress.status === 'failed' && (
+                               <div style={{ 
+                                 marginTop: 12, 
+                                 padding: 8, 
+                                 backgroundColor: '#fff2f0', 
+                                 border: '1px solid #ffccc7',
+                                 borderRadius: 4,
+                                 fontSize: 13,
+                                 color: '#cf1322',
+                                 display: 'flex',
+                                 justifyContent: 'space-between',
+                                 alignItems: 'center'
+                               }}>
+                                 <span>❌ 初始化失败，请检查网络连接或联系管理员。</span>
+                                 <Button 
+                                   size="small" 
+                                   type="text" 
+                                   onClick={clearInitializationProgress}
+                                   style={{ color: '#cf1322' }}
+                                 >
+                                   清除
+                                 </Button>
+                               </div>
+                             )}
+                          </div>
+                        )}
+                      </Space>
+                    </div>
+                  )}
+
+                  <Table
+                    columns={columns}
+                    dataSource={subjects}
+                    rowKey="id"
+                    loading={loading}
+                    pagination={{
+                      pageSize: 10,
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      showTotal: (total) => `共 ${total} 个学科`
                     }}
-                  >
-                    添加学科
-                  </Button>
-                  <Button
-                    icon={<StarOutlined />}
-                    onClick={initializeDefaultSubjects}
-                  >
-                    初始化九大学科
-                  </Button>
-                </Space>
-              </div>
-            )}
-
-            <Table
-              columns={columns}
-              dataSource={subjects}
-              rowKey="id"
-              loading={loading}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total) => `共 ${total} 个学科`
-              }}
-            />
-          </TabPane>
-
-          <TabPane tab="知识图谱" key="knowledge-graph" disabled={!selectedSubject}>
-            {selectedSubject && (
-              <KnowledgeGraphViewer subjectId={selectedSubject.id} />
-            )}
-          </TabPane>
-
-          <TabPane tab="试卷管理" key="exam-papers" disabled={!selectedSubject}>
-            {selectedSubject && (
-              <ExamPaperManager subjectId={selectedSubject.id} />
-            )}
-          </TabPane>
-
-          <TabPane tab="统计分析" key="statistics" disabled={!selectedSubject}>
-            {renderStatistics()}
-          </TabPane>
-
-          <TabPane tab="星图视图" key="star-map" disabled={!selectedSubject}>
-            {selectedSubject && (
-              <StarMapViewer subjectId={selectedSubject.id} />
-            )}
-          </TabPane>
-        </Tabs>
+                  />
+                </>
+              )
+            },
+            {
+              key: 'knowledge-graph',
+              label: '知识图谱',
+              disabled: !selectedSubject,
+              children: selectedSubject && (
+                <KnowledgeGraphViewer subjectId={selectedSubject.id} />
+              )
+            },
+            {
+              key: 'exam-papers',
+              label: '试卷管理',
+              disabled: !selectedSubject,
+              children: selectedSubject && (
+                <ExamPaperManager subjectId={selectedSubject.id} />
+              )
+            },
+            {
+              key: 'statistics',
+              label: '统计分析',
+              disabled: !selectedSubject,
+              children: renderStatistics()
+            },
+            {
+              key: 'star-map',
+              label: '星图视图',
+              disabled: !selectedSubject,
+              children: selectedSubject && (
+                <StarMapViewer subjectId={selectedSubject.id} />
+              )
+            }
+          ]}
+        />
       </Card>
 
       <Modal
@@ -543,6 +728,42 @@ const SubjectManagement: React.FC = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="数据冲突处理"
+        open={conflictModalVisible}
+        onCancel={() => setConflictModalVisible(false)}
+        width={800}
+        footer={[
+          <Button key="cancel" onClick={() => setConflictModalVisible(false)}>
+            取消
+          </Button>,
+          <Button key="skip" onClick={() => setConflictModalVisible(false)}>
+            跳过冲突
+          </Button>,
+          <Button key="overwrite" type="primary" onClick={() => setConflictModalVisible(false)}>
+            覆盖数据
+          </Button>
+        ]}
+      >
+        <div>
+          <p>检测到以下数据冲突，请选择处理方式：</p>
+          {conflicts.map((conflict, index) => (
+            <Card key={index} title={`学科: ${conflict.subject}`} style={{ marginBottom: 16 }}>
+              <div>
+                {conflict.conflicts.map((item: any, itemIndex: number) => (
+                  <div key={itemIndex} style={{ marginBottom: 8, padding: 8, background: '#f5f5f5', borderRadius: 4 }}>
+                    <div><strong>类型：</strong>{item.type}</div>
+                    <div><strong>标题：</strong>{item.title}</div>
+                    <div><strong>年份：</strong>{item.year}</div>
+                    <div><strong>冲突原因：</strong>{item.reason}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
       </Modal>
     </div>
   );

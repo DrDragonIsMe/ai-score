@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>设置管理员Token</title>
+</head>
+<body>
+    <h1>设置管理员Token</h1>
+    <p>请在浏览器控制台中运行以下代码来设置管理员token：</p>
+    <pre>
+// 管理员token
+const adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1Njc0NDE0NCwianRpIjoiZjY0YTQ5YTMtNDYyNS00Y2EwLTk1ZDctMzA4MGRiMDFjNTg2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VyX2lkIjoiYzBhNzUwZTMtNzk5Zi00ZTNlLWI5MDctMjA4NGUwMjNiZDI4IiwidGVuYW50X2lkIjoiN2YyNmVlZWEtNjFkMC00MDQ5LTgxYjktNGM4NmViMTc3OGVlIiwicm9sZSI6ImFkbWluIn0sIm5iZiI6MTc1Njc0NDE0NCwiZXhwIjoxNzU2ODMwNTQ0fQ.bVcqfxw9dblnX39svAvZMhLIKZx3p-tmonKcQx546zM';
+
+// 管理员用户信息
+const adminUser = {
+  id: 'c0a750e3-799f-4e3e-b907-2084e023bd28',
+  username: 'admin',
+  email: 'admin@example.com',
+  role: 'admin',
+  tenant_id: '7f26eeea-61d0-4049-81b9-4c86eb1778ee'
+};
+
+// 设置localStorage中的token
+localStorage.setItem('token', adminToken);
+
+// 设置zustand存储的认证状态
+const authStorage = {
+  state: {
+    user: adminUser,
+    token: adminToken,
+    isAuthenticated: true
+  },
+  version: 0
+};
+
+localStorage.setItem('auth-storage', JSON.stringify(authStorage));
+
+console.log('管理员token已设置！');
+console.log('请刷新页面以应用更改。');
+alert('管理员token已设置！请刷新页面以应用更改。');
+    </pre>
+    
+    <h2>使用步骤：</h2>
+    <ol>
+        <li>打开浏览器开发者工具（F12）</li>
+        <li>切换到Console（控制台）标签</li>
+        <li>复制上面的代码并粘贴到控制台中</li>
+        <li>按Enter键执行</li>
+        <li>刷新页面</li>
+    </ol>
+    
+    <button onclick="setToken()">点击设置Token</button>
+    
+    <script>
+    function setToken() {
+        // 管理员token
+        const adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1Njc0NDE0NCwianRpIjoiZjY0YTQ5YTMtNDYyNS00Y2EwLTk1ZDctMzA4MGRiMDFjNTg2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VyX2lkIjoiYzBhNzUwZTMtNzk5Zi00ZTNlLWI5MDctMjA4NGUwMjNiZDI4IiwidGVuYW50X2lkIjoiN2YyNmVlZWEtNjFkMC00MDQ5LTgxYjktNGM4NmViMTc3OGVlIiwicm9sZSI6ImFkbWluIn0sIm5iZiI6MTc1Njc0NDE0NCwiZXhwIjoxNzU2ODMwNTQ0fQ.bVcqfxw9dblnX39svAvZMhLIKZx3p-tmonKcQx546zM';
+        
+        // 管理员用户信息
+        const adminUser = {
+          id: 'c0a750e3-799f-4e3e-b907-2084e023bd28',
+          username: 'admin',
+          email: 'admin@example.com',
+          role: 'admin',
+          tenant_id: '7f26eeea-61d0-4049-81b9-4c86eb1778ee'
+        };
+        
+        // 设置localStorage中的token
+        localStorage.setItem('token', adminToken);
+        
+        // 设置zustand存储的认证状态
+        const authStorage = {
+          state: {
+            user: adminUser,
+            token: adminToken,
+            isAuthenticated: true
+          },
+          version: 0
+        };
+        
+        localStorage.setItem('auth-storage', JSON.stringify(authStorage));
+        
+        alert('管理员token已设置！请刷新页面以应用更改。');
+    }
+    </script>
+</body>
+</html>

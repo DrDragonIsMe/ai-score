@@ -244,7 +244,7 @@ class MultiTenantConfig:
         return tenant_config.get('limits', {})
     
     @staticmethod
-    def validate_tenant_access(tenant_id: str, user_id: str = None) -> bool:
+    def validate_tenant_access(tenant_id: str, user_id: Optional[str] = None) -> bool:
         """验证租户访问权限
         
         Args:

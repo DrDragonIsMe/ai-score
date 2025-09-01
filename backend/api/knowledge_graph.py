@@ -30,7 +30,9 @@ knowledge_graph_bp = Blueprint('knowledge_graph', __name__)
 def get_subject_knowledge_graph(subject_id):
     """获取学科知识图谱"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
         year = request.args.get('year', datetime.now().year, type=int)
         graph_type = request.args.get('type', 'exam_scope')  # 默认为考试范围
         
@@ -83,7 +85,9 @@ def get_subject_knowledge_graph(subject_id):
 def create_knowledge_graph(subject_id):
     """创建或更新知识图谱"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
         data = request.get_json()
         
         # 验证学科
@@ -210,12 +214,114 @@ def get_question_knowledge_points(question_id):
     except Exception as e:
         return error_response(f'Failed to get question knowledge points: {str(e)}', 500)
 
+
+@knowledge_graph_bp.route('/knowledge-graph/exam-papers/<paper_id>/star-map', methods=['GET'])
+@jwt_required()
+def get_exam_paper_star_map(paper_id):
+    """获取试卷的知识点星图数据（试卷与星图联动）"""
+    try:
+        tenant_id = g.get('tenant_id')
+        
+        # 验证试卷
+        paper = ExamPaper.query.filter(
+            ExamPaper.id == paper_id,
+            ExamPaper.tenant_id == tenant_id,
+            ExamPaper.is_active == True
+        ).first()
+        
+        if not paper:
+            return error_response('Exam paper not found', 404)
+        
+        # 获取试卷中所有题目的知识点
+        questions = Question.query.filter(
+            Question.paper_id == paper_id,
+            Question.is_active == True
+        ).all()
+        
+        # 统计知识点分布
+        knowledge_point_stats = {}
+        all_knowledge_points = set()
+        
+        for question in questions:
+            if question.knowledge_points:
+                for kp_id in question.knowledge_points:
+                    all_knowledge_points.add(kp_id)
+                    if kp_id not in knowledge_point_stats:
+                        knowledge_point_stats[kp_id] = {
+                            'question_count': 0,
+                            'total_score': 0,
+                            'difficulties': [],
+                            'question_types': []
+                        }
+                    
+                    knowledge_point_stats[kp_id]['question_count'] += 1
+                    knowledge_point_stats[kp_id]['total_score'] += question.score or 0
+                    knowledge_point_stats[kp_id]['difficulties'].append(question.difficulty or 0)
+                    knowledge_point_stats[kp_id]['question_types'].append(question.type or '')
+        
+        # 获取知识点详细信息
+        if all_knowledge_points:
+            knowledge_points = KnowledgePoint.query.filter(
+                KnowledgePoint.id.in_(all_knowledge_points),
+                KnowledgePoint.is_active == True
+            ).all()
+        else:
+            knowledge_points = []
+        
+        # 构建星图数据
+        star_map_data = {
+            'paper_info': {
+                'id': paper.id,
+                'title': paper.title,
+                'year': paper.year,
+                'exam_type': paper.exam_type,
+                'total_score': paper.total_score,
+                'question_count': len(questions)
+            },
+            'knowledge_points': [],
+            'highlight_nodes': list(all_knowledge_points),
+            'statistics': {
+                'total_knowledge_points': len(all_knowledge_points),
+                'coverage_rate': 0  # 将在前端计算
+            }
+        }
+        
+        # 添加知识点详情和统计信息
+        for kp in knowledge_points:
+            stats = knowledge_point_stats.get(str(kp.id), {})
+            avg_difficulty = sum(stats.get('difficulties', [0])) / max(len(stats.get('difficulties', [1])), 1)
+            
+            star_map_data['knowledge_points'].append({
+                'id': str(kp.id),
+                'name': kp.name,
+                'code': kp.code,
+                'difficulty': kp.difficulty,
+                'importance': kp.importance,
+                'chapter': {
+                    'id': kp.chapter.id,
+                    'name': kp.chapter.name
+                } if kp.chapter else None,
+                'paper_stats': {
+                    'question_count': stats.get('question_count', 0),
+                    'total_score': stats.get('total_score', 0),
+                    'avg_difficulty': round(avg_difficulty, 2),
+                    'question_types': list(set(stats.get('question_types', [])))
+                }
+            })
+        
+        return success_response(star_map_data)
+        
+    except Exception as e:
+        return error_response(f'Failed to get exam paper star map: {str(e)}', 500)
+
 @knowledge_graph_bp.route('/knowledge-graph/<subject_id>/exam-scope', methods=['GET'])
 @jwt_required()
 def get_exam_scope(subject_id):
     """获取学科考试范围"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
         year = request.args.get('year', datetime.now().year, type=int)
         
         # 验证学科
@@ -241,7 +347,9 @@ def get_exam_scope(subject_id):
 def update_exam_scope(subject_id):
     """更新学科考试范围"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
         data = request.get_json()
         
         # 验证学科
@@ -444,6 +552,9 @@ def generate_exam_scope_graph(subject_id, year):
         ).all()
         
         for kp in important_kps:
+            # 计算题目数量
+            question_count = kp.questions.count() if hasattr(kp, 'questions') else 0
+            
             nodes.append({
                 'id': f'kp_{kp.id}',
                 'name': kp.name,
@@ -451,8 +562,8 @@ def generate_exam_scope_graph(subject_id, year):
                 'level': 2,
                 'difficulty': kp.difficulty,
                 'importance': kp.importance,
-                'mastery_level': kp.mastery_level,
-                'question_count': kp.question_count
+                'mastery_level': 0,  # 默认掌握度为0
+                'question_count': question_count
             })
             
             # 添加章节到知识点的边
@@ -496,11 +607,8 @@ def generate_mastery_level_graph(subject_id, year):
     })
     
     for chapter in chapters:
-        # 计算章节平均掌握度
-        chapter_mastery = db.session.query(func.avg(KnowledgePoint.mastery_level)).filter(
-            KnowledgePoint.chapter_id == chapter.id,
-            KnowledgePoint.is_active == True
-        ).scalar() or 0
+        # 计算章节平均掌握度（由于KnowledgePoint没有mastery_level字段，设为默认值0）
+        chapter_mastery = 0
         
         # 添加章节节点
         nodes.append({
@@ -528,6 +636,10 @@ def generate_mastery_level_graph(subject_id, year):
         ).all()
         
         for kp in knowledge_points:
+            # 计算题目数量
+            question_count = kp.questions.count() if hasattr(kp, 'questions') else 0
+            mastery_level = 0  # 默认掌握度为0
+            
             nodes.append({
                 'id': f'kp_{kp.id}',
                 'name': kp.name,
@@ -535,12 +647,12 @@ def generate_mastery_level_graph(subject_id, year):
                 'level': 2,
                 'difficulty': kp.difficulty,
                 'importance': kp.importance,
-                'mastery_level': kp.mastery_level,
-                'question_count': kp.question_count
+                'mastery_level': mastery_level,
+                'question_count': question_count
             })
             
             # 添加章节到知识点的边，强度基于掌握度
-            strength = 0.5 + (kp.mastery_level / 10.0) * 0.5
+            strength = 0.5 + (mastery_level / 10.0) * 0.5
             edges.append({
                 'source': f'chapter_{chapter.id}',
                 'target': f'kp_{kp.id}',

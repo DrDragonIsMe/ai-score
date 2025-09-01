@@ -60,7 +60,8 @@ class AIAssistantService:
             ]
         }
     
-    def chat_with_user(self, user_id: str, message: str, context: Optional[Dict] = None) -> Dict[str, Any]:
+    def chat_with_user(self, user_id: str, message: str, context: Optional[Dict] = None, 
+                      model_id: Optional[str] = None) -> Dict[str, Any]:
         """
         与用户进行智能对话
         
@@ -68,6 +69,7 @@ class AIAssistantService:
             user_id: 用户ID
             message: 用户消息
             context: 对话上下文
+            model_id: 指定使用的AI模型ID
         
         Returns:
             AI助理回复
@@ -85,13 +87,15 @@ class AIAssistantService:
             response = llm_service.generate_text(
                 prompt=full_prompt,
                 max_tokens=500,
-                temperature=0.7
+                temperature=0.7,
+                model_name=model_id
             )
             
             return {
                 "success": True,
                 "response": response,
                 "assistant_name": self.assistant_name,
+                "model_used": model_id or "default",
                 "timestamp": datetime.now().isoformat(),
                 "suggestions": self._generate_contextual_suggestions(user_id, message)
             }
@@ -106,7 +110,7 @@ class AIAssistantService:
     
     def recognize_question_from_image(self, user_id: str, image_data: str) -> Dict[str, Any]:
         """
-        从图片中识别试题
+        从图片中识别试题或描述图片内容
         
         Args:
             user_id: 用户ID
@@ -123,21 +127,43 @@ class AIAssistantService:
             # OCR识别文字
             extracted_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
             
+            # 如果没有识别到文字，尝试描述图片内容
             if not extracted_text.strip():
+                image_description = self._describe_image_content(image_data, user_id)
                 return {
-                    "success": False,
-                    "message": "未能识别到文字内容，请确保图片清晰且包含文字。"
+                    "success": True,
+                    "content_type": "image_description",
+                    "description": image_description,
+                    "message": "这张图片没有文字内容，我来为你描述一下图片内容。",
+                    "timestamp": datetime.now().isoformat()
                 }
             
-            # 使用AI分析识别的文本，提取题目信息
-            question_analysis = self._analyze_extracted_text(extracted_text, user_id)
+            # 使用AI分析识别的文本，判断是否为题目
+            content_analysis = self._analyze_extracted_text(extracted_text, user_id)
             
-            return {
-                "success": True,
-                "extracted_text": extracted_text,
-                "question_analysis": question_analysis,
-                "timestamp": datetime.now().isoformat()
-            }
+            logger.info(f"图片识别成功 - 提取文本: {extracted_text[:100]}...")
+            logger.info(f"内容分析结果: {content_analysis}")
+            
+            # 根据分析结果决定处理方式
+            if content_analysis.get('is_question', False):
+                return {
+                    "success": True,
+                    "content_type": "question",
+                    "extracted_text": extracted_text,
+                    "question_analysis": content_analysis,
+                    "timestamp": datetime.now().isoformat()
+                }
+            else:
+                # 不是题目，描述图片内容
+                image_description = self._describe_image_content(image_data, user_id, extracted_text)
+                return {
+                    "success": True,
+                    "content_type": "image_description",
+                    "extracted_text": extracted_text,
+                    "description": image_description,
+                    "message": "这张图片不是题目，我来为你介绍一下图片内容。",
+                    "timestamp": datetime.now().isoformat()
+                }
             
         except Exception as e:
             logger.error(f"图片识别失败: {str(e)}")
@@ -323,6 +349,55 @@ class AIAssistantService:
                 "key_concepts": [],
                 "cleaned_question": text
             }
+    
+    def _describe_image_content(self, image_data: str, user_id: str, extracted_text: Optional[str] = None) -> str:
+        """
+        描述图片内容
+        
+        Args:
+            image_data: Base64编码的图片数据
+            user_id: 用户ID
+            extracted_text: OCR提取的文本（可选）
+        
+        Returns:
+            图片内容描述
+        """
+        try:
+            # 构建描述提示
+            if extracted_text:
+                prompt = f"""
+请根据以下信息描述这张图片的内容：
+
+图片中的文字内容：
+{extracted_text}
+
+请用友好、详细的语言描述这张图片，包括：
+1. 图片的主要内容和主题
+2. 图片中的文字信息
+3. 可能的用途或背景
+4. 其他值得注意的细节
+
+请以自然、易懂的方式描述，就像在和朋友聊天一样。
+"""
+            else:
+                prompt = """
+这是一张没有文字内容的图片。请描述这张图片可能包含的内容，比如：
+1. 可能是什么类型的图片（照片、图表、插画等）
+2. 可能的主题或内容
+3. 建议用户如何更好地使用图片识别功能
+
+请用友好、鼓励的语气回复。
+"""
+            
+            result = llm_service.generate_text(prompt, max_tokens=300)
+            return result.strip()
+            
+        except Exception as e:
+            logger.error(f"图片内容描述失败: {str(e)}")
+            if extracted_text:
+                return f"我看到这张图片包含以下文字内容：{extracted_text[:200]}...\n\n这看起来不是一道题目，而是包含文字信息的图片。如果你需要我帮助分析特定内容，请告诉我你想了解什么！"
+            else:
+                return "这张图片没有包含文字内容。如果你想让我识别题目，请确保图片清晰且包含题目文字。我也可以帮你分析其他包含文字的学习材料！"
     
     def _build_question_analysis_prompt(self, question: str, user_answer: Optional[str], 
                                       user_profile: Dict) -> str:

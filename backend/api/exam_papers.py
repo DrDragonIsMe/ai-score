@@ -40,7 +40,9 @@ def allowed_file(filename):
 def get_exam_papers():
     """获取试卷列表"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id') if isinstance(current_user_identity, dict) else g.get('tenant_id')
         subject_id = request.args.get('subject_id')
         year = request.args.get('year', type=int)
         exam_type = request.args.get('exam_type')
@@ -80,7 +82,9 @@ def get_exam_papers():
 def upload_exam_paper():
     """上传试卷文件"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user = get_jwt_identity()
+        tenant_id = current_user.get('tenant_id')
         
         # 检查文件
         if 'file' not in request.files:
@@ -157,7 +161,7 @@ def upload_exam_paper():
             db.session.commit()
             current_app.logger.error(f'Failed to parse exam paper {exam_paper.id}: {str(parse_error)}')
         
-        return success_response(exam_paper.to_dict()), 201
+        return success_response(exam_paper.to_dict())
         
     except Exception as e:
         return error_response(f'Failed to upload exam paper: {str(e)}', 500)
@@ -167,7 +171,9 @@ def upload_exam_paper():
 def get_parse_status(paper_id):
     """获取试卷解析状态"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user = get_jwt_identity()
+        tenant_id = current_user.get('tenant_id')
         
         exam_paper = ExamPaper.query.filter_by(
             id=paper_id, 
@@ -342,7 +348,9 @@ def link_question_knowledge_points(paper_id, question_id):
 def download_subject_papers(subject_id):
     """下载学科真题"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user = get_jwt_identity()
+        tenant_id = current_user.get('tenant_id')
         data = request.get_json()
         years = data.get('years', 10)  # 默认下载近10年
         

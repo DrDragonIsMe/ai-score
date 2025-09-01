@@ -18,6 +18,7 @@ from .user import User, UserProfile
 from .knowledge import Subject, Chapter, KnowledgePoint, SubKnowledgePoint
 from .question import Question, QuestionType
 from .exam_papers import ExamPaper, KnowledgeGraph
+from .exam_knowledge_mapping import ExamKnowledgeMapping, ExamKnowledgeStatistics
 from .learning import LearningPath, StudyRecord, MemoryCard
 from .diagnosis import DiagnosisReport, WeaknessPoint, LearningProfile
 from .ai_model import AIModelConfig
@@ -29,6 +30,7 @@ __all__ = [
     'Tenant', 'User', 'UserProfile',
     'Subject', 'Chapter', 'KnowledgePoint', 'SubKnowledgePoint',
     'Question', 'QuestionType', 'ExamPaper', 'KnowledgeGraph',
+    'ExamKnowledgeMapping', 'ExamKnowledgeStatistics',
     'LearningPath', 'StudyRecord', 'MemoryCard',
     'DiagnosisReport', 'WeaknessPoint', 'LearningProfile',
     'AIModelConfig',

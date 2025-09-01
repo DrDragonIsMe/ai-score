@@ -21,6 +21,7 @@ import {
   BulbOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
+  FilePdfOutlined,
   BarChartOutlined,
   UserOutlined,
   LogoutOutlined,
@@ -60,6 +61,11 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       key: '/subjects',
       icon: <BookOutlined />,
       label: '学科管理',
+    },
+    {
+      key: '/exam-papers',
+      icon: <FilePdfOutlined />,
+      label: '试卷管理',
     },
     {
       key: '/diagnosis',

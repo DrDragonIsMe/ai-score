@@ -34,15 +34,25 @@ def admin_required(f):
     @jwt_required()
     def decorated_function(*args, **kwargs):
         try:
-            # 获取当前用户
-            current_user_id = get_jwt_identity()
+            # 获取当前用户信息
+            current_user_info = get_jwt_identity()
+            
+            # 处理JWT payload格式
+            if isinstance(current_user_info, dict):
+                current_user_id = current_user_info.get('user_id')
+                user_role = current_user_info.get('role')
+            else:
+                current_user_id = current_user_info
+                user_role = None
+            
             user = User.query.get(current_user_id)
             
             if not user:
                 return error_response("用户不存在", 401)
             
-            # 检查是否是管理员
-            if not user.is_admin:
+            # 检查是否是管理员（优先使用JWT中的角色信息）
+            is_admin = user_role == 'admin' if user_role else user.is_admin
+            if not is_admin:
                 return error_response("需要管理员权限", 403)
             
             # 将用户信息添加到全局变量
@@ -68,15 +78,25 @@ def tenant_required(f):
     @jwt_required()
     def decorated_function(*args, **kwargs):
         try:
-            # 获取当前用户
-            current_user_id = get_jwt_identity()
+            # 获取当前用户信息
+            current_user_info = get_jwt_identity()
+            
+            # 处理JWT payload格式
+            if isinstance(current_user_info, dict):
+                current_user_id = current_user_info.get('user_id')
+                tenant_id = current_user_info.get('tenant_id')
+            else:
+                current_user_id = current_user_info
+                tenant_id = None
+            
             user = User.query.get(current_user_id)
             
             if not user:
                 return error_response("用户不存在", 401)
             
-            # 获取租户信息
-            tenant = Tenant.query.get(user.tenant_id)
+            # 获取租户信息（优先使用JWT中的租户ID）
+            tenant_id_to_use = tenant_id if tenant_id else user.tenant_id
+            tenant = Tenant.query.get(tenant_id_to_use)
             if not tenant:
                 return error_response("租户不存在", 401)
             
@@ -109,16 +129,29 @@ def role_required(*roles):
         @jwt_required()
         def decorated_function(*args, **kwargs):
             try:
-                # 获取当前用户
-                current_user_id = get_jwt_identity()
-                user = User.query.get(current_user_id)
+                # 获取当前用户信息
+                current_user_info = get_jwt_identity()
                 
-                if not user:
-                    return error_response("用户不存在", 401)
+                # 如果是字典格式，提取user_id
+                if isinstance(current_user_info, dict):
+                    current_user_id = current_user_info.get('user_id')
+                    user_role = current_user_info.get('role')
+                else:
+                    current_user_id = current_user_info
+                    user = User.query.get(current_user_id)
+                    if not user:
+                        return error_response("用户不存在", 401)
+                    user_role = user.role
                 
                 # 检查用户角色
-                if user.role not in roles:
+                if user_role not in roles:
                     return error_response(f"需要以下角色之一: {', '.join(roles)}", 403)
+                
+                # 如果需要用户对象，从数据库获取
+                if isinstance(current_user_info, dict):
+                    user = User.query.get(current_user_id)
+                    if not user:
+                        return error_response("用户不存在", 401)
                 
                 # 将用户信息添加到全局变量
                 g.current_user = user
