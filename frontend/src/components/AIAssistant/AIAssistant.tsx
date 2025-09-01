@@ -607,9 +607,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
       onCancel={onClose}
       footer={null}
       width={800}
-      height={600}
       className="ai-assistant-modal"
       closeIcon={<CloseOutlined />}
+      destroyOnHidden={false}
     >
       <div className="ai-assistant-container">
         <Tabs 
