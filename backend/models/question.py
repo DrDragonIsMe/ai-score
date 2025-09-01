@@ -81,6 +81,7 @@ class Question(db.Model):
     
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
+    exam_paper_id = db.Column(db.String(36), db.ForeignKey('exam_papers.id'), nullable=True)
     knowledge_point_id = db.Column(db.String(36), db.ForeignKey('knowledge_points.id'), nullable=False)
     question_type_id = db.Column(db.String(36), db.ForeignKey('question_types.id'), nullable=False)
     
@@ -189,109 +190,5 @@ class Question(db.Model):
                 'solution_steps': self.solution_steps,
                 'key_points': self.key_points
             })
-        
-        return data
-
-class ExamPaper(db.Model):
-    """试卷模型"""
-    
-    __tablename__ = 'exam_papers'
-    
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    tenant_id = db.Column(db.String(36), db.ForeignKey('tenants.id'), nullable=False)
-    
-    # 基本信息
-    name = db.Column(db.String(100), nullable=False, comment='试卷名称')
-    description = db.Column(db.Text, comment='试卷描述')
-    subject_id = db.Column(db.String(36), db.ForeignKey('subjects.id'), nullable=False)
-    
-    # 试卷属性
-    total_score = db.Column(db.Integer, default=150, comment='总分')
-    time_limit = db.Column(db.Integer, comment='考试时间(分钟)')
-    difficulty = db.Column(db.Integer, default=3, comment='整体难度1-5')
-    
-    # 题目配置
-    question_config = db.Column(db.JSON, default={}, comment='题目配置')
-    questions = db.Column(db.JSON, default=[], comment='题目ID列表')
-    
-    # 来源信息
-    source = db.Column(db.String(100), comment='试卷来源')
-    year = db.Column(db.Integer, comment='年份')
-    region = db.Column(db.String(50), comment='地区')
-    exam_type = db.Column(db.String(50), comment='考试类型')
-    
-    # 统计信息
-    attempt_count = db.Column(db.Integer, default=0, comment='尝试次数')
-    avg_score = db.Column(db.Float, comment='平均分')
-    avg_time = db.Column(db.Float, comment='平均用时')
-    
-    # 状态
-    is_active = db.Column(db.Boolean, default=True)
-    is_public = db.Column(db.Boolean, default=False, comment='是否公开')
-    
-    # 时间戳
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # 关系
-    subject = db.relationship('Subject', backref='exam_papers')
-    
-    def __repr__(self):
-        return f'<ExamPaper {self.name}>'
-    
-    def get_questions(self):
-        """获取试卷题目"""
-        if not self.questions:
-            return []
-        return Question.query.filter(Question.id.in_(self.questions)).all()
-    
-    def calculate_total_score(self):
-        """计算试卷总分"""
-        questions = self.get_questions()
-        return sum(q.score for q in questions)
-    
-    def update_stats(self, score, time_spent):
-        """更新统计信息"""
-        self.attempt_count += 1
-        
-        # 更新平均分
-        if self.avg_score:
-            self.avg_score = (self.avg_score * (self.attempt_count - 1) + score) / self.attempt_count
-        else:
-            self.avg_score = score
-        
-        # 更新平均时间
-        if self.avg_time:
-            self.avg_time = (self.avg_time * (self.attempt_count - 1) + time_spent) / self.attempt_count
-        else:
-            self.avg_time = time_spent
-        
-        db.session.commit()
-    
-    def to_dict(self, include_questions=False):
-        data = {
-            'id': str(self.id),
-            'name': self.name,
-            'description': self.description,
-            'subject_id': str(self.subject_id),
-            'total_score': self.total_score,
-            'time_limit': self.time_limit,
-            'difficulty': self.difficulty,
-            'question_config': self.question_config,
-            'source': self.source,
-            'year': self.year,
-            'region': self.region,
-            'exam_type': self.exam_type,
-            'attempt_count': self.attempt_count,
-            'avg_score': self.avg_score,
-            'avg_time': self.avg_time,
-            'is_active': self.is_active,
-            'is_public': self.is_public,
-            'question_count': len(self.questions) if self.questions else 0
-        }
-        
-        if include_questions:
-            questions = self.get_questions()
-            data['questions'] = [q.to_dict() for q in questions]
         
         return data

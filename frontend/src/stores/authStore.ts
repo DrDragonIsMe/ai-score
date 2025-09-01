@@ -32,8 +32,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(persist(
     login: async (credentials: LoginRequest) => {
       set({ isLoading: true, error: null });
       try {
-        const response: AuthResponse = await api.post('/auth/login', credentials);
-        const { access_token, user } = response;
+        // 将email字段映射为username发送给后端
+        const loginData = {
+          username: credentials.email,
+          password: credentials.password
+        };
+        const response = await api.post('/auth/login', loginData);
+        const { access_token, user } = response.data;
         
         // 保存token到localStorage
         localStorage.setItem('token', access_token);
@@ -58,8 +63,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(persist(
     register: async (userData: RegisterRequest) => {
       set({ isLoading: true, error: null });
       try {
-        const response: AuthResponse = await api.post('/auth/register', userData);
-        const { access_token, user } = response;
+        const response = await api.post('/auth/register', userData);
+        const { access_token, user } = response.data;
         
         // 保存token到localStorage
         localStorage.setItem('token', access_token);

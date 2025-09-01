@@ -1,0 +1,560 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AI智能学习系统 - API接口 - knowledge_graph.py
+
+Description:
+    知识图谱星图展示API接口，提供知识点可视化、关联分析等功能。
+
+Author: Chang Xinglong
+Date: 2025-01-21
+Version: 1.0.0
+License: Apache License 2.0
+"""
+
+from flask import Blueprint, request, jsonify, g
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from utils.decorators import admin_required
+from models import Subject, Chapter, KnowledgePoint, SubKnowledgePoint, KnowledgeGraph, ExamPaper, Question
+from utils.database import db
+from utils.response import success_response, error_response
+from utils.decorators import admin_required
+from sqlalchemy import desc, func, and_
+import json
+from datetime import datetime
+
+knowledge_graph_bp = Blueprint('knowledge_graph', __name__)
+
+@knowledge_graph_bp.route('/knowledge-graph/<subject_id>', methods=['GET'])
+@jwt_required()
+def get_subject_knowledge_graph(subject_id):
+    """获取学科知识图谱"""
+    try:
+        tenant_id = g.get('tenant_id')
+        year = request.args.get('year', datetime.now().year, type=int)
+        graph_type = request.args.get('type', 'exam_scope')  # 默认为考试范围
+        
+        # 验证学科
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 查找现有的知识图谱
+        knowledge_graph = KnowledgeGraph.query.filter_by(
+            subject_id=subject_id, year=year, graph_type=graph_type, is_active=True
+        ).first()
+        
+        if knowledge_graph:
+            return success_response(knowledge_graph.to_dict())
+        
+        # 根据图谱类型生成不同的图谱数据
+        if graph_type == 'exam_scope':
+            graph_data = generate_exam_scope_graph(subject_id, year)
+        elif graph_type == 'full_knowledge':
+            graph_data = generate_knowledge_graph(subject_id, year)
+        elif graph_type == 'mastery_level':
+            graph_data = generate_mastery_level_graph(subject_id, year)
+        else:
+            graph_data = generate_knowledge_graph(subject_id, year)
+        
+        # 保存生成的图谱
+        new_graph = KnowledgeGraph(
+            subject_id=subject_id,
+            name=f"{subject.name}{get_graph_type_name(graph_type)}{year}",
+            description=f"{year}年{subject.name}{get_graph_type_name(graph_type)}知识点关系图",
+            year=year,
+            graph_type=graph_type,
+            nodes=graph_data['nodes'],
+            edges=graph_data['edges'],
+            layout_config=graph_data['layout_config']
+        )
+        
+        db.session.add(new_graph)
+        db.session.commit()
+        
+        return success_response(new_graph.to_dict())
+        
+    except Exception as e:
+        return error_response(f'Failed to get knowledge graph: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/<subject_id>', methods=['POST'])
+@jwt_required()
+@admin_required
+def create_knowledge_graph(subject_id):
+    """创建或更新知识图谱"""
+    try:
+        tenant_id = g.get('tenant_id')
+        data = request.get_json()
+        
+        # 验证学科
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        year = data.get('year', datetime.now().year)
+        
+        # 查找现有图谱
+        existing_graph = KnowledgeGraph.query.filter_by(
+            subject_id=subject_id, year=year, is_active=True
+        ).first()
+        
+        if existing_graph:
+            # 更新现有图谱
+            existing_graph.nodes = data.get('nodes', existing_graph.nodes)
+            existing_graph.edges = data.get('edges', existing_graph.edges)
+            existing_graph.layout_config = data.get('layout_config', existing_graph.layout_config)
+            existing_graph.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            return success_response(existing_graph.to_dict())
+        else:
+            # 创建新图谱
+            new_graph = KnowledgeGraph(
+                subject_id=subject_id,
+                name=data.get('name', f"{subject.name}知识图谱{year}"),
+                description=data.get('description', ''),
+                year=year,
+                nodes=data.get('nodes', []),
+                edges=data.get('edges', []),
+                layout_config=data.get('layout_config', {})
+            )
+            
+            db.session.add(new_graph)
+            db.session.commit()
+            
+            return success_response(new_graph.to_dict()), 201
+        
+    except Exception as e:
+        return error_response(f'Failed to create knowledge graph: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/knowledge-points/<point_id>/questions', methods=['GET'])
+@jwt_required()
+def get_knowledge_point_questions(point_id):
+    """获取知识点相关的题目"""
+    try:
+        tenant_id = g.get('tenant_id')
+        
+        # 验证知识点
+        knowledge_point = KnowledgePoint.query.filter_by(id=point_id, is_active=True).first()
+        if not knowledge_point:
+            return error_response('Knowledge point not found', 404)
+        
+        # 查找相关题目
+        questions = Question.query.join(ExamPaper).filter(
+            ExamPaper.tenant_id == tenant_id,
+            ExamPaper.is_active == True,
+            Question.is_active == True,
+            Question.knowledge_points.contains([point_id])
+        ).order_by(desc(ExamPaper.year)).all()
+        
+        result = []
+        for question in questions:
+            question_data = question.to_dict()
+            question_data['exam_paper'] = {
+                'id': question.exam_paper.id,
+                'title': question.exam_paper.title,
+                'year': question.exam_paper.year,
+                'exam_type': question.exam_paper.exam_type
+            }
+            result.append(question_data)
+        
+        return success_response(result)
+        
+    except Exception as e:
+        return error_response(f'Failed to get knowledge point questions: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/questions/<question_id>/knowledge-points', methods=['GET'])
+@jwt_required()
+def get_question_knowledge_points(question_id):
+    """获取题目关联的知识点（用于星图高亮）"""
+    try:
+        tenant_id = g.get('tenant_id')
+        
+        # 验证题目
+        question = Question.query.join(ExamPaper).filter(
+            Question.id == question_id,
+            ExamPaper.tenant_id == tenant_id,
+            Question.is_active == True
+        ).first()
+        
+        if not question:
+            return error_response('Question not found', 404)
+        
+        # 获取关联的知识点详情
+        knowledge_points = []
+        if question.knowledge_points:
+            points = KnowledgePoint.query.filter(
+                KnowledgePoint.id.in_(question.knowledge_points),
+                KnowledgePoint.is_active == True
+            ).all()
+            
+            for point in points:
+                knowledge_points.append({
+                    'id': point.id,
+                    'name': point.name,
+                    'code': point.code,
+                    'difficulty': point.difficulty,
+                    'importance': point.importance,
+                    'chapter': {
+                        'id': point.chapter.id,
+                        'name': point.chapter.name
+                    }
+                })
+        
+        return success_response({
+            'question': question.to_dict(),
+            'knowledge_points': knowledge_points,
+            'highlight_nodes': [kp['id'] for kp in knowledge_points]
+        })
+        
+    except Exception as e:
+        return error_response(f'Failed to get question knowledge points: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/<subject_id>/exam-scope', methods=['GET'])
+@jwt_required()
+def get_exam_scope(subject_id):
+    """获取学科考试范围"""
+    try:
+        tenant_id = g.get('tenant_id')
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # 验证学科
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 获取考试范围配置
+        exam_scope = subject.exam_scope or {}
+        
+        # 如果没有配置，根据知识点生成默认范围
+        if not exam_scope:
+            exam_scope = generate_exam_scope(subject_id, year)
+        
+        return success_response(exam_scope)
+        
+    except Exception as e:
+        return error_response(f'Failed to get exam scope: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/<subject_id>/exam-scope', methods=['PUT'])
+@jwt_required()
+@admin_required
+def update_exam_scope(subject_id):
+    """更新学科考试范围"""
+    try:
+        tenant_id = g.get('tenant_id')
+        data = request.get_json()
+        
+        # 验证学科
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 更新考试范围
+        subject.exam_scope = data.get('exam_scope', {})
+        subject.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return success_response(subject.to_dict())
+        
+    except Exception as e:
+        return error_response(f'Failed to update exam scope: {str(e)}', 500)
+
+def generate_knowledge_graph(subject_id, year):
+    """生成知识图谱数据"""
+    # 获取学科的所有章节和知识点
+    chapters = Chapter.query.filter_by(subject_id=subject_id, is_active=True).all()
+    
+    nodes = []
+    edges = []
+    
+    # 生成章节节点
+    for chapter in chapters:
+        nodes.append({
+            'id': f'chapter_{chapter.id}',
+            'type': 'chapter',
+            'name': chapter.name,
+            'level': 1,
+            'importance': chapter.importance,
+            'difficulty': chapter.difficulty,
+            'x': 0,  # 将由前端布局算法计算
+            'y': 0
+        })
+        
+        # 生成知识点节点
+        knowledge_points = chapter.knowledge_points.filter_by(is_active=True).all()
+        for kp in knowledge_points:
+            nodes.append({
+                'id': f'kp_{kp.id}',
+                'type': 'knowledge_point',
+                'name': kp.name,
+                'level': 2,
+                'importance': kp.importance,
+                'difficulty': kp.difficulty,
+                'exam_frequency': kp.exam_frequency,
+                'x': 0,
+                'y': 0
+            })
+            
+            # 章节到知识点的边
+            edges.append({
+                'source': f'chapter_{chapter.id}',
+                'target': f'kp_{kp.id}',
+                'type': 'contains',
+                'weight': 1
+            })
+            
+            # 知识点之间的关联边
+            if kp.prerequisites:
+                for prereq_id in kp.prerequisites:
+                    edges.append({
+                        'source': f'kp_{prereq_id}',
+                        'target': f'kp_{kp.id}',
+                        'type': 'prerequisite',
+                        'weight': 2
+                    })
+            
+            if kp.related_points:
+                for related_id in kp.related_points:
+                    edges.append({
+                        'source': f'kp_{kp.id}',
+                        'target': f'kp_{related_id}',
+                        'type': 'related',
+                        'weight': 1
+                    })
+    
+    layout_config = {
+        'algorithm': 'force',
+        'iterations': 100,
+        'node_size_factor': 1.0,
+        'edge_length': 100,
+        'repulsion_strength': 1000
+    }
+    
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'layout_config': layout_config
+    }
+
+def generate_exam_scope(subject_id, year):
+    """生成考试范围配置"""
+    chapters = Chapter.query.filter_by(subject_id=subject_id, is_active=True).all()
+    
+    scope = {
+        'year': year,
+        'chapters': [],
+        'key_knowledge_points': [],
+        'difficulty_distribution': {
+            'easy': 30,
+            'medium': 50,
+            'hard': 20
+        }
+    }
+    
+    for chapter in chapters:
+        chapter_scope = {
+            'id': chapter.id,
+            'name': chapter.name,
+            'importance': chapter.importance,
+            'included': True,
+            'knowledge_points': []
+        }
+        
+        # 获取重要知识点
+        important_kps = chapter.knowledge_points.filter(
+            KnowledgePoint.importance >= 4,
+            KnowledgePoint.is_active == True
+        ).all()
+        
+        for kp in important_kps:
+            chapter_scope['knowledge_points'].append({
+                'id': kp.id,
+                'name': kp.name,
+                'importance': kp.importance,
+                'exam_frequency': kp.exam_frequency
+            })
+            
+            if kp.importance >= 4:
+                scope['key_knowledge_points'].append({
+                    'id': kp.id,
+                    'name': kp.name,
+                    'chapter_name': chapter.name
+                })
+        
+        scope['chapters'].append(chapter_scope)
+    
+    return scope
+
+def get_graph_type_name(graph_type):
+    """获取图谱类型的中文名称"""
+    type_names = {
+        'exam_scope': '考试范围',
+        'full_knowledge': '完整知识图谱',
+        'mastery_level': '掌握情况图谱'
+    }
+    return type_names.get(graph_type, '知识图谱')
+
+def generate_exam_scope_graph(subject_id, year):
+    """生成考试范围知识图谱"""
+    # 获取学科章节和重要知识点
+    chapters = Chapter.query.filter_by(subject_id=subject_id, is_active=True).all()
+    
+    nodes = []
+    edges = []
+    
+    # 添加学科根节点
+    subject = Subject.query.get(subject_id)
+    nodes.append({
+        'id': f'subject_{subject_id}',
+        'name': subject.name,
+        'type': 'subject',
+        'level': 0,
+        'difficulty': 0,
+        'importance': 5,
+        'mastery_level': 0,
+        'question_count': 0
+    })
+    
+    for chapter in chapters:
+        # 添加章节节点
+        nodes.append({
+            'id': f'chapter_{chapter.id}',
+            'name': chapter.name,
+            'type': 'chapter',
+            'level': 1,
+            'difficulty': chapter.difficulty,
+            'importance': chapter.importance,
+            'mastery_level': 0,
+            'question_count': 0
+        })
+        
+        # 添加学科到章节的边
+        edges.append({
+            'source': f'subject_{subject_id}',
+            'target': f'chapter_{chapter.id}',
+            'type': 'hierarchy',
+            'strength': 1.0
+        })
+        
+        # 只包含重要的知识点（考试范围）
+        important_kps = chapter.knowledge_points.filter(
+            KnowledgePoint.importance >= 4,
+            KnowledgePoint.is_active == True
+        ).all()
+        
+        for kp in important_kps:
+            nodes.append({
+                'id': f'kp_{kp.id}',
+                'name': kp.name,
+                'type': 'knowledge_point',
+                'level': 2,
+                'difficulty': kp.difficulty,
+                'importance': kp.importance,
+                'mastery_level': kp.mastery_level,
+                'question_count': kp.question_count
+            })
+            
+            # 添加章节到知识点的边
+            edges.append({
+                'source': f'chapter_{chapter.id}',
+                'target': f'kp_{kp.id}',
+                'type': 'hierarchy',
+                'strength': 0.8
+            })
+    
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'layout_config': {
+            'layout': 'force',
+            'node_size_factor': 1.2,
+            'link_strength_factor': 0.8,
+            'color_scheme': 'exam_scope'
+        }
+    }
+
+def generate_mastery_level_graph(subject_id, year):
+    """生成掌握情况知识图谱"""
+    # 获取学科章节和知识点
+    chapters = Chapter.query.filter_by(subject_id=subject_id, is_active=True).all()
+    
+    nodes = []
+    edges = []
+    
+    # 添加学科根节点
+    subject = Subject.query.get(subject_id)
+    nodes.append({
+        'id': f'subject_{subject_id}',
+        'name': subject.name,
+        'type': 'subject',
+        'level': 0,
+        'difficulty': 0,
+        'importance': 5,
+        'mastery_level': 0,
+        'question_count': 0
+    })
+    
+    for chapter in chapters:
+        # 计算章节平均掌握度
+        chapter_mastery = db.session.query(func.avg(KnowledgePoint.mastery_level)).filter(
+            KnowledgePoint.chapter_id == chapter.id,
+            KnowledgePoint.is_active == True
+        ).scalar() or 0
+        
+        # 添加章节节点
+        nodes.append({
+            'id': f'chapter_{chapter.id}',
+            'name': chapter.name,
+            'type': 'chapter',
+            'level': 1,
+            'difficulty': chapter.difficulty,
+            'importance': chapter.importance,
+            'mastery_level': chapter_mastery,
+            'question_count': 0
+        })
+        
+        # 添加学科到章节的边
+        edges.append({
+            'source': f'subject_{subject_id}',
+            'target': f'chapter_{chapter.id}',
+            'type': 'hierarchy',
+            'strength': 1.0
+        })
+        
+        # 获取所有知识点，按掌握度分组显示
+        knowledge_points = chapter.knowledge_points.filter(
+            KnowledgePoint.is_active == True
+        ).all()
+        
+        for kp in knowledge_points:
+            nodes.append({
+                'id': f'kp_{kp.id}',
+                'name': kp.name,
+                'type': 'knowledge_point',
+                'level': 2,
+                'difficulty': kp.difficulty,
+                'importance': kp.importance,
+                'mastery_level': kp.mastery_level,
+                'question_count': kp.question_count
+            })
+            
+            # 添加章节到知识点的边，强度基于掌握度
+            strength = 0.5 + (kp.mastery_level / 10.0) * 0.5
+            edges.append({
+                'source': f'chapter_{chapter.id}',
+                'target': f'kp_{kp.id}',
+                'type': 'hierarchy',
+                'strength': strength
+            })
+    
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'layout_config': {
+            'layout': 'force',
+            'node_size_factor': 1.0,
+            'link_strength_factor': 1.0,
+            'color_scheme': 'mastery_level'
+        }
+    }

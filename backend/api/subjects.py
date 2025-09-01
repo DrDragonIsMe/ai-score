@@ -16,7 +16,7 @@ License: Apache License 2.0
 from flask import request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from . import api_bp
-from models import Subject, Chapter, KnowledgePoint, SubKnowledgePoint
+from models import Subject, Chapter, KnowledgePoint, SubKnowledgePoint, ExamPaper, KnowledgeGraph
 from utils.database import db
 from utils.response import success_response, error_response
 from utils.decorators import admin_required
@@ -27,11 +27,13 @@ from sqlalchemy import desc, func
 def get_subjects():
     """获取学科列表"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id') if isinstance(current_user_identity, dict) else g.get('tenant_id')
         include_stats = request.args.get('include_stats', 'false').lower() == 'true'
         
         query = Subject.query.filter_by(tenant_id=tenant_id, is_active=True)
-        subjects = query.order_by(Subject.order, Subject.name).all()
+        subjects = query.order_by(Subject.sort_order, Subject.name).all()
         
         result = []
         for subject in subjects:
@@ -94,10 +96,11 @@ def create_subject():
             description=data.get('description', ''),
             icon=data.get('icon', ''),
             color=data.get('color', '#1890ff'),
-            order=data.get('order', 0),
-            grade_levels=data.get('grade_levels', []),
-            exam_types=data.get('exam_types', []),
-            total_score=data.get('total_score', 100)
+            sort_order=data.get('sort_order', 0),
+            grade_range=data.get('grade_range', []),
+            total_score=data.get('total_score', 100),
+            category=data.get('category', ''),
+            name_en=data.get('name_en', '')
         )
         
         db.session.add(subject)
@@ -171,8 +174,8 @@ def update_subject(subject_id):
         
         # 更新字段
         updatable_fields = [
-            'name', 'code', 'description', 'icon', 'color', 'order',
-            'grade_levels', 'exam_types', 'total_score', 'is_active'
+            'name', 'code', 'description', 'icon', 'color', 'sort_order',
+            'grade_range', 'total_score', 'is_active', 'category', 'name_en'
         ]
         
         for field in updatable_fields:
@@ -420,3 +423,197 @@ def delete_chapter(chapter_id):
     except Exception as e:
         db.session.rollback()
         return error_response(f'Failed to delete chapter: {str(e)}', 500)
+
+@api_bp.route('/subjects/initialize-default', methods=['POST'])
+@jwt_required()
+@admin_required
+def initialize_default_subjects():
+    """初始化九大学科"""
+    try:
+        tenant_id = g.get('tenant_id')
+        
+        # 九大学科配置
+        default_subjects = [
+            {
+                'code': 'chinese',
+                'name': '语文',
+                'name_en': 'Chinese',
+                'category': 'language',
+                'description': '语文学科，包含现代文阅读、古诗文阅读、写作等',
+                'total_score': 150,
+                'sort_order': 1
+            },
+            {
+                'code': 'math',
+                'name': '数学',
+                'name_en': 'Mathematics',
+                'category': 'science',
+                'description': '数学学科，包含代数、几何、概率统计等',
+                'total_score': 150,
+                'sort_order': 2
+            },
+            {
+                'code': 'english',
+                'name': '英语',
+                'name_en': 'English',
+                'category': 'language',
+                'description': '英语学科，包含听力、阅读、写作等',
+                'total_score': 150,
+                'sort_order': 3
+            },
+            {
+                'code': 'physics',
+                'name': '物理',
+                'name_en': 'Physics',
+                'category': 'science',
+                'description': '物理学科，包含力学、电磁学、光学等',
+                'total_score': 100,
+                'sort_order': 4
+            },
+            {
+                'code': 'chemistry',
+                'name': '化学',
+                'name_en': 'Chemistry',
+                'category': 'science',
+                'description': '化学学科，包含无机化学、有机化学、物理化学等',
+                'total_score': 100,
+                'sort_order': 5
+            },
+            {
+                'code': 'biology',
+                'name': '生物',
+                'name_en': 'Biology',
+                'category': 'science',
+                'description': '生物学科，包含细胞生物学、遗传学、生态学等',
+                'total_score': 100,
+                'sort_order': 6
+            },
+            {
+                'code': 'history',
+                'name': '历史',
+                'name_en': 'History',
+                'category': 'liberal_arts',
+                'description': '历史学科，包含中国古代史、中国近现代史、世界史等',
+                'total_score': 100,
+                'sort_order': 7
+            },
+            {
+                'code': 'geography',
+                'name': '地理',
+                'name_en': 'Geography',
+                'category': 'liberal_arts',
+                'description': '地理学科，包含自然地理、人文地理、区域地理等',
+                'total_score': 100,
+                'sort_order': 8
+            },
+            {
+                'code': 'politics',
+                'name': '政治',
+                'name_en': 'Politics',
+                'category': 'liberal_arts',
+                'description': '政治学科，包含马克思主义基本原理、思想政治教育等',
+                'total_score': 100,
+                'sort_order': 9
+            }
+        ]
+        
+        created_subjects = []
+        
+        for subject_data in default_subjects:
+            # 检查是否已存在
+            existing = Subject.query.filter_by(
+                tenant_id=tenant_id,
+                code=subject_data['code']
+            ).first()
+            
+            if not existing:
+                subject = Subject(
+                    tenant_id=tenant_id,
+                    **subject_data
+                )
+                db.session.add(subject)
+                created_subjects.append(subject_data['name'])
+        
+        db.session.commit()
+        
+        return success_response({
+            'message': f'Successfully initialized {len(created_subjects)} subjects',
+            'created_subjects': created_subjects
+        })
+        
+    except Exception as e:
+        return error_response(f'Failed to initialize subjects: {str(e)}', 500)
+
+@api_bp.route('/subjects/<subject_id>/statistics', methods=['GET'])
+@jwt_required()
+def get_subject_statistics(subject_id):
+    """获取学科统计信息"""
+    try:
+        tenant_id = g.get('tenant_id')
+        
+        subject = Subject.query.filter_by(
+            id=subject_id, tenant_id=tenant_id, is_active=True
+        ).first()
+        
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 统计章节数量
+        chapter_count = Chapter.query.filter_by(
+            subject_id=subject_id, is_active=True
+        ).count()
+        
+        # 统计知识点数量
+        knowledge_point_count = db.session.query(func.count(KnowledgePoint.id)).join(
+            Chapter
+        ).filter(
+            Chapter.subject_id == subject_id,
+            Chapter.is_active == True,
+            KnowledgePoint.is_active == True
+        ).scalar()
+        
+        # 统计试卷数量
+        paper_count = ExamPaper.query.filter_by(
+            subject_id=subject_id, is_active=True
+        ).count()
+        
+        # 统计知识图谱数量
+        graph_count = KnowledgeGraph.query.filter_by(
+            subject_id=subject_id, is_active=True
+        ).count()
+        
+        # 按年份统计试卷
+        paper_by_year = db.session.query(
+            ExamPaper.year,
+            func.count(ExamPaper.id).label('count')
+        ).filter_by(
+            subject_id=subject_id, is_active=True
+        ).group_by(ExamPaper.year).order_by(desc(ExamPaper.year)).all()
+        
+        # 按难度统计知识点
+        kp_by_difficulty = db.session.query(
+            KnowledgePoint.difficulty,
+            func.count(KnowledgePoint.id).label('count')
+        ).join(Chapter).filter(
+            Chapter.subject_id == subject_id,
+            Chapter.is_active == True,
+            KnowledgePoint.is_active == True
+        ).group_by(KnowledgePoint.difficulty).all()
+        
+        statistics = {
+            'basic_stats': {
+                'chapter_count': chapter_count,
+                'knowledge_point_count': knowledge_point_count or 0,
+                'paper_count': paper_count,
+                'graph_count': graph_count
+            },
+            'paper_by_year': [{'year': year, 'count': count} for year, count in paper_by_year],
+            'knowledge_point_by_difficulty': [
+                {'difficulty': diff, 'count': count} for diff, count in kp_by_difficulty
+            ]
+        }
+        
+        return success_response(statistics)
+        
+    except Exception as e:
+        return error_response(f'Failed to get subject statistics: {str(e)}', 500)

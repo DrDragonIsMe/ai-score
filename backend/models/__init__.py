@@ -16,7 +16,8 @@ License: Apache License 2.0
 from .tenant import Tenant
 from .user import User, UserProfile
 from .knowledge import Subject, Chapter, KnowledgePoint, SubKnowledgePoint
-from .question import Question, QuestionType, ExamPaper
+from .question import Question, QuestionType
+from .exam_papers import ExamPaper, KnowledgeGraph
 from .learning import LearningPath, StudyRecord, MemoryCard
 from .diagnosis import DiagnosisReport, WeaknessPoint, LearningProfile
 from .ai_model import AIModelConfig
@@ -27,7 +28,7 @@ from .tracking import LearningMetric, PerformanceSnapshot, LearningReport, GoalT
 __all__ = [
     'Tenant', 'User', 'UserProfile',
     'Subject', 'Chapter', 'KnowledgePoint', 'SubKnowledgePoint',
-    'Question', 'QuestionType', 'ExamPaper',
+    'Question', 'QuestionType', 'ExamPaper', 'KnowledgeGraph',
     'LearningPath', 'StudyRecord', 'MemoryCard',
     'DiagnosisReport', 'WeaknessPoint', 'LearningProfile',
     'AIModelConfig',

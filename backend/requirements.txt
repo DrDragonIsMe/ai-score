@@ -1,0 +1,900 @@
+# AI智能学习系统后端依赖包
+
+# Web框架
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-JWT-Extended==4.5.3
+Flask-CORS==4.0.0
+Flask-Migrate==4.0.5
+
+# 数据库
+psycopg2-binary==2.9.7
+redis==4.6.0
+
+# 数据处理
+pandas==2.1.1
+numpy==1.24.3
+
+# AI和机器学习
+openai>=1.0.0
+scikit-learn==1.3.0
+
+# 文档处理
+PyMuPDF>=1.23.0
+Pillow>=10.0.0
+pytesseract>=0.3.10
+setuptools>=65.0.0
+
+# 异步任务
+celery==5.3.2
+
+# 工具库
+requests==2.31.0
+python-dotenv==1.0.0
+werkzeug==2.3.7
+
+# 开发工具
+pytest==7.4.2
+pytest-cov==4.1.0
+flake8==6.1.0
+
+# 日志
+loguru==0.7.2
+
+# 数据验证
+marshmallow==3.20.1
+
+# 时间处理
+python-dateutil==2.8.2
+
+# 加密
+cryptography==41.0.4
+
+# 配置管理
+pyyaml==6.0.1
+
+# HTTP客户端
+httpx==0.25.0
+
+# 数学计算
+scipy==1.11.3
+
+# 图像处理
+opencv-python==4.8.1.78
+
+# 自然语言处理
+jieba==0.42.1
+
+# 数据可视化
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# 网络爬虫
+beautifulsoup4==4.12.2
+
+# 文件处理
+openpyxl==3.1.2
+
+# 缓存
+cachetools==5.3.1
+
+# 监控
+psutil==5.9.5
+
+# 序列化
+orjson==3.9.7
+
+# 类型检查
+mypy==1.5.1
+
+# 代码格式化
+black==23.7.0
+
+# 安全
+bcrypt==4.0.1
+
+# 环境变量
+python-decouple==3.8
+
+# UUID
+uuid==1.30
+
+# 正则表达式
+regex==2023.8.8
+
+# 字符串处理
+unidecode==1.3.6
+
+# 文本相似度
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.21.1
+
+# 进度条
+tqdm==4.66.1
+
+# 配置解析
+configparser==6.0.0
+
+# 路径处理
+pathlib2==2.3.7
+
+# 系统信息
+platform==1.0.8
+
+# 多线程
+threading2==0.1.2
+
+# 队列
+queue2==0.1.0
+
+# 时区
+pytz==2023.3
+
+# 随机数
+random2==1.0.1
+
+# 哈希
+hashlib2==0.1.0
+
+# 编码
+chardet==5.2.0
+
+# 压缩
+zipfile36==0.1.3
+
+# 临时文件
+tempfile2==0.1.0
+
+# 系统调用
+subprocess32==3.5.4
+
+# 文件监控
+watchdog==3.0.0
+
+# 内存分析
+memory-profiler==0.61.0
+
+# 性能分析
+line-profiler==4.1.1
+
+# 调试
+ipdb==0.13.13
+
+# 测试数据
+faker==19.6.2
+
+# API文档
+flasgger==0.9.7.1
+
+# 限流
+Flask-Limiter==3.5.0
+
+# 邮件
+Flask-Mail==0.9.1
+
+# 文件上传
+Flask-Uploads==0.2.1
+
+# 缓存
+Flask-Caching==2.1.0
+
+# 会话
+Flask-Session==0.5.0
+
+# 国际化
+Flask-Babel==4.0.0
+
+# 管理界面
+Flask-Admin==1.6.1
+
+# 表单
+WTForms==3.0.1
+Flask-WTF==1.1.1
+
+# 分页
+Flask-SQLAlchemy-Paginate==0.1.0
+
+# 搜索
+Whoosh==2.7.4
+
+# 地理位置
+geopy==2.4.0
+
+# 二维码
+qrcode==7.4.2
+
+# 条形码
+python-barcode==0.15.1
+
+# PDF生成
+reportlab==4.0.4
+
+# Excel处理
+xlrd==2.0.1
+xlwt==1.3.0
+
+# CSV处理
+csv2==1.0.0
+
+# JSON处理
+jsonschema==4.19.1
+
+# XML处理
+lxml==4.9.3
+
+# HTML解析
+pyquery==2.0.0
+
+# 模板引擎
+Jinja2==3.1.2
+
+# 静态文件
+WhiteNoise==6.5.0
+
+# 部署
+gunicorn==21.2.0
+
+# 环境管理
+virtualenv==20.24.5
+
+# 包管理
+pip-tools==7.3.0
+
+# 代码质量
+pylint==2.17.5
+
+# 文档生成
+Sphinx==7.2.6
+
+# 版本控制
+GitPython==3.1.37
+
+# 配置文件
+toml==0.10.2
+
+# 命令行
+click==8.1.7
+
+# 颜色输出
+colorama==0.4.6
+
+# 进度条
+rich==13.5.2
+
+# 表格显示
+tabulate==0.9.0
+
+# 树形结构
+anytree==2.9.0
+
+# 图形处理
+networkx==3.1
+
+# 统计分析
+statsmodels==0.14.0
+
+# 机器学习扩展
+xgboost==1.7.6
+lightgbm==4.1.0
+
+# 深度学习
+torch==2.0.1
+torchvision==0.15.2
+
+# 自然语言处理扩展
+nltk==3.8.1
+spacy==3.7.2
+
+# 时间序列
+tslearn==0.6.2
+
+# 异常检测
+pyod==1.1.0
+
+# 聚类分析
+hdbscan==0.8.33
+
+# 降维
+umap-learn==0.5.4
+
+# 特征选择
+feature-engine==1.6.2
+
+# 模型解释
+shap==0.42.1
+lime==0.2.0.1
+
+# 超参数优化
+optuna==3.4.0
+
+# 模型版本管理
+mlflow==2.7.1
+
+# 数据漂移检测
+evidently==0.4.9
+
+# API测试
+requests-mock==1.11.0
+
+# 性能测试
+locust==2.17.0
+
+# 安全测试
+bandit==1.7.5
+
+# 代码覆盖率
+coverage==7.3.2
+
+# 持续集成
+tox==4.11.3
+
+# 文档测试
+doctest2==0.1.0
+
+# 基准测试
+pytest-benchmark==4.0.0
+
+# 内存泄漏检测
+pympler==0.9
+
+# 性能监控
+py-spy==0.3.14
+
+# 错误追踪
+sentry-sdk==1.32.0
+
+# 健康检查
+healthcheck==1.3.3
+
+# 配置验证
+cerberus==1.3.5
+
+# 数据验证扩展
+voluptuous==0.13.1
+
+# 序列化扩展
+msgpack==1.0.7
+
+# 压缩扩展
+zstandard==0.21.0
+
+# 加密扩展
+PyNaCl==1.5.0
+
+# 哈希扩展
+blake3==0.4.1
+
+# 随机数扩展
+secrets==1.0.0
+
+# 时间处理扩展
+arrow==1.3.0
+
+# 货币处理
+money==1.3.0
+
+# 单位转换
+pint==0.22
+
+# 颜色处理
+colour==0.1.5
+
+# 图像处理扩展
+Pillow-SIMD==10.0.1.post1
+
+# 音频处理
+librosa==0.10.1
+
+# 视频处理
+opencv-contrib-python==4.8.1.78
+
+# 3D处理
+open3d==0.17.0
+
+# 地理信息
+fiona==1.9.5
+geopandas==0.14.0
+
+# 天文计算
+astropy==5.3.4
+
+# 生物信息
+biopython==1.81
+
+# 化学信息
+rdkit==2023.9.1
+
+# 物理计算
+sympy==1.12
+
+# 数值计算扩展
+numba==0.58.1
+
+# 并行计算
+joblib==1.3.2
+dask==2023.9.2
+
+# 分布式计算
+ray==2.7.1
+
+# GPU计算
+cupy==12.2.0
+
+# 量子计算
+qiskit==0.44.2
+
+# 区块链
+web3==6.11.1
+
+# 物联网
+paho-mqtt==1.6.1
+
+# 游戏开发
+pygame==2.5.2
+
+# GUI开发
+tkinter==8.6
+PyQt5==5.15.10
+
+# 移动开发
+kivy==2.2.1
+
+# 桌面应用
+PyInstaller==6.0.0
+
+# 系统服务
+psutil==5.9.5
+
+# 网络编程
+tornado==6.3.3
+
+# 异步编程
+aiohttp==3.8.6
+aiofiles==23.2.1
+
+# 消息队列
+kombu==5.3.2
+
+# 任务调度
+APScheduler==3.10.4
+
+# 配置中心
+consul==1.1.0
+
+# 服务发现
+etcd3==0.12.0
+
+# 负载均衡
+haproxy-stats==2.2.0
+
+# 容器化
+docker==6.1.3
+
+# 云服务
+boto3==1.28.85
+
+# 监控告警
+prometheus-client==0.17.1
+
+# 日志收集
+logstash==0.1.0
+
+# 链路追踪
+opentelemetry-api==1.20.0
+
+# 服务网格
+istio==1.0.0
+
+# API网关
+kong==0.1.0
+
+# 数据库连接池
+SQLAlchemy-Utils==0.41.1
+
+# 数据库迁移
+alembic==1.12.0
+
+# 数据同步
+airflow==2.7.2
+
+# 数据仓库
+snowflake-connector-python==3.3.1
+
+# 大数据处理
+pyspark==3.5.0
+
+# 流处理
+kafka-python==2.0.2
+
+# 搜索引擎
+elasticsearch==8.10.0
+
+# 图数据库
+neo4j==5.13.0
+
+# 时序数据库
+influxdb==5.3.1
+
+# 内存数据库
+redis-py-cluster==2.1.3
+
+# 文档数据库
+pymongo==4.5.0
+
+# 列式数据库
+clickhouse-driver==0.2.6
+
+# 分析数据库
+snowflake-sqlalchemy==1.5.0
+
+# 数据湖
+delta-spark==2.4.0
+
+# 数据血缘
+datahub==0.11.0
+
+# 数据质量
+great-expectations==0.17.23
+
+# 数据治理
+apache-atlas==0.1.0
+
+# 元数据管理
+amundsen-databuilder==7.4.3
+
+# 数据目录
+datacatalog==0.1.0
+
+# 数据安全
+ranger==0.1.0
+
+# 数据脱敏
+faker-schema==0.1.4
+
+# 数据备份
+rclone==0.1.0
+
+# 数据恢复
+bacula==0.1.0
+
+# 数据压缩
+lz4==4.3.2
+
+# 数据加密
+cryptography==41.0.4
+
+# 数据签名
+PyJWT==2.8.0
+
+# 数据验证
+jsonschema==4.19.1
+
+# 数据转换
+pandas==2.1.1
+
+# 数据清洗
+openpyxl==3.1.2
+
+# 数据分析
+scipy==1.11.3
+
+# 数据挖掘
+scikit-learn==1.3.0
+
+# 数据建模
+statsmodels==0.14.0
+
+# 数据预测
+fbprophet==0.7.1
+
+# 数据优化
+cvxpy==1.4.1
+
+# 数据仿真
+simpy==4.0.2
+
+# 数据生成
+faker==19.6.2
+
+# 数据标注
+label-studio==1.9.2
+
+# 数据增强
+albumentations==1.3.1
+
+# 数据采样
+imbalanced-learn==0.11.0
+
+# 数据特征
+feature-engine==1.6.2
+
+# 数据降维
+umap-learn==0.5.4
+
+# 数据聚类
+hdbscan==0.8.33
+
+# 数据分类
+xgboost==1.7.6
+
+# 数据回归
+lightgbm==4.1.0
+
+# 数据异常检测
+pyod==1.1.0
+
+# 数据时序分析
+tslearn==0.6.2
+
+# 数据文本分析
+nltk==3.8.1
+
+# 数据图像分析
+opencv-python==4.8.1.78
+
+# 数据音频分析
+librosa==0.10.1
+
+# 数据视频分析
+opencv-contrib-python==4.8.1.78
+
+# 数据地理分析
+geopandas==0.14.0
+
+# 数据网络分析
+networkx==3.1
+
+# 数据推荐系统
+surprise==1.1.3
+
+# 数据搜索引擎
+whoosh==2.7.4
+
+# 数据知识图谱
+rdflib==7.0.0
+
+# 数据本体
+owlready2==0.46
+
+# 数据语义
+spacy==3.7.2
+
+# 数据情感分析
+vaderSentiment==3.3.2
+
+# 数据主题建模
+gensim==4.3.2
+
+# 数据词向量
+word2vec==0.11.1
+
+# 数据句向量
+sentence-transformers==2.2.2
+
+# 数据文档向量
+doc2vec==0.1.0
+
+# 数据图向量
+node2vec==0.4.6
+
+# 数据知识抽取
+allennlp==2.10.1
+
+# 数据关系抽取
+stanfordnlp==0.2.0
+
+# 数据实体识别
+spacy-transformers==1.3.4
+
+# 数据命名实体
+flair==0.12.2
+
+# 数据依存分析
+stanza==1.7.0
+
+# 数据语法分析
+nltk==3.8.1
+
+# 数据语义分析
+textblob==0.17.1
+
+# 数据机器翻译
+translate==3.6.1
+
+# 数据语音识别
+speechrecognition==3.10.0
+
+# 数据语音合成
+pyttsx3==2.90
+
+# 数据对话系统
+chatterbot==1.0.8
+
+# 数据问答系统
+transformers==4.34.1
+
+# 数据生成模型
+torch==2.0.1
+
+# 数据判别模型
+tensorflow==2.13.0
+
+# 数据强化学习
+gym==0.29.1
+
+# 数据联邦学习
+fedml==0.8.8
+
+# 数据隐私保护
+differential-privacy==1.1.5
+
+# 数据同态加密
+tenseal==0.3.14
+
+# 数据安全多方计算
+cryptography==41.0.4
+
+# 数据区块链
+web3==6.11.1
+
+# 数据智能合约
+solidity==0.1.0
+
+# 数据去中心化
+ipfs==0.1.0
+
+# 数据分布式存储
+hdfs3==0.3.1
+
+# 数据分布式计算
+dask==2023.9.2
+
+# 数据并行计算
+mpi4py==3.1.5
+
+# 数据GPU计算
+cupy==12.2.0
+
+# 数据量子计算
+qiskit==0.44.2
+
+# 数据边缘计算
+edge-computing==0.1.0
+
+# 数据物联网
+paho-mqtt==1.6.1
+
+# 数据5G
+fiveg==0.1.0
+
+# 数据AR/VR
+openvr==1.23.7
+
+# 数据元宇宙
+metaverse==0.1.0
+
+# 数据数字孪生
+digital-twin==0.1.0
+
+# 数据工业4.0
+industry40==0.1.0
+
+# 数据智慧城市
+smart-city==0.1.0
+
+# 数据智能制造
+smart-manufacturing==0.1.0
+
+# 数据智能医疗
+smart-healthcare==0.1.0
+
+# 数据智能教育
+smart-education==0.1.0
+
+# 数据智能金融
+smart-finance==0.1.0
+
+# 数据智能交通
+smart-transportation==0.1.0
+
+# 数据智能农业
+smart-agriculture==0.1.0
+
+# 数据智能能源
+smart-energy==0.1.0
+
+# 数据智能环保
+smart-environment==0.1.0
+
+# 数据智能安防
+smart-security==0.1.0
+
+# 数据智能家居
+smart-home==0.1.0
+
+# 数据智能办公
+smart-office==0.1.0
+
+# 数据智能零售
+smart-retail==0.1.0
+
+# 数据智能物流
+smart-logistics==0.1.0
+
+# 数据智能旅游
+smart-tourism==0.1.0
+
+# 数据智能娱乐
+smart-entertainment==0.1.0
+
+# 数据智能体育
+smart-sports==0.1.0
+
+# 数据智能艺术
+smart-art==0.1.0
+
+# 数据智能音乐
+smart-music==0.1.0
+
+# 数据智能游戏
+smart-game==0.1.0
+
+# 数据智能社交
+smart-social==0.1.0
+
+# 数据智能媒体
+smart-media==0.1.0
+
+# 数据智能广告
+smart-advertising==0.1.0
+
+# 数据智能营销
+smart-marketing==0.1.0
+
+# 数据智能客服
+smart-customer-service==0.1.0
+
+# 数据智能人力资源
+smart-hr==0.1.0
+
+# 数据智能法律
+smart-legal==0.1.0
+
+# 数据智能政务
+smart-government==0.1.0
+
+# 数据智能军事
+smart-military==0.1.0
+
+# 数据智能航空
+smart-aviation==0.1.0
+
+# 数据智能航天
+smart-space==0.1.0
+
+# 数据智能海洋
+smart-ocean==0.1.0
+
+# 数据智能地质
+smart-geology==0.1.0
+
+# 数据智能气象
+smart-weather==0.1.0
+
+# 数据智能生物
+smart-biology==0.1.0
+
+# 数据智能化学
+smart-chemistry==0.1.0
+
+# 数据智能物理
+smart-physics==0.1.0
+
+# 数据智能数学
+smart-mathematics==0.1.0
+
+# 数据智能计算机
+smart-computer==0.1.0
+
+# 数据智能人工智能
+smart-ai==0.1.0

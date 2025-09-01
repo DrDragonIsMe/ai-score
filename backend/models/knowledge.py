@@ -36,6 +36,14 @@ class Subject(db.Model):
     grade_range = db.Column(db.JSON, default=[], comment='适用年级范围')
     total_score = db.Column(db.Integer, default=150, comment='总分')
     
+    # 星图展示配置
+    star_map_config = db.Column(db.JSON, comment='星图展示配置')
+    exam_scope = db.Column(db.JSON, comment='考试范围配置')
+    
+    # 真题统计
+    paper_count = db.Column(db.Integer, default=0, comment='真题数量')
+    last_paper_year = db.Column(db.Integer, comment='最新真题年份')
+    
     # 状态
     is_active = db.Column(db.Boolean, default=True, comment='是否激活')
     sort_order = db.Column(db.Integer, default=0, comment='排序')
@@ -46,6 +54,8 @@ class Subject(db.Model):
     
     # 关系
     chapters = db.relationship('Chapter', backref='subject', lazy='dynamic', cascade='all, delete-orphan')
+    exam_papers = db.relationship('ExamPaper', backref='subject', lazy='dynamic')
+    knowledge_graphs = db.relationship('KnowledgeGraph', backref='subject', lazy='dynamic')
     
     # 唯一约束
     __table_args__ = (
@@ -55,8 +65,8 @@ class Subject(db.Model):
     def __repr__(self):
         return f'<Subject {self.name}>'
     
-    def to_dict(self):
-        return {
+    def to_dict(self, include_stats=False):
+        data = {
             'id': str(self.id),
             'code': self.code,
             'name': self.name,
@@ -65,10 +75,23 @@ class Subject(db.Model):
             'category': self.category,
             'grade_range': self.grade_range,
             'total_score': self.total_score,
+            'star_map_config': self.star_map_config,
+            'exam_scope': self.exam_scope,
+            'paper_count': self.paper_count,
+            'last_paper_year': self.last_paper_year,
             'is_active': self.is_active,
             'sort_order': self.sort_order,
             'chapter_count': self.chapters.count()
         }
+        
+        if include_stats:
+            data['stats'] = {
+                'knowledge_point_count': sum(chapter.knowledge_points.count() for chapter in self.chapters.all()),
+                'exam_paper_count': self.exam_papers.count(),
+                'knowledge_graph_count': self.knowledge_graphs.count()
+            }
+        
+        return data
 
 class Chapter(db.Model):
     """章节模型"""

@@ -86,6 +86,11 @@ class User(db.Model):
         refresh_token = create_refresh_token(identity=identity)
         return access_token, refresh_token
     
+    @property
+    def is_admin(self):
+        """检查用户是否是管理员"""
+        return self.role == 'admin'
+    
     def to_dict(self, include_sensitive=False):
         """转换为字典"""
         data = {
