@@ -119,7 +119,7 @@ def login():
         data = request.get_json()
         
         # 验证必填字段
-        if not data.get('username') or not data.get('password'):
+        if not data or not data.get('username') or not data.get('password'):
             return error_response('Username and password are required', 400)
         
         username = data['username'].strip()

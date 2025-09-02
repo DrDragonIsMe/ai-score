@@ -90,13 +90,12 @@ const Login: React.FC = () => {
                         <Form.Item
                             name="email"
                             rules={[
-                                { required: true, message: '请输入邮箱地址' },
-                                { type: 'email', message: '请输入有效的邮箱地址' },
+                                { required: true, message: '请输入用户名或邮箱地址' },
                             ]}
                         >
                             <Input
                                 prefix={<MailOutlined />}
-                                placeholder="邮箱地址"
+                                placeholder="用户名或邮箱地址"
                             />
                         </Form.Item>
 

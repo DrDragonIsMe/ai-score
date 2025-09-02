@@ -58,6 +58,12 @@ interface Message {
     keyPoints: string[];
     difficulty: string;
   };
+  referencedDocuments?: {
+    id: string;
+    title: string;
+    relevance_score: number;
+    content_snippet: string;
+  }[];
 }
 
 interface AIAssistantProps {
@@ -133,7 +139,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
           id: (Date.now() + 1).toString(),
           type: 'assistant',
           content: result.data.response || result.response,
-          timestamp: new Date()
+          timestamp: new Date(),
+          referencedDocuments: result.data.referenced_documents || []
         };
         setMessages(prev => [...prev, assistantMessage]);
       } else {
@@ -665,6 +672,37 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                           </div>
                         </div>
                       )}
+                    </Space>
+                  </Card>
+                )}
+                {msg.referencedDocuments && msg.referencedDocuments.length > 0 && (
+                  <Card size="small" style={{ marginTop: '8px', backgroundColor: '#f0f9ff' }}>
+                    <div style={{ marginBottom: '8px' }}>
+                      <Text strong style={{ color: '#1890ff' }}>📚 参考文档</Text>
+                    </div>
+                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                      {msg.referencedDocuments.map((doc, index) => (
+                        <div key={doc.id} style={{ 
+                          padding: '8px', 
+                          backgroundColor: 'white', 
+                          borderRadius: '6px',
+                          border: '1px solid #e6f7ff'
+                        }}>
+                          <div style={{ display: 'flex', justifyItems: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                            <Text strong style={{ color: '#1890ff', cursor: 'pointer' }} 
+                                  onClick={() => window.open(`/documents/${doc.id}`, '_blank')}>
+                              <FileTextOutlined style={{ marginRight: '4px' }} />
+                              {doc.title}
+                            </Text>
+                            <Tag color="blue" style={{ fontSize: '11px' }}>
+                               相关度: {(doc.relevance_score * 100).toFixed(0)}%
+                             </Tag>
+                          </div>
+                          <Text type="secondary" style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                            {doc.content_snippet}
+                          </Text>
+                        </div>
+                      ))}
                     </Space>
                   </Card>
                 )}

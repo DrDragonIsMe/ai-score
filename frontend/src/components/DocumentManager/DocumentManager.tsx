@@ -12,7 +12,14 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  X
+  X,
+  Maximize2,
+  Minimize2,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import './DocumentManager.css';
 
@@ -825,10 +832,58 @@ interface DocumentModalProps {
 
 const DocumentModal: React.FC<DocumentModalProps> = ({ document, onClose }) => {
   const [activeTab, setActiveTab] = useState('info');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [rotation, setRotation] = useState(0);
+
+  // 全屏切换
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // 缩放控制
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 25, 200));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 25, 50));
+  };
+
+  // 旋转控制
+  const handleRotate = () => {
+    setRotation(prev => (prev + 90) % 360);
+  };
+
+  // 页面导航
+  const goToPrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 0));
+  };
+
+  const goToNextPage = () => {
+    if (document.pages && document.pages.length > 0) {
+      setCurrentPage(prev => Math.min(prev + 1, document.pages!.length - 1));
+    }
+  };
+
+  // ESC键退出全屏
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    if (isFullscreen) {
+      window.document.addEventListener('keydown', handleKeyPress);
+      return () => window.document.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [isFullscreen]);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container modal-container-xl">
+    <div className={`modal-overlay ${isFullscreen ? 'modal-fullscreen' : ''}`}>
+      <div className={`modal-container ${isFullscreen ? 'modal-container-fullscreen' : 'modal-container-xl'}`}>
         <div className="modal-header">
           <div className="flex items-center space-x-3">
             <FileText className="w-5 h-5 text-blue-500" />
@@ -837,9 +892,53 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ document, onClose }) => {
               <p className="text-xs text-gray-500">{document.filename}</p>
             </div>
           </div>
-          <button onClick={onClose} className="modal-close">
-            <X className="close-icon" />
-          </button>
+          <div className="modal-header-actions">
+            {activeTab === 'content' && (
+              <>
+                <button onClick={toggleFullscreen} className="modal-action-btn" title={isFullscreen ? '退出全屏' : '全屏查看'}>
+                  {isFullscreen ? <Minimize2 className="action-icon" /> : <Maximize2 className="action-icon" />}
+                </button>
+                {document.pages && document.pages.length > 1 && (
+                  <div className="page-navigation">
+                    <button 
+                      onClick={goToPrevPage} 
+                      disabled={currentPage === 0}
+                      className="nav-btn"
+                      title="上一页"
+                    >
+                      <ChevronLeft className="nav-icon" />
+                    </button>
+                    <span className="page-indicator">
+                      {currentPage + 1} / {document.pages.length}
+                    </span>
+                    <button 
+                      onClick={goToNextPage} 
+                      disabled={!document.pages || currentPage >= document.pages.length - 1}
+                      className="nav-btn"
+                      title="下一页"
+                    >
+                      <ChevronRight className="nav-icon" />
+                    </button>
+                  </div>
+                )}
+                <div className="zoom-controls">
+                  <button onClick={handleZoomOut} className="zoom-btn" title="缩小">
+                    <ZoomOut className="zoom-icon" />
+                  </button>
+                  <span className="zoom-level">{zoomLevel}%</span>
+                  <button onClick={handleZoomIn} className="zoom-btn" title="放大">
+                    <ZoomIn className="zoom-icon" />
+                  </button>
+                  <button onClick={handleRotate} className="rotate-btn" title="旋转">
+                    <RotateCw className="rotate-icon" />
+                  </button>
+                </div>
+              </>
+            )}
+            <button onClick={onClose} className="modal-close">
+              <X className="close-icon" />
+            </button>
+          </div>
         </div>
 
         {/* 标签页导航 */}
@@ -942,22 +1041,38 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ document, onClose }) => {
 
           {activeTab === 'content' && document.pages && (
             <div className="content-tab">
-              <div className="content-header">
-                <h4 className="content-title">文档内容</h4>
-                <span className="content-count">{document.pages.length} 页</span>
-              </div>
-              <div className="content-pages">
-                {document.pages.map((page) => (
-                  <div key={page.id} className="content-page">
-                    <div className="page-header">
-                      <span className="page-number">第 {page.page_number} 页</span>
-                      <span className="page-chars">{(page.page_content || '').length} 字符</span>
-                    </div>
-                    <div className="page-content">
-                      {page.page_content || '无内容'}
+              {!isFullscreen && (
+                <div className="content-header">
+                  <h4 className="content-title">文档内容</h4>
+                  <span className="content-count">{document.pages.length} 页</span>
+                </div>
+              )}
+              <div className={`content-viewer ${isFullscreen ? 'content-viewer-fullscreen' : ''}`}>
+                {document.pages.length > 0 && (
+                  <div className="content-page-container">
+                    <div 
+                      className="content-page-display"
+                      style={{
+                        transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
+                        transformOrigin: 'center center'
+                      }}
+                    >
+                      <div className="page-header">
+                        <span className="page-number">第 {document.pages[currentPage].page_number} 页</span>
+                        <span className="page-chars">{(document.pages[currentPage].page_content || '').length} 字符</span>
+                      </div>
+                      <div className="page-content">
+                        {document.pages[currentPage].page_content || '无内容'}
+                      </div>
                     </div>
                   </div>
-                ))}
+                )}
+                {document.pages.length === 0 && (
+                  <div className="no-content">
+                    <FileText className="no-content-icon" />
+                    <p className="no-content-text">暂无文档内容</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

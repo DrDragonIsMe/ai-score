@@ -17,6 +17,7 @@ import {
   FullscreenExitOutlined,
 } from '@ant-design/icons';
 import AISidebar from '../AISidebar/AISidebar';
+import AIFullscreen from '../AIFullscreen/AIFullscreen';
 import './AIDisplayManager.css';
 
 export type AIDisplayMode = 'hidden' | 'sidebar' | 'drawer' | 'fullscreen';
@@ -213,21 +214,14 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
         </Drawer>
 
         {/* 全屏模式 */}
-        <Modal
-          title="AI智能助手 - 全屏模式"
-          open={fullscreenVisible}
-          onCancel={() => {
-            setFullscreenVisible(false);
-            setDisplayMode('hidden');
-          }}
-          footer={null}
-          width="100vw"
-          style={{ top: 0, paddingBottom: 0 }}
-          styles={{ body: { height: 'calc(100vh - 55px)', padding: 0 } }}
-          className="ai-fullscreen-modal"
-        >
-          {renderAIComponent('ai-fullscreen-mode')}
-        </Modal>
+        {fullscreenVisible && (
+          <AIFullscreen 
+            onClose={() => {
+              setFullscreenVisible(false);
+              setDisplayMode('hidden');
+            }}
+          />
+        )}
 
         {/* 隐藏模式时的侧边触发区域和浮动按钮 */}
         {displayMode === 'hidden' && (

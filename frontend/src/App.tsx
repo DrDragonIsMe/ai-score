@@ -13,10 +13,11 @@ import LearningPath from './pages/LearningPath';
 import Login from './pages/Login';
 import Memory from './pages/Memory';
 import MistakeBook from './pages/MistakeBook';
+import Profile from './pages/Profile';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
 import SubjectManagement from './pages/SubjectManagement';
-import StatisticsAnalysis from './components/StatisticsAnalysis';
+import LearningAnalytics from './pages/LearningAnalytics';
 import DocumentManagement from './pages/DocumentManagement';
 import { useAuthStore } from './stores/authStore';
 
@@ -71,8 +72,8 @@ const App: React.FC = () => {
                                         <Route path="/memory-cards" element={<Memory />} />
                                         <Route path="/mistake-book" element={<MistakeBook />} />
                                         <Route path="/exam" element={<Exam />} />
-                                        <Route path="/analytics" element={<StatisticsAnalysis />} />
-                                        <Route path="/profile" element={<div>个人资料页面开发中...</div>} />
+                                        <Route path="/analytics" element={<LearningAnalytics />} />
+                                        <Route path="/profile" element={<Profile />} />
                                         <Route path="/settings" element={<Settings />} />
                                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                         <Route path="*" element={<Navigate to="/dashboard" replace />} />

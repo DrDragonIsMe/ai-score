@@ -13,6 +13,7 @@ License: Apache License 2.0
 """
 
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from utils.response import success_response, error_response
 from services.ai_assistant_service import ai_assistant_service
@@ -32,6 +33,7 @@ def get_assistant_info():
     return success_response(info, "获取AI助理信息成功")
 
 @ai_assistant_bp.route('/chat', methods=['POST'])
+@jwt_required()
 def chat_with_assistant():
     """
     与AI助理对话
@@ -54,9 +56,13 @@ def chat_with_assistant():
         return error_response("消息内容不能为空", 400)
     
     try:
-        # 调用AI助理服务（暂时使用固定用户ID）
+        # 从JWT token中获取用户ID
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        # 调用AI助理服务
         result = ai_assistant_service.chat_with_user(
-            user_id="1",
+            user_id=user_id,
             message=message,
             context=context,
             model_id=model_id

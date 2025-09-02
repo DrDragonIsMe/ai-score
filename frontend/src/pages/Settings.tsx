@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -37,6 +38,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { settingsApi } from '../api/settings';
+import { useAuthStore } from '../stores/authStore';
 
 interface AIModel {
   id: string;
@@ -100,6 +102,8 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const Settings: React.FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuthStore();
   const [tabValue, setTabValue] = useState(0);
   const [models, setModels] = useState<AIModel[]>([]);
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -131,17 +135,32 @@ const Settings: React.FC = () => {
   });
 
   useEffect(() => {
+    // 检查用户是否已登录
+    if (!isAuthenticated) {
+      showSnackbar('请先登录', 'error');
+      navigate('/login');
+      return;
+    }
+    
     fetchModels();
     fetchSystemInfo();
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   const fetchModels = async () => {
     try {
       setLoading(true);
       const response = await settingsApi.getAIModels();
       setModels(response.data.models || []);
-    } catch (error) {
-      showSnackbar('获取AI模型列表失败', 'error');
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        showSnackbar('登录已过期，请重新登录', 'error');
+        logout();
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
+      } else {
+        showSnackbar('获取AI模型列表失败', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -151,8 +170,16 @@ const Settings: React.FC = () => {
     try {
       const response = await settingsApi.getSystemInfo();
       setSystemInfo(response.data);
-    } catch (error) {
-      console.error('获取系统信息失败:', error);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        showSnackbar('登录已过期，请重新登录', 'error');
+        logout();
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
+      } else {
+        console.error('获取系统信息失败:', error);
+      }
     }
   };
 
@@ -239,8 +266,10 @@ const Settings: React.FC = () => {
       handleCloseDialog();
       fetchModels();
       fetchSystemInfo();
-    } catch (error) {
-      showSnackbar(editingModel ? 'AI模型更新失败' : 'AI模型创建失败', 'error');
+    } catch (error: any) {
+      console.error('AI模型操作失败:', error);
+      const errorMessage = error.response?.data?.message || error.message || (editingModel ? 'AI模型更新失败' : 'AI模型创建失败');
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -277,6 +306,18 @@ const Settings: React.FC = () => {
       fetchSystemInfo();
     } catch (error) {
       showSnackbar('默认模型设置失败', 'error');
+    }
+  };
+
+  const handleToggleActive = async (modelId: string) => {
+    try {
+      await settingsApi.toggleAIModelActive(modelId);
+      showSnackbar('模型状态切换成功', 'success');
+      fetchModels();
+      fetchSystemInfo();
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || '模型状态切换失败';
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -385,12 +426,12 @@ const Settings: React.FC = () => {
                       成本: ${model.cost_per_1k_input_tokens}/${model.cost_per_1k_output_tokens} per 1K tokens
                     </Typography>
 
-                    <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       <Button
                         size="small"
                         startIcon={testingModel === model.id ? <CircularProgress size={16} /> : <TestIcon />}
                         onClick={() => handleTestModel(model.id)}
-                        disabled={testingModel === model.id}
+                        disabled={testingModel === model.id || !model.is_active}
                       >
                         测试
                       </Button>
@@ -400,6 +441,13 @@ const Settings: React.FC = () => {
                         onClick={() => handleOpenDialog(model)}
                       >
                         编辑
+                      </Button>
+                      <Button
+                        size="small"
+                        color={model.is_active ? 'warning' : 'success'}
+                        onClick={() => handleToggleActive(model.id)}
+                      >
+                        {model.is_active ? '禁用' : '启用'}
                       </Button>
                       <Button
                         size="small"

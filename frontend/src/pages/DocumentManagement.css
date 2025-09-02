@@ -1,0 +1,124 @@
+/* 全屏抽屉样式 */
+.fullscreen-drawer .ant-drawer-content {
+  height: 100vh !important;
+}
+
+.fullscreen-drawer .ant-drawer-body {
+  height: calc(100vh - 55px) !important;
+  padding: 0 !important;
+}
+
+.fullscreen-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 文档内容查看器样式 */
+.document-content-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-content-viewer .ant-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-content-viewer .ant-tabs-content-holder {
+  flex: 1;
+  overflow: hidden;
+}
+
+.document-content-viewer .ant-tabs-tabpane {
+  height: 100%;
+  overflow: auto;
+}
+
+/* 文档页面容器 */
+.document-page-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  background: #f5f5f5;
+  overflow: auto;
+}
+
+.document-page-display {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d9d9d9;
+  max-width: 100%;
+  transition: transform 0.3s ease;
+}
+
+.document-page-content {
+  padding: 24px;
+}
+
+.document-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.document-page-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.document-page-chars {
+  font-size: 12px;
+  color: #999;
+}
+
+.document-page-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #262626;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 无内容状态 */
+.document-no-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+}
+
+.document-no-content .anticon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.document-no-content p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .document-page-container {
+    padding: 10px;
+  }
+  
+  .document-page-content {
+    padding: 16px;
+  }
+  
+  .document-page-text {
+    font-size: 13px;
+  }
+}

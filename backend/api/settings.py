@@ -154,7 +154,8 @@ def create_ai_model():
     except Exception as e:
         db.session.rollback()
         logger.error(f"创建AI模型配置失败: {str(e)}")
-        return error_response(message='创建AI模型配置失败')
+        logger.error(f"请求数据: {data}")
+        return error_response(message=f'创建AI模型配置失败: {str(e)}')
 
 @settings_bp.route('/ai-models/<model_id>', methods=['PUT'])
 @jwt_required()
@@ -322,6 +323,67 @@ def set_default_model(model_id):
         db.session.rollback()
         logger.error(f"设置默认模型失败: {str(e)}")
         return error_response(message='设置默认模型失败')
+
+@settings_bp.route('/ai-models/<model_id>/toggle-active', methods=['POST'])
+@jwt_required()
+@admin_required
+@tenant_required
+def toggle_model_active(model_id):
+    """
+    切换AI模型的启用/禁用状态
+    """
+    try:
+        tenant_id = get_jwt_identity()['tenant_id']
+        
+        model_config = AIModelConfig.query.filter_by(
+            id=model_id,
+            tenant_id=tenant_id
+        ).first()
+        
+        if not model_config:
+            return error_response(message='模型配置不存在')
+        
+        # 如果是默认模型且要禁用，需要先检查是否有其他可用模型
+        if model_config.is_default and model_config.is_active:
+            other_active_models = AIModelConfig.query.filter(
+                AIModelConfig.tenant_id == tenant_id,
+                AIModelConfig.id != model_id,
+                AIModelConfig.is_active == True
+            ).count()
+            
+            if other_active_models == 0:
+                return error_response(message='不能禁用默认模型，请先启用其他模型或设置其他模型为默认')
+        
+        # 切换激活状态
+        model_config.is_active = not model_config.is_active
+        model_config.updated_at = datetime.utcnow()
+        
+        # 如果禁用了默认模型，自动设置第一个可用模型为默认
+        if model_config.is_default and not model_config.is_active:
+            model_config.is_default = False
+            
+            # 找到第一个可用模型设为默认
+            new_default = AIModelConfig.query.filter_by(
+                tenant_id=tenant_id,
+                is_active=True
+            ).filter(AIModelConfig.id != model_id).first()
+            
+            if new_default:
+                new_default.is_default = True
+                new_default.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        status_text = '启用' if model_config.is_active else '禁用'
+        return success_response(
+            data=model_config.to_dict(include_sensitive=False),
+            message=f'模型{status_text}成功'
+        )
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"切换模型状态失败: {str(e)}")
+        return error_response(message='切换模型状态失败')
 
 @settings_bp.route('/system-info', methods=['GET'])
 @jwt_required()

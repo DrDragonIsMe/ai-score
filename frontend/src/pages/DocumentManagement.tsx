@@ -18,8 +18,10 @@ import {
   Badge,
   Statistic,
   Row,
-  Col
+  Col,
+  Descriptions
 } from 'antd';
+import './DocumentManagement.css';
 import {
   PlusOutlined,
   UploadOutlined,
@@ -28,7 +30,14 @@ import {
   DeleteOutlined,
   FileTextOutlined,
   FolderAddOutlined,
-  SearchOutlined
+  SearchOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
+  RotateRightOutlined,
+  LeftOutlined,
+  RightOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { UploadProps } from 'antd';
@@ -54,6 +63,17 @@ interface Document {
   tags: string[];
   page_count?: number;
   word_count?: number;
+  pages?: Array<{
+    id: string;
+    page_number: number;
+    page_content: string;
+    content_type: string;
+    ocr_confidence?: number;
+    topics?: string[];
+    key_concepts?: string[];
+    summary?: string;
+    created_at?: string;
+  }>;
 }
 
 interface Category {
@@ -84,6 +104,11 @@ const DocumentManagement: React.FC = () => {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [rotation, setRotation] = useState(0);
+  const [activeDocumentTab, setActiveDocumentTab] = useState('info');
   const [form] = Form.useForm();
   const [categoryForm] = Form.useForm();
 
@@ -269,6 +294,9 @@ const DocumentManagement: React.FC = () => {
       
       if (result.success) {
         setSelectedDocument(result.data);
+        setCurrentPage(0);
+        setZoomLevel(100);
+        setRotation(0);
         setDrawerVisible(true);
       } else {
         message.error('获取文档详情失败: ' + result.message);
@@ -277,6 +305,43 @@ const DocumentManagement: React.FC = () => {
       console.error('获取文档详情失败:', error);
       message.error('获取文档详情失败');
     }
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 25, 200));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 25, 50));
+  };
+
+  const handleRotate = () => {
+    setRotation(prev => (prev + 90) % 360);
+  };
+
+  const handlePrevPage = () => {
+    if (selectedDocument?.pages && currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (selectedDocument?.pages && currentPage < selectedDocument.pages.length - 1) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerVisible(false);
+    setIsFullscreen(false);
+    setCurrentPage(0);
+    setZoomLevel(100);
+    setRotation(0);
+    setSelectedDocument(null);
   };
 
   // 创建分类
@@ -661,16 +726,57 @@ const DocumentManagement: React.FC = () => {
 
       {/* 文档详情抽屉 */}
       <Drawer
-        title="文档详情"
+        title={selectedDocument?.title || '文档详情'}
         placement="right"
-        width={600}
+        width={isFullscreen ? '100vw' : 800}
+        height={isFullscreen ? '100vh' : undefined}
         open={drawerVisible}
-        onClose={() => {
-          setDrawerVisible(false);
-          setSelectedDocument(null);
-        }}
+        onClose={handleCloseDrawer}
+        className={isFullscreen ? 'fullscreen-drawer' : ''}
         extra={
           <Space>
+            <Button
+              icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+              onClick={toggleFullscreen}
+              title={isFullscreen ? '退出全屏' : '全屏查看'}
+            />
+            <Button
+              icon={<ZoomOutOutlined />}
+              onClick={handleZoomOut}
+              disabled={zoomLevel <= 50}
+              title="缩小"
+            />
+            <span style={{ fontSize: '12px', color: '#666' }}>{zoomLevel}%</span>
+            <Button
+              icon={<ZoomInOutlined />}
+              onClick={handleZoomIn}
+              disabled={zoomLevel >= 200}
+              title="放大"
+            />
+            <Button
+              icon={<RotateRightOutlined />}
+              onClick={handleRotate}
+              title="旋转"
+            />
+            {activeDocumentTab === 'analysis' && selectedDocument?.pages && selectedDocument.pages.length > 1 && (
+               <>
+                 <Button
+                   icon={<LeftOutlined />}
+                   onClick={handlePrevPage}
+                   disabled={currentPage === 0}
+                   title="上一页"
+                 />
+                 <span style={{ fontSize: '12px', color: '#666' }}>
+                   {currentPage + 1} / {selectedDocument.pages.length}
+                 </span>
+                 <Button
+                   icon={<RightOutlined />}
+                   onClick={handleNextPage}
+                   disabled={currentPage === selectedDocument.pages.length - 1}
+                   title="下一页"
+                 />
+               </>
+             )}
             {selectedDocument && (
               <>
                 <Button
@@ -695,101 +801,229 @@ const DocumentManagement: React.FC = () => {
         }
       >
         {selectedDocument && (
-          <div>
-            <Tabs
-              defaultActiveKey="info"
-              items={[
-                {
-                  key: 'info',
-                  label: '基本信息',
-                  children: (
-                    <div style={{ padding: '16px 0' }}>
-                      <Row gutter={[16, 16]}>
-                        <Col span={24}>
-                          <div style={{ marginBottom: 16 }}>
-                            <h3 style={{ margin: 0, marginBottom: 8 }}>{selectedDocument.title}</h3>
-                            <p style={{ color: '#666', margin: 0 }}>{selectedDocument.filename}</p>
-                          </div>
-                        </Col>
-                        
-                        <Col span={12}>
-                          <Statistic title="文件大小" value={formatFileSize(selectedDocument.file_size)} />
-                        </Col>
-                        <Col span={12}>
-                          <Statistic title="文件类型" value={selectedDocument.file_type.toUpperCase()} />
-                        </Col>
-                        
-                        <Col span={12}>
-                          <div>
-                            <p style={{ margin: '0 0 8px 0', color: '#666' }}>状态</p>
-                            <Tag color={getStatusColor(selectedDocument.parse_status)}>
-                              {getStatusText(selectedDocument.parse_status)}
-                            </Tag>
-                          </div>
-                        </Col>
-                        <Col span={12}>
-                          <div>
-                            <p style={{ margin: '0 0 8px 0', color: '#666' }}>上传时间</p>
-                            <p style={{ margin: 0 }}>{new Date(selectedDocument.created_at).toLocaleString('zh-CN')}</p>
-                          </div>
-                        </Col>
-                        
-                        {selectedDocument.parse_status === 'processing' && (
-                          <Col span={24}>
-                            <div>
-                              <p style={{ margin: '0 0 8px 0', color: '#666' }}>解析进度</p>
-                              <Progress percent={selectedDocument.parse_progress} />
+                  <div>
+                    <Tabs
+                      defaultActiveKey="info"
+                      onChange={setActiveDocumentTab}
+                      items={[
+                        {
+                          key: 'info',
+                          label: '基本信息',
+                          children: (
+                            <div style={{ padding: '16px 0' }}>
+                              <Row gutter={[16, 16]}>
+                                <Col span={24}>
+                                  <div style={{ marginBottom: 16 }}>
+                                    <h3 style={{ margin: 0, marginBottom: 8 }}>{selectedDocument.title}</h3>
+                                    <p style={{ color: '#666', margin: 0 }}>{selectedDocument.filename}</p>
+                                  </div>
+                                </Col>
+                                
+                                <Col span={12}>
+                                  <Statistic title="文件大小" value={formatFileSize(selectedDocument.file_size)} />
+                                </Col>
+                                <Col span={12}>
+                                  <Statistic title="文件类型" value={selectedDocument.file_type.toUpperCase()} />
+                                </Col>
+                                
+                                <Col span={12}>
+                                  <div>
+                                    <p style={{ margin: '0 0 8px 0', color: '#666' }}>状态</p>
+                                    <Tag color={getStatusColor(selectedDocument.parse_status)}>
+                                      {getStatusText(selectedDocument.parse_status)}
+                                    </Tag>
+                                  </div>
+                                </Col>
+                                <Col span={12}>
+                                  <div>
+                                    <p style={{ margin: '0 0 8px 0', color: '#666' }}>上传时间</p>
+                                    <p style={{ margin: 0 }}>{new Date(selectedDocument.created_at).toLocaleString('zh-CN')}</p>
+                                  </div>
+                                </Col>
+                                
+                                {selectedDocument.parse_status === 'processing' && (
+                                  <Col span={24}>
+                                    <div>
+                                      <p style={{ margin: '0 0 8px 0', color: '#666' }}>解析进度</p>
+                                      <Progress percent={selectedDocument.parse_progress} />
+                                    </div>
+                                  </Col>
+                                )}
+                                
+                                {selectedDocument.category && (
+                                  <Col span={24}>
+                                    <div>
+                                      <p style={{ margin: '0 0 8px 0', color: '#666' }}>分类</p>
+                                      <Tag>{selectedDocument.category.name}</Tag>
+                                    </div>
+                                  </Col>
+                                )}
+                                
+                                {selectedDocument.description && (
+                                  <Col span={24}>
+                                    <div>
+                                      <p style={{ margin: '0 0 8px 0', color: '#666' }}>描述</p>
+                                      <p style={{ margin: 0 }}>{selectedDocument.description}</p>
+                                    </div>
+                                  </Col>
+                                )}
+                                
+                                {selectedDocument.tags && selectedDocument.tags.length > 0 && (
+                                  <Col span={24}>
+                                    <div>
+                                      <p style={{ margin: '0 0 8px 0', color: '#666' }}>标签</p>
+                                      <Space wrap>
+                                        {selectedDocument.tags.map((tag, index) => (
+                                          <Tag key={index}>{tag}</Tag>
+                                        ))}
+                                      </Space>
+                                    </div>
+                                  </Col>
+                                )}
+                              </Row>
                             </div>
-                          </Col>
-                        )}
-                        
-                        {selectedDocument.category && (
-                          <Col span={24}>
-                            <div>
-                              <p style={{ margin: '0 0 8px 0', color: '#666' }}>分类</p>
-                              <Tag>{selectedDocument.category.name}</Tag>
+                          )
+                        },
+                        {
+                          key: 'content',
+                          label: '文档预览',
+                          children: (
+                            <div style={{ height: isFullscreen ? 'calc(100vh - 200px)' : '600px' }}>
+                              {selectedDocument.file_type.toLowerCase() === 'pdf' ? (
+                                <div style={{ 
+                                  height: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  background: '#f5f5f5'
+                                }}>
+                                  <div style={{
+                                    flex: 1,
+                                    overflow: 'auto',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    padding: '20px'
+                                  }}>
+                                    <iframe
+                                      src={`/api/document/${selectedDocument.id}/preview`}
+                                      style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
+                                        transformOrigin: 'center',
+                                        transition: 'transform 0.3s ease'
+                                      }}
+                                      title="PDF预览"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%',
+                                  color: '#999'
+                                }}>
+                                  <FileTextOutlined style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
+                                  <p style={{ margin: 0, fontSize: '14px' }}>该文件类型不支持预览</p>
+                                  <p style={{ margin: '8px 0 0 0', fontSize: '12px' }}>请下载文件查看内容</p>
+                                </div>
+                              )}
                             </div>
-                          </Col>
-                        )}
-                        
-                        {selectedDocument.description && (
-                          <Col span={24}>
-                            <div>
-                              <p style={{ margin: '0 0 8px 0', color: '#666' }}>描述</p>
-                              <p style={{ margin: 0 }}>{selectedDocument.description}</p>
+                          )
+                        },
+                        {
+                          key: 'analysis',
+                          label: '分析结果',
+                          children: (
+                            <div style={{ height: isFullscreen ? 'calc(100vh - 200px)' : '600px' }}>
+                              {selectedDocument.pages && selectedDocument.pages.length > 0 ? (
+                                <div style={{ 
+                                  height: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  background: '#f5f5f5'
+                                }}>
+                                  <div style={{
+                                    flex: 1,
+                                    overflow: 'auto',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'flex-start',
+                                    padding: '20px'
+                                  }}>
+                                    <div style={{
+                                      background: 'white',
+                                      borderRadius: '8px',
+                                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                      border: '1px solid #d9d9d9',
+                                      maxWidth: '100%',
+                                      width: '100%'
+                                    }}>
+                                      <div style={{ padding: '24px' }}>
+                                        <div style={{
+                                          display: 'flex',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'center',
+                                          paddingBottom: '16px',
+                                          marginBottom: '16px',
+                                          borderBottom: '1px solid #f0f0f0'
+                                        }}>
+                                          <span style={{ 
+                                            fontSize: '14px', 
+                                            fontWeight: 600, 
+                                            color: '#1890ff' 
+                                          }}>
+                                            第 {currentPage + 1} 页解析结果
+                                          </span>
+                                          <span style={{ 
+                                            fontSize: '12px', 
+                                            color: '#999' 
+                                          }}>
+                                            {selectedDocument.pages[currentPage]?.page_content?.length || 0} 字符
+                                          </span>
+                                        </div>
+                                        <div style={{
+                                          fontSize: '14px',
+                                          lineHeight: 1.6,
+                                          color: '#262626',
+                                          whiteSpace: 'pre-wrap',
+                                          wordWrap: 'break-word',
+                                          maxHeight: isFullscreen ? 'calc(100vh - 400px)' : '400px',
+                                          overflowY: 'auto'
+                                        }}>
+                                          {selectedDocument.pages[currentPage]?.page_content || '暂无解析内容'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%',
+                                  color: '#999'
+                                }}>
+                                  <FileTextOutlined style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
+                                  <p style={{ margin: 0, fontSize: '14px' }}>暂无分析结果</p>
+                                  <p style={{ margin: '8px 0 0 0', fontSize: '12px' }}>文档解析完成后将显示结构化文本内容</p>
+                                </div>
+                              )}
                             </div>
-                          </Col>
-                        )}
-                        
-                        {selectedDocument.tags && selectedDocument.tags.length > 0 && (
-                          <Col span={24}>
-                            <div>
-                              <p style={{ margin: '0 0 8px 0', color: '#666' }}>标签</p>
-                              <Space wrap>
-                                {selectedDocument.tags.map((tag, index) => (
-                                  <Tag key={index}>{tag}</Tag>
-                                ))}
-                              </Space>
-                            </div>
-                          </Col>
-                        )}
-                      </Row>
-                    </div>
-                  )
-                },
-                {
-                  key: 'content',
-                  label: '文档内容',
-                  children: (
-                    <div style={{ padding: '16px 0' }}>
-                      <p style={{ color: '#666' }}>文档内容预览功能开发中...</p>
-                    </div>
-                  )
-                }
-              ]}
-            />
-          </div>
-        )}
+                          )
+                        }
+                      ]}
+                    />
+                  </div>
+                )}
       </Drawer>
     </div>
   );

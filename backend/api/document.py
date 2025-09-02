@@ -41,13 +41,19 @@ def upload_document():
     - tags: 标签列表，逗号分隔（可选）
     """
     try:
+        logger.info(f"收到文档上传请求，files: {list(request.files.keys())}, form: {dict(request.form)}")
+        
         # 检查文件是否存在
         if 'file' not in request.files:
+            logger.error(f"未找到上传文件，可用字段: {list(request.files.keys())}")
             return error_response("未找到上传文件", 400)
         
         file = request.files['file']
         if file.filename == '':
+            logger.error("文件名为空")
             return error_response("未选择文件", 400)
+        
+        logger.info(f"准备上传文件: {file.filename}, 大小: {file.content_length if hasattr(file, 'content_length') else 'unknown'}")
         
         # 获取其他参数
         title = request.form.get('title')
@@ -191,6 +197,52 @@ def download_document(document_id: str):
     except Exception as e:
         logger.error(f"文档下载失败: {e}")
         return error_response("文档下载失败", 500)
+
+@document_bp.route('/<document_id>/preview', methods=['GET'])
+def preview_document(document_id: str):
+    """
+    预览PDF文档
+    
+    路径参数:
+    - document_id: 文档ID
+    """
+    try:
+        # 暂时使用固定的用户ID
+        user_id = "1"
+        
+        document = Document.query.filter_by(id=document_id, user_id=user_id).first()
+        if not document:
+            return error_response("文档不存在或无权限访问", 404)
+        
+        # 检查文件类型是否为PDF
+        if document.file_type.lower() != 'pdf':
+            return error_response("只支持PDF文件预览", 400)
+        
+        # 如果file_path为空，尝试根据文件名在uploads/documents目录中查找
+        file_path = document.file_path
+        if not file_path or not os.path.exists(file_path):
+            # 在uploads/documents目录中查找包含文档文件名的文件
+            uploads_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'documents')
+            uploads_dir = os.path.abspath(uploads_dir)
+            
+            if os.path.exists(uploads_dir):
+                for filename in os.listdir(uploads_dir):
+                    if document.filename in filename and filename.endswith('.pdf'):
+                        file_path = os.path.join(uploads_dir, filename)
+                        break
+        
+        if not file_path or not os.path.exists(file_path):
+            return error_response("文件不存在", 404)
+        
+        return send_file(
+            file_path,
+            as_attachment=False,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logger.error(f"文档预览失败: {e}")
+        return error_response("文档预览失败", 500)
 
 @document_bp.route('/<document_id>', methods=['PUT'])
 def update_document(document_id: str):

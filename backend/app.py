@@ -55,9 +55,22 @@ def create_app(config_class=Config):
     # 多租户中间件
     @app.before_request
     def load_tenant():
-        """根据域名加载租户信息"""
+        """根据JWT token或域名加载租户信息"""
+        from flask_jwt_extended import get_jwt_identity, jwt_required
+        
+        # 优先从JWT token中获取tenant_id
+        try:
+            current_user_info = get_jwt_identity()
+            if current_user_info and isinstance(current_user_info, dict):
+                tenant_id = current_user_info.get('tenant_id')
+                if tenant_id:
+                    g.tenant_id = tenant_id
+                    return
+        except:
+            pass
+        
+        # 如果JWT中没有tenant_id，则从域名中提取
         host = request.headers.get('Host', 'localhost')
-        # 从域名中提取租户标识
         tenant_id = extract_tenant_from_host(host)
         g.tenant_id = tenant_id
     
@@ -70,6 +83,25 @@ def create_app(config_class=Config):
         return request.accept_languages.best_match(['zh', 'en', 'ja', 'ko']) or 'zh'
     
     babel.init_app(app, locale_selector=get_locale)
+    
+    # JWT错误处理器
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        print(f"JWT过期错误: {jwt_payload}")  # 调试日志
+        return {'error': 'Token has expired'}, 401
+    
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        # 获取Authorization头部进行调试
+        auth_header = request.headers.get('Authorization', '')
+        print(f"JWT无效错误: {error}")  # 调试日志
+        print(f"Authorization头部: '{auth_header}'")  # 调试日志
+        return {'error': 'Invalid token'}, 422
+    
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        print(f"JWT缺失错误: {error}")  # 调试日志
+        return {'error': 'Authorization token is required'}, 401
     
     # 错误处理器
     @app.errorhandler(Exception)
@@ -84,10 +116,12 @@ def create_app(config_class=Config):
     from api.subject_initializer import subject_initializer_bp
     from api.settings import settings_bp
     from api.document import document_bp
+    from routes.learning_analytics import learning_analytics_bp
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(subject_initializer_bp)
     app.register_blueprint(settings_bp, url_prefix='/api')
     app.register_blueprint(document_bp)
+    app.register_blueprint(learning_analytics_bp)
     
     return app
 

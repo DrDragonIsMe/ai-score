@@ -102,6 +102,11 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       icon: <BarChartOutlined />,
       label: '学习分析',
     },
+    {
+      key: '/settings',
+      icon: <SettingOutlined />,
+      label: '系统设置',
+    },
   ];
 
   // 切换账号功能

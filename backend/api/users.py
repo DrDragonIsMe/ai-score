@@ -22,6 +22,7 @@ from utils.response import success_response, error_response
 from utils.decorators import admin_required
 from datetime import datetime, timedelta
 from sqlalchemy import func, desc
+from models import Tenant
 
 @api_bp.route('/users', methods=['GET'])
 @jwt_required()
@@ -85,6 +86,43 @@ def get_users():
     except Exception as e:
         return error_response(f'Failed to get users: {str(e)}', 500)
 
+@api_bp.route('/users/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    """获取当前登录用户信息"""
+    try:
+        # 从JWT token中获取用户信息
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        tenant_id = current_user_data['tenant_id']
+        
+        # 查询用户信息
+        user = User.query.filter_by(id=user_id, tenant_id=tenant_id).first()
+        if not user:
+            return error_response('User not found', 404)
+        
+        return success_response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'real_name': user.real_name,
+            'avatar_url': user.avatar,
+            'role': user.role,
+            'phone': user.phone,
+            'grade': user.grade,
+            'school': user.school,
+            'language': user.language or 'zh',
+            'timezone': user.timezone or 'Asia/Shanghai',
+            'nickname': user.nickname,
+            'preferred_greeting': user.preferred_greeting,
+            'bio': user.bio,
+            'last_login_at': user.last_login_at.isoformat() if user.last_login_at else None,
+            'created_at': user.created_at.isoformat(),
+            'updated_at': user.updated_at.isoformat()
+        })
+    except Exception as e:
+        return error_response(f'Failed to get current user: {str(e)}', 500)
+
 @api_bp.route('/users/<string:user_id>', methods=['GET'])
 @jwt_required()
 def get_user(user_id):
@@ -98,8 +136,15 @@ def get_user(user_id):
         if current_user_role != 'admin' and current_user_id != user_id:
             return error_response('Permission denied', 403)
         
-        tenant_id = g.get('tenant_id')
+        # 优先从JWT token中获取tenant_id
+        tenant_id = current_user_data.get('tenant_id')
+        print(f"JWT中的tenant_id: {tenant_id}")  # 调试日志
+        if not tenant_id:
+            tenant_id = g.get('tenant_id')
+            print(f"从g获取的tenant_id: {tenant_id}")  # 调试日志
+        print(f"最终使用的Tenant ID: {tenant_id}")  # 调试日志
         user = User.query.filter_by(id=user_id, tenant_id=tenant_id).first()
+        print(f"User found: {user is not None}")  # 调试日志
         
         if not user:
             return error_response('User not found', 404)
@@ -145,8 +190,15 @@ def update_user(user_id):
         if current_user_role != 'admin' and current_user_id != user_id:
             return error_response('Permission denied', 403)
         
-        tenant_id = g.get('tenant_id')
-        user = User.query.filter_by(id=user_id, tenant_id=tenant_id).first()
+        tenant_subdomain = g.get('tenant_id', 'default')
+        
+        # 通过subdomain查找租户
+        from models import Tenant
+        tenant = Tenant.query.filter_by(subdomain=tenant_subdomain, is_active=True).first()
+        if not tenant:
+            return error_response('Tenant not found', 400)
+        
+        user = User.query.filter_by(id=user_id, tenant_id=tenant.id).first()
         
         if not user:
             return error_response('User not found', 404)
@@ -155,21 +207,26 @@ def update_user(user_id):
         
         # 普通用户只能更新部分字段
         if current_user_role != 'admin':
-            allowed_fields = ['real_name', 'avatar', 'grade', 'school', 'language', 'timezone']
-            data = {k: v for k, v in data.items() if k in allowed_fields}
+            allowed_fields = ['real_name', 'nickname', 'avatar', 'grade', 'school', 'bio', 'language', 'timezone', 'preferred_greeting']
+            filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
+            data = filtered_data
         
         # 更新用户信息
-        for field in ['real_name', 'avatar', 'grade', 'school', 'language', 'timezone']:
-            if field in data:
-                setattr(user, field, data[field])
-        
-        # 管理员可以更新的额外字段
-        if current_user_role == 'admin':
-            for field in ['role', 'is_active', 'is_verified']:
+        try:
+            for field in ['real_name', 'nickname', 'avatar', 'grade', 'school', 'bio', 'language', 'timezone', 'preferred_greeting']:
                 if field in data:
                     setattr(user, field, data[field])
-        
-        db.session.commit()
+            
+            # 管理员可以更新的额外字段
+            if current_user_role == 'admin':
+                for field in ['role', 'is_active', 'is_verified']:
+                    if field in data:
+                        setattr(user, field, data[field])
+            
+            db.session.commit()
+        except Exception as commit_error:
+            db.session.rollback()
+            return error_response(f'Database error: {str(commit_error)}', 422)
         
         return success_response(user.to_dict(), 'User updated successfully')
         

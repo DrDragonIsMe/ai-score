@@ -4,8 +4,18 @@ export interface User {
   username: string;
   email: string;
   full_name?: string;
+  real_name?: string;
   avatar_url?: string;
   role?: string;
+  phone?: string;
+  grade?: string;
+  school?: string;
+  language?: string;
+  timezone?: string;
+  nickname?: string; // 用户希望AI称呼的名字
+  preferred_greeting?: string; // 用户偏好的问候方式
+  bio?: string; // 个人简介
+  last_login_at?: string;
   created_at: string;
   updated_at: string;
 }

@@ -24,9 +24,14 @@ from utils.database import db
 from models.user import User
 from models.diagnosis import DiagnosisReport, WeaknessPoint
 from models.knowledge import KnowledgePoint, Subject
+from models.exam import ExamSession, ExamAnalytics
+from models.exam_papers import ExamPaper
+from models.mistake import MistakeRecord, MistakeReviewSession, MistakePattern
+from models.learning import StudyRecord, MemoryCard
 from services.llm_service import llm_service
 from services.diagnosis_service import DiagnosisService
 from services.document_service import get_document_service
+from services.vector_database_service import vector_db_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -81,8 +86,11 @@ class AIAssistantService:
             # 获取用户信息和学习情况
             user_profile = self._get_user_learning_profile(user_id)
             
-            # 构建对话提示词
-            system_prompt = self._build_chat_prompt(user_profile, context)
+            # 检索综合数据（文档、试卷、错题记录等）
+            comprehensive_data = self._retrieve_comprehensive_data(user_id, message)
+            
+            # 构建对话提示词（包含综合数据信息）
+            system_prompt = self._build_comprehensive_chat_prompt(user_profile, context, comprehensive_data)
             
             # 调用大模型生成回复
             full_prompt = f"{system_prompt}\n\n用户: {message}\n\n高小分:"
@@ -100,7 +108,8 @@ class AIAssistantService:
                 "assistant_name": self.assistant_name,
                 "model_used": model_id or "default",
                 "timestamp": datetime.now().isoformat(),
-                "suggestions": self._generate_contextual_suggestions(user_id, message)
+                "suggestions": self._generate_contextual_suggestions(user_id, message),
+                "referenced_data": comprehensive_data
             }
             
         except Exception as e:
@@ -423,6 +432,9 @@ class AIAssistantService:
             profile = {
                 "user_id": user_id,
                 "username": user.username,
+                "real_name": getattr(user, 'real_name', None),
+                "nickname": getattr(user, 'nickname', None),
+                "preferred_greeting": getattr(user, 'preferred_greeting', 'casual'),
                 "grade_level": getattr(user, 'grade_level', '未知'),
                 "recent_reports": len(recent_reports),
                 "learning_style": self._infer_learning_style(recent_reports),
@@ -436,25 +448,248 @@ class AIAssistantService:
             logger.error(f"获取用户学习档案失败: {str(e)}")
             return {}
     
-    def _build_chat_prompt(self, user_profile: Dict, context: Optional[Dict] = None) -> str:
+    def _retrieve_relevant_documents(self, user_id: str, query: str) -> List[Dict[str, Any]]:
+        """
+        检索与查询相关的文档
+        
+        Args:
+            user_id: 用户ID
+            query: 查询文本
+        
+        Returns:
+            相关文档列表
+        """
+        try:
+            # 使用向量数据库进行语义搜索
+            similar_docs = vector_db_service.search_similar_documents(
+                query=query,
+                top_k=3,
+                similarity_threshold=0.4
+            )
+            
+            if not similar_docs:
+                return []
+            
+            # 获取文档详细信息
+            document_service = get_document_service()
+            relevant_documents = []
+            
+            for doc in similar_docs:
+                try:
+                    # 根据文档类型获取详细信息
+                    if doc['document_type'] == 'document':
+                        doc_info = document_service.get_document_info(doc['document_id'])
+                        if doc_info:
+                            relevant_documents.append({
+                                'id': doc['document_id'],
+                                'type': 'document',
+                                'title': doc_info.get('title', '未知文档'),
+                                'content_snippet': doc['content'][:200] + '...' if len(doc['content']) > 200 else doc['content'],
+                                'similarity': doc['similarity'],
+                                'preview_url': f"/api/document/{doc['document_id']}/preview",
+                                'metadata': doc.get('metadata', {})
+                            })
+                    elif doc['document_type'] == 'exam_paper':
+                        # 处理试卷文档
+                        relevant_documents.append({
+                            'id': doc['document_id'],
+                            'type': 'exam_paper',
+                            'title': f"试卷 {doc['document_id']}",
+                            'content_snippet': doc['content'][:200] + '...' if len(doc['content']) > 200 else doc['content'],
+                            'similarity': doc['similarity'],
+                            'preview_url': f"/api/exam_papers/{doc['document_id']}/preview",
+                            'metadata': doc.get('metadata', {})
+                        })
+                except Exception as e:
+                    logger.warning(f"获取文档 {doc['document_id']} 详细信息失败: {str(e)}")
+                    continue
+            
+            logger.info(f"为查询 '{query}' 找到 {len(relevant_documents)} 个相关文档")
+            return relevant_documents
+            
+        except Exception as e:
+            logger.error(f"文档检索失败: {str(e)}")
+            return []
+    
+    def _retrieve_comprehensive_data(self, user_id: str, query: str) -> Dict[str, Any]:
+        """
+        检索综合数据，包括文档、试卷、错题记录和学习情况
+        
+        Args:
+            user_id: 用户ID
+            query: 查询内容
+        
+        Returns:
+            综合数据字典
+        """
+        try:
+            # 检索相关文档
+            documents = self._retrieve_relevant_documents(user_id, query)
+            
+            # 检索试卷数据
+            exam_papers = self._get_exam_papers_data(user_id, query)
+            
+            # 检索错题记录
+            mistake_records = self._get_mistake_records_data(user_id, query)
+            
+            # 检索考试会话
+            exam_sessions = self._get_exam_sessions_data(user_id, query)
+            
+            # 检索学习记录
+            study_records = self._get_study_records_data(user_id, query)
+            
+            # 获取学习分析数据
+            learning_analytics = self._get_learning_analytics_data(user_id)
+            
+            return {
+                'documents': documents,
+                'exam_papers': exam_papers,
+                'mistake_records': mistake_records,
+                'exam_sessions': exam_sessions,
+                'study_records': study_records,
+                'learning_analytics': learning_analytics
+            }
+            
+        except Exception as e:
+            logger.error(f"检索综合数据失败: {str(e)}")
+            return {}
+    
+    def _build_chat_prompt(self, user_profile: Dict, context: Optional[Dict] = None, 
+                          relevant_documents: Optional[List[Dict]] = None) -> str:
         """
         构建对话提示词
         """
+        # 确定用户称呼
+        user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
+        preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        
+        # 根据问候偏好设置称呼方式
+        greeting_styles = {
+            'formal': f'您好，{user_nickname}',
+            'casual': f'嗨，{user_nickname}',
+            'friendly': f'{user_nickname}，你好',
+            'professional': f'{user_nickname}同学'
+        }
+        
+        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        
         base_prompt = f"""
 你是{self.assistant_name}，一个友善、耐心、专业的AI学习助手。你的任务是帮助学生提高学习效果。
 
 用户信息：
-- 用户名：{user_profile.get('username', '同学')}
+- 称呼：{user_nickname}
+- 问候方式：{greeting_style}
 - 年级：{user_profile.get('grade_level', '未知')}
 - 擅长科目：{', '.join(user_profile.get('strong_subjects', []))}
 - 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
 
-对话风格：
+对话风格要求：
+- 在回复开始时使用设定的问候方式称呼用户
+- 在对话中适当使用用户的称呼
+- 根据用户偏好调整语言风格（正式/亲切/友好/专业）
 - 使用友善、鼓励性的语言
 - 根据用户的学习情况提供针对性建议
 - 适当使用表情符号增加亲和力
 - 保持专业性，提供准确的学习指导
 """
+        
+        # 添加相关文档信息
+        if relevant_documents:
+            base_prompt += "\n\n相关参考资料："
+            for i, doc in enumerate(relevant_documents, 1):
+                doc_type_name = "文档" if doc['type'] == 'document' else "试卷"
+                base_prompt += f"""
+{i}. {doc_type_name}：{doc['title']}
+   内容摘要：{doc['content_snippet']}
+   预览链接：{doc['preview_url']}
+   相关度：{doc['similarity']:.2f}"""
+            
+            base_prompt += "\n\n回答指导："
+            base_prompt += "\n- 当回答涉及上述参考资料时，请引用相关内容并提供预览链接"
+            base_prompt += "\n- 使用格式：[文档标题](预览链接) 来引用文档"
+            base_prompt += "\n- 结合参考资料为用户提供更准确、详细的解答"
+        
+        if context:
+            base_prompt += f"\n\n对话上下文：{json.dumps(context, ensure_ascii=False)}"
+        
+        return base_prompt
+    
+    def _build_comprehensive_chat_prompt(self, user_profile: Dict, context: Optional[Dict] = None, 
+                                       comprehensive_data: Optional[Dict] = None) -> str:
+        """
+        构建包含综合数据的对话提示词
+        """
+        # 确定用户称呼
+        user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
+        preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        
+        # 根据问候偏好设置称呼方式
+        greeting_styles = {
+            'formal': f'您好，{user_nickname}',
+            'casual': f'嗨，{user_nickname}',
+            'friendly': f'{user_nickname}，你好',
+            'professional': f'{user_nickname}同学'
+        }
+        
+        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        
+        base_prompt = f"""
+你是{self.assistant_name}，一个友善、耐心、专业的AI学习助手。你的任务是帮助学生提高学习效果。
+
+用户信息：
+- 称呼：{user_nickname}
+- 问候方式：{greeting_style}
+- 年级：{user_profile.get('grade_level', '未知')}
+- 擅长科目：{', '.join(user_profile.get('strong_subjects', []))}
+- 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
+
+对话风格要求：
+- 在回复开始时使用设定的问候方式称呼用户
+- 在对话中适当使用用户的称呼
+- 根据用户偏好调整语言风格（正式/亲切/友好/专业）
+- 使用友善、鼓励性的语言
+- 根据用户的学习情况提供针对性建议
+- 适当使用表情符号增加亲和力
+- 保持专业性，提供准确的学习指导
+"""
+        
+        if comprehensive_data:
+            # 添加文档信息
+            documents = comprehensive_data.get('documents', [])
+            if documents:
+                base_prompt += "\n\n相关文档资料："
+                for i, doc in enumerate(documents[:3], 1):
+                    base_prompt += f"\n{i}. {doc['title']} - {doc['content_snippet'][:100]}..."
+            
+            # 添加试卷信息
+            exam_papers = comprehensive_data.get('exam_papers', [])
+            if exam_papers:
+                base_prompt += "\n\n相关试卷："
+                for i, paper in enumerate(exam_papers[:3], 1):
+                    base_prompt += f"\n{i}. {paper['title']} ({paper['year']}年 {paper['exam_type']})"
+            
+            # 添加错题记录信息
+            mistake_records = comprehensive_data.get('mistake_records', [])
+            if mistake_records:
+                base_prompt += f"\n\n用户错题情况：共有{len(mistake_records)}道错题记录"
+                resolved_count = sum(1 for m in mistake_records if m.get('is_resolved'))
+                base_prompt += f"，已解决{resolved_count}道"
+            
+            # 添加学习分析数据
+            learning_analytics = comprehensive_data.get('learning_analytics', {})
+            if learning_analytics:
+                mistake_analysis = learning_analytics.get('mistake_analysis', {})
+                exam_performance = learning_analytics.get('exam_performance', {})
+                if mistake_analysis.get('total_mistakes', 0) > 0:
+                    base_prompt += f"\n\n学习分析：最近30天错题{mistake_analysis['total_mistakes']}道，解决率{mistake_analysis.get('resolution_rate', 0):.1f}%"
+                if exam_performance.get('total_exams', 0) > 0:
+                    base_prompt += f"，平均考试成绩{exam_performance.get('average_score', 0):.1f}分"
+            
+            base_prompt += "\n\n回答指导："
+            base_prompt += "\n- 结合用户的学习数据提供个性化建议"
+            base_prompt += "\n- 针对错题记录和薄弱环节给出具体改进方案"
+            base_prompt += "\n- 推荐相关的学习资料和练习题目"
+            base_prompt += "\n- 鼓励用户并提供学习动力"
         
         if context:
             base_prompt += f"\n\n对话上下文：{json.dumps(context, ensure_ascii=False)}"
@@ -547,6 +782,20 @@ class AIAssistantService:
         """
         构建题目分析提示词
         """
+        # 确定用户称呼
+        user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
+        preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        
+        # 根据问候偏好设置称呼方式
+        greeting_styles = {
+            'formal': f'您好，{user_nickname}',
+            'casual': f'嗨，{user_nickname}',
+            'friendly': f'{user_nickname}，你好',
+            'professional': f'{user_nickname}同学'
+        }
+        
+        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        
         prompt = f"""
 作为专业的学习助手{self.assistant_name}，请分析以下题目：
 
@@ -559,7 +808,9 @@ class AIAssistantService:
         
         prompt += f"""
 
-用户学习情况：
+用户信息：
+- 称呼：{user_nickname}
+- 问候方式：{greeting_style}
 - 擅长领域：{', '.join(user_profile.get('strong_subjects', []))}
 - 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
 
@@ -570,7 +821,11 @@ class AIAssistantService:
 4. 常见错误分析
 5. 针对该用户的个性化建议
 
-请用友善、鼓励的语调回答。
+回答要求：
+- 在回复开始时使用设定的问候方式称呼用户
+- 在分析过程中适当使用用户的称呼
+- 根据用户偏好调整语言风格（正式/亲切/友好/专业）
+- 用友善、鼓励的语调回答
 """
         
         return prompt
@@ -746,6 +1001,20 @@ class AIAssistantService:
         """
         构建文档问答提示词
         """
+        # 确定用户称呼
+        user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
+        preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        
+        # 根据问候偏好设置称呼方式
+        greeting_styles = {
+            'formal': f'您好，{user_nickname}',
+            'casual': f'嗨，{user_nickname}',
+            'friendly': f'{user_nickname}，你好',
+            'professional': f'{user_nickname}同学'
+        }
+        
+        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        
         return f"""
 你是高小分，一个专业的学习助手。用户上传了一个PDF文档，现在想要询问相关问题。
 
@@ -758,17 +1027,21 @@ class AIAssistantService:
 
 用户问题：{question}
 
-用户学习情况：
+用户信息：
+- 称呼：{user_nickname}
+- 问候方式：{greeting_style}
 - 年级：{user_profile.get('grade_level', '未知')}
 - 强势学科：{', '.join(user_profile.get('strong_subjects', []))}
 - 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
 
 请基于文档内容回答用户的问题，并结合用户的学习情况给出个性化的学习建议。
 回答要求：
-1. 直接回答用户问题
-2. 引用文档中的相关内容
-3. 提供学习建议
-4. 语言要友善、鼓励性
+1. 在回复开始时使用设定的问候方式称呼用户
+2. 直接回答用户问题
+3. 引用文档中的相关内容
+4. 提供学习建议
+5. 根据用户偏好调整语言风格（正式/亲切/友好/专业）
+6. 语言要友善、鼓励性
 """
     
     def _build_document_analysis_prompt(self, document_info: Dict, document_content: str, 
@@ -776,6 +1049,20 @@ class AIAssistantService:
         """
         构建文档分析提示词
         """
+        # 确定用户称呼
+        user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
+        preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        
+        # 根据问候偏好设置称呼方式
+        greeting_styles = {
+            'formal': f'您好，{user_nickname}',
+            'casual': f'嗨，{user_nickname}',
+            'friendly': f'{user_nickname}，你好',
+            'professional': f'{user_nickname}同学'
+        }
+        
+        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        
         return f"""
 你是高小分，一个专业的学习助手。用户上传了一个PDF文档，请帮助分析文档内容。
 
@@ -786,7 +1073,9 @@ class AIAssistantService:
 文档内容（前2000字符）：
 {document_content[:2000]}...
 
-用户学习情况：
+用户信息：
+- 称呼：{user_nickname}
+- 问候方式：{greeting_style}
 - 年级：{user_profile.get('grade_level', '未知')}
 - 强势学科：{', '.join(user_profile.get('strong_subjects', []))}
 - 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
@@ -798,7 +1087,10 @@ class AIAssistantService:
 4. 对用户的学习价值
 5. 个性化学习建议
 
-回答要友善、专业，并具有鼓励性。
+回答要求：
+- 在回复开始时使用设定的问候方式称呼用户
+- 根据用户偏好调整语言风格（正式/亲切/友好/专业）
+- 回答要友善、专业，并具有鼓励性
 """
     
     def _generate_document_learning_suggestions(self, user_id: str, document_info: Dict, 
@@ -844,6 +1136,311 @@ class AIAssistantService:
         content_preview = document.get('content', '')[:100] + '...' if document.get('content') else '暂无内容预览'
         
         return f"《{title}》- {category}类文档。{content_preview}"
+    
+    def _get_exam_papers_data(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        获取试卷数据
+        
+        Args:
+            user_id: 用户ID
+            query: 查询关键词（可选）
+        
+        Returns:
+            试卷数据列表
+        """
+        try:
+            # 构建查询
+            exam_query = db.session.query(ExamPaper)
+            
+            if query:
+                filters = []
+                if hasattr(ExamPaper, 'title'):
+                    filters.append(ExamPaper.title.contains(query))
+                if hasattr(ExamPaper, 'description'):
+                    filters.append(ExamPaper.description.contains(query))
+                if hasattr(ExamPaper, 'exam_type'):
+                    filters.append(ExamPaper.exam_type.contains(query))
+                if hasattr(ExamPaper, 'region'):
+                    filters.append(ExamPaper.region.contains(query))
+                if filters:
+                    exam_query = exam_query.filter(db.or_(*filters))
+            
+            # 限制返回数量
+            exam_papers = exam_query.limit(10).all()
+            
+            papers_data = []
+            for paper in exam_papers:
+                papers_data.append({
+                    'id': paper.id,
+                    'title': paper.title,
+                    'description': paper.description,
+                    'year': paper.year,
+                    'exam_type': paper.exam_type,
+                    'region': paper.region,
+                    'total_score': paper.total_score,
+                    'duration': paper.duration,
+                    'difficulty_level': paper.difficulty_level,
+                    'question_count': paper.question_count,
+                    'download_count': paper.download_count
+                })
+            
+            return papers_data
+            
+        except Exception as e:
+            logger.error(f"获取试卷数据失败: {str(e)}")
+            return []
+    
+    def _get_mistake_records_data(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        获取错题记录数据
+        
+        Args:
+            user_id: 用户ID
+            query: 查询关键词（可选）
+        
+        Returns:
+            错题记录数据列表
+        """
+        try:
+            # 构建查询
+            mistake_query = db.session.query(MistakeRecord).filter(
+                MistakeRecord.user_id == user_id,
+                MistakeRecord.is_archived == False
+            )
+            
+            if query:
+                # 关联查询题目内容
+                from models.question import Question
+                mistake_query = mistake_query.join(Question).filter(
+                    db.or_(
+                        Question.content.contains(query),
+                        MistakeRecord.error_analysis.contains(query)
+                    )
+                )
+            
+            # 按时间排序，限制返回数量
+            mistakes = mistake_query.order_by(
+                MistakeRecord.created_time.desc()
+            ).limit(20).all()
+            
+            mistakes_data = []
+            for mistake in mistakes:
+                mistakes_data.append({
+                    'id': mistake.id,
+                    'question_id': mistake.question_id,
+                    'user_answer': mistake.user_answer,
+                    'correct_answer': mistake.correct_answer,
+                    'mistake_type': mistake.mistake_type.value if hasattr(mistake, 'mistake_type') and mistake.mistake_type is not None else None,
+                    'mistake_level': mistake.mistake_level.value if hasattr(mistake, 'mistake_level') and mistake.mistake_level is not None else None,
+                    'error_analysis': mistake.error_analysis,
+                    'solution_steps': mistake.solution_steps,
+                    'key_concepts': mistake.key_concepts,
+                    'improvement_suggestions': mistake.improvement_suggestions,
+                    'review_count': mistake.review_count,
+                    'mastery_level': mistake.mastery_level,
+                    'is_resolved': mistake.is_resolved,
+                    'priority_score': getattr(mistake, 'priority_score', 0),
+                    'created_time': mistake.created_time.isoformat() if hasattr(mistake, 'created_time') and mistake.created_time is not None else None,
+                    'next_review_time': mistake.next_review_time.isoformat() if hasattr(mistake, 'next_review_time') and mistake.next_review_time is not None and hasattr(mistake.next_review_time, 'isoformat') else None
+                })
+            
+            return mistakes_data
+            
+        except Exception as e:
+            logger.error(f"获取错题记录失败: {str(e)}")
+            return []
+    
+    def _get_exam_sessions_data(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        获取考试会话数据
+        
+        Args:
+            user_id: 用户ID
+            query: 查询关键词（可选）
+        
+        Returns:
+            考试会话数据列表
+        """
+        try:
+            # 构建查询
+            exam_query = db.session.query(ExamSession).filter(
+                ExamSession.user_id == user_id
+            )
+            
+            if query:
+                filters = []
+                if hasattr(ExamSession, 'title'):
+                    filters.append(ExamSession.title.contains(query))
+                if hasattr(ExamSession, 'description'):
+                    filters.append(ExamSession.description.contains(query))
+                if hasattr(ExamSession, 'exam_type'):
+                    filters.append(ExamSession.exam_type.contains(query))
+                if filters:
+                    exam_query = exam_query.filter(db.or_(*filters))
+            
+            # 按时间排序，限制返回数量
+            exams = exam_query.order_by(
+                ExamSession.created_time.desc()
+            ).limit(15).all()
+            
+            exams_data = []
+            for exam in exams:
+                exams_data.append({
+                    'id': exam.id,
+                    'title': exam.title,
+                    'description': exam.description,
+                    'exam_type': exam.exam_type,
+                    'status': exam.status,
+                    'total_questions': exam.total_questions,
+                    'completed_questions': exam.completed_questions,
+                    'total_score': exam.total_score,
+                    'score_percentage': exam.score_percentage,
+                    'correct_answers': exam.correct_answers,
+                    'wrong_answers': exam.wrong_answers,
+                    'time_efficiency': exam.time_efficiency,
+                    'average_time_per_question': exam.average_time_per_question,
+                    'created_time': exam.created_time.isoformat() if hasattr(exam, 'created_time') and exam.created_time is not None else None,
+                    'actual_start_time': exam.actual_start_time.isoformat() if hasattr(exam, 'actual_start_time') and exam.actual_start_time is not None else None,
+                    'end_time': exam.end_time.isoformat() if hasattr(exam, 'end_time') and exam.end_time is not None else None
+                })
+            
+            return exams_data
+            
+        except Exception as e:
+            logger.error(f"获取考试会话数据失败: {str(e)}")
+            return []
+    
+    def _get_study_records_data(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        获取学习记录数据
+        
+        Args:
+            user_id: 用户ID
+            query: 查询关键词（可选）
+        
+        Returns:
+            学习记录数据列表
+        """
+        try:
+            # 构建查询
+            study_query = db.session.query(StudyRecord).filter(
+                StudyRecord.user_id == user_id
+            )
+            
+            if query:
+                filters = []
+                if hasattr(StudyRecord, 'study_type') and hasattr(StudyRecord.study_type.property, 'columns'):
+                    filters.append(StudyRecord.study_type.contains(query))
+                if hasattr(StudyRecord, 'content_type') and hasattr(StudyRecord.content_type.property, 'columns'):
+                    filters.append(StudyRecord.content_type.contains(query))
+                if hasattr(StudyRecord, 'notes') and hasattr(StudyRecord.notes.property, 'columns'):
+                    filters.append(StudyRecord.notes.contains(query))
+                if filters:
+                    study_query = study_query.filter(db.or_(*filters))
+            
+            # 按时间排序，限制返回数量
+            records = study_query.order_by(
+                StudyRecord.start_time.desc()
+            ).limit(20).all()
+            
+            records_data = []
+            for record in records:
+                records_data.append({
+                    'id': record.id,
+                    'study_type': record.study_type,
+                    'content_type': record.content_type,
+                    'is_correct': record.is_correct,
+                    'score': record.score,
+                    'max_score': record.max_score,
+                    'duration': record.duration,
+                    'mastery_level': record.mastery_level,
+                    'difficulty_rating': record.difficulty_rating,
+                    'confidence_level': record.confidence_level,
+                    'error_types': record.error_types,
+                    'improvement_areas': record.improvement_areas,
+                    'notes': record.notes,
+                    'start_time': record.start_time.isoformat() if record.start_time else None,
+                    'end_time': record.end_time.isoformat() if record.end_time else None
+                })
+            
+            return records_data
+            
+        except Exception as e:
+            logger.error(f"获取学习记录失败: {str(e)}")
+            return []
+    
+    def _get_learning_analytics_data(self, user_id: str) -> Dict[str, Any]:
+        """
+        获取学习分析数据
+        
+        Args:
+            user_id: 用户ID
+        
+        Returns:
+            学习分析数据
+        """
+        try:
+            from datetime import datetime, timedelta
+            from sqlalchemy import func
+            
+            # 获取最近30天的数据
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            
+            # 错题统计
+            mistake_stats = db.session.query(
+                func.count(MistakeRecord.id).label('total_mistakes'),
+                func.count(func.case((MistakeRecord.is_resolved == True, 1))).label('resolved_mistakes'),
+                func.avg(MistakeRecord.mastery_level).label('avg_mastery')
+            ).filter(
+                MistakeRecord.user_id == user_id
+            ).first()
+            
+            # 考试统计
+            exam_stats = db.session.query(
+                func.count(ExamSession.id).label('total_exams'),
+                func.avg(ExamSession.score_percentage).label('avg_score'),
+                func.avg(ExamSession.time_efficiency).label('avg_efficiency')
+            ).filter(
+                ExamSession.user_id == user_id
+            ).filter(
+                ExamSession.created_time >= thirty_days_ago
+            ).filter(
+                ExamSession.status == 'completed' # type: ignore
+            ).first()
+            
+            # 学习时长统计
+            study_stats = db.session.query(
+                func.sum(StudyRecord.duration).label('total_duration'),
+                func.count(StudyRecord.id).label('total_sessions'),
+                func.avg(StudyRecord.mastery_level).label('avg_mastery')
+            ).filter(
+                StudyRecord.user_id == user_id,
+                StudyRecord.start_time >= thirty_days_ago
+            ).first()
+            
+            return {
+                'mistake_analysis': {
+                    'total_mistakes': getattr(mistake_stats, 'total_mistakes', 0) or 0,
+                    'resolved_mistakes': getattr(mistake_stats, 'resolved_mistakes', 0) or 0,
+                    'average_mastery': float(getattr(mistake_stats, 'avg_mastery', 0) or 0),
+                    'resolution_rate': (getattr(mistake_stats, 'resolved_mistakes', 0) or 0) / max(getattr(mistake_stats, 'total_mistakes', 1) or 1, 1) * 100
+                },
+                'exam_performance': {
+                    'total_exams': getattr(exam_stats, 'total_exams', 0) or 0,
+                    'average_score': float(getattr(exam_stats, 'avg_score', 0) or 0),
+                    'average_efficiency': float(getattr(exam_stats, 'avg_efficiency', 0) or 0)
+                },
+                'study_habits': {
+                    'total_duration': getattr(study_stats, 'total_duration', 0) or 0,
+                    'total_sessions': getattr(study_stats, 'total_sessions', 0) or 0,
+                    'average_mastery': float(getattr(study_stats, 'avg_mastery', 0) or 0),
+                    'average_session_duration': (getattr(study_stats, 'total_duration', 0) or 0) / max(getattr(study_stats, 'total_sessions', 1) or 1, 1)
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"获取学习分析数据失败: {str(e)}")
+            return {}
 
 # 创建全局实例
 ai_assistant_service = AIAssistantService()

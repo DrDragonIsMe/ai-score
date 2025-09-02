@@ -71,6 +71,11 @@ export const settingsApi = {
     return api.post(`/settings/ai-models/${modelId}/set-default`);
   },
 
+  // 切换AI模型启用/禁用状态
+  toggleAIModelActive: (modelId: string) => {
+    return api.post(`/settings/ai-models/${modelId}/toggle-active`);
+  },
+
   // 获取系统信息
   getSystemInfo: () => {
     return api.get('/settings/system-info');

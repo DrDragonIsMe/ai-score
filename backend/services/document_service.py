@@ -28,6 +28,20 @@ from models.document import Document, DocumentCategory, DocumentPage, DocumentAn
 from services.classification_service import classification_service
 from utils.logger import get_logger
 
+# 延迟导入向量数据库服务以避免循环导入
+vector_db_service = None
+
+def get_vector_db_service():
+    global vector_db_service
+    if vector_db_service is None:
+        try:
+            from services.vector_database_service import vector_db_service as vdb
+            vector_db_service = vdb
+        except ImportError:
+            logger.warning("向量数据库服务不可用")
+            vector_db_service = None
+    return vector_db_service
+
 logger = get_logger(__name__)
 
 class DocumentService:
@@ -418,11 +432,65 @@ class DocumentService:
                     new_tags = analysis_result.get('keywords', [])
                     document.tags = list(set(existing_tags + new_tags))
                 
+                # 创建向量索引
+                self._create_document_vectors(document.id, all_content, analysis_result)
+                
                 # 完成解析
                 document.parse_status = 'completed'
                 document.parse_progress = 100
                 document.parsed_at = datetime.utcnow()
                 
+            elif document.file_type.lower() == 'txt':
+                # 处理文本文件
+                try:
+                    with open(document.file_path, 'r', encoding='utf-8') as f:
+                        all_content = f.read()
+                    
+                    # 更新文档统计信息
+                    document.word_count = len(all_content.split())
+                    document.character_count = len(all_content)
+                    document.page_count = 1
+                    document.parse_progress = 50
+                    db.session.commit()
+                    
+                    # AI分析文档内容
+                    if all_content.strip():
+                        analysis_result = self.analyze_document_content(all_content)
+                        
+                        # 保存分析结果
+                        analysis = DocumentAnalysis(
+                            document_id=document.id,
+                            analysis_type='classification',
+                            result=analysis_result,
+                            confidence_score=analysis_result.get('confidence_score', 0.0),
+                            status='completed'
+                        )
+                        db.session.add(analysis)
+                        
+                        # 进行智能分类
+                        classification_result = classification_service.classify_document(document, all_content)
+                        
+                        # 更新文档信息
+                        if not document.title or document.title == document.filename:
+                            document.title = analysis_result.get('summary', document.filename)[:100]
+                        
+                        # 合并标签
+                        existing_tags = document.tags or []
+                        new_tags = analysis_result.get('keywords', [])
+                        document.tags = list(set(existing_tags + new_tags))
+                        
+                        # 创建向量索引
+                        self._create_document_vectors(document.id, all_content, analysis_result)
+                    
+                    # 完成解析
+                    document.parse_status = 'completed'
+                    document.parse_progress = 100
+                    document.parsed_at = datetime.utcnow()
+                    
+                except Exception as e:
+                    logger.error(f"文本文件处理失败: {e}")
+                    raise Exception(f"文本文件解析失败: {str(e)}")
+            
             else:
                 # 其他文件类型的处理
                 document.parse_status = 'completed'
@@ -443,6 +511,54 @@ class DocumentService:
                 db.session.commit()
             
             return False
+    
+    def _create_document_vectors(self, document_id: str, content: str, analysis_result: Dict[str, Any]):
+        """
+        为文档创建向量索引
+        
+        Args:
+            document_id: 文档ID
+            content: 文档内容
+            analysis_result: 文档分析结果
+        """
+        try:
+            vdb_service = get_vector_db_service()
+            if vdb_service is None:
+                logger.warning(f"向量数据库服务不可用，跳过文档 {document_id} 的向量索引创建")
+                return
+            
+            # 将长文本分割成块
+            content_chunks = vdb_service._split_text_into_chunks(content, chunk_size=500, overlap=50)
+            
+            if not content_chunks:
+                logger.warning(f"文档 {document_id} 内容为空，跳过向量索引创建")
+                return
+            
+            # 准备元数据
+            metadata = {
+                'document_id': document_id,
+                'document_type': analysis_result.get('document_type', '未知'),
+                'subject_area': analysis_result.get('subject_area', '未知'),
+                'difficulty_level': analysis_result.get('difficulty_level', 3),
+                'keywords': analysis_result.get('keywords', []),
+                'created_at': datetime.utcnow().isoformat()
+            }
+            
+            # 添加向量到数据库
+            success = vdb_service.add_document_vectors(
+                document_id=document_id,
+                document_type='document',
+                content_chunks=content_chunks,
+                metadata=metadata
+            )
+            
+            if success:
+                logger.info(f"文档 {document_id} 向量索引创建成功，共 {len(content_chunks)} 个块")
+            else:
+                logger.error(f"文档 {document_id} 向量索引创建失败")
+                
+        except Exception as e:
+            logger.error(f"创建文档 {document_id} 向量索引时发生错误: {str(e)}")
     
     def get_documents(self, user_id: str, tenant_id: str, 
                      category_id: Optional[str] = None, search: Optional[str] = None, 
@@ -669,6 +785,15 @@ class DocumentService:
             document = Document.query.filter_by(id=document_id, user_id=user_id).first()
             if not document:
                 raise ValueError("文档不存在或无权限")
+            
+            # 删除向量索引
+            try:
+                vdb_service = get_vector_db_service()
+                if vdb_service:
+                    vdb_service.delete_document_vectors(document_id)
+                    logger.info(f"文档 {document_id} 向量索引删除成功")
+            except Exception as e:
+                logger.warning(f"删除文档 {document_id} 向量索引时发生错误: {str(e)}")
             
             # 删除文件
             if os.path.exists(document.file_path):

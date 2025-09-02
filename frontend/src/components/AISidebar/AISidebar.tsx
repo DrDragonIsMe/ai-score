@@ -40,6 +40,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
+import { useAuthStore } from '../../stores/authStore';
 import './AISidebar.css';
 
 const { Text, Title } = Typography;
@@ -65,6 +66,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
   displayMode = 'sidebar',
   onModeChange 
 }) => {
+  const { token } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -124,6 +126,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: currentInput,
@@ -214,10 +217,10 @@ const AISidebar: React.FC<AISidebarProps> = ({
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append('document', file);
+      formData.append('file', file);
       formData.append('title', file.name);
 
-      const response = await fetch('http://localhost:5001/api/ai-assistant/upload-document', {
+      const response = await fetch('http://localhost:5001/api/document/upload', {
         method: 'POST',
         body: formData
       });
@@ -400,6 +403,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: prompt,

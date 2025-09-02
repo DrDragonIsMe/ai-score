@@ -40,13 +40,16 @@ class User(db.Model):
     
     # 个人信息
     real_name = db.Column(db.String(50), comment='真实姓名')
+    nickname = db.Column(db.String(50), comment='昵称/称呼')
     avatar = db.Column(db.String(200), comment='头像URL')
     grade = db.Column(db.String(10), comment='年级')
     school = db.Column(db.String(100), comment='学校')
+    bio = db.Column(db.Text, comment='个人简介')
     
     # 偏好设置
     language = db.Column(db.String(10), default='zh', comment='语言偏好')
     timezone = db.Column(db.String(50), default='Asia/Shanghai', comment='时区')
+    preferred_greeting = db.Column(db.String(20), default='casual', comment='问候偏好：formal/casual/friendly/professional')
     
     # 时间戳
     created_at = db.Column(db.DateTime, default=datetime.utcnow, comment='创建时间')
@@ -102,11 +105,14 @@ class User(db.Model):
             'is_verified': self.is_verified,
             'role': self.role,
             'real_name': self.real_name,
+            'nickname': self.nickname,
             'avatar': self.avatar,
             'grade': self.grade,
             'school': self.school,
+            'bio': self.bio,
             'language': self.language,
             'timezone': self.timezone,
+            'preferred_greeting': self.preferred_greeting,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None
         }
