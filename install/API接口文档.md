@@ -10,8 +10,8 @@
 - **认证方式**: JWT Bearer Token
 - **内容类型**: `application/json`
 - **字符编码**: UTF-8
-- **版本**: v1.2.0
-- **最后更新**: 2025-01-15
+- **版本**: v1.2.1
+- **最后更新**: 2025-01-22
 
 ### 通用响应格式
 
@@ -1438,9 +1438,150 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 13. 统计分析接口 (Analytics)
+## 13. PPT模板管理接口 (PPT Templates)
 
-### 13.1 获取学习统计
+### 13.1 获取PPT模板列表
+
+**接口地址**: `GET /ppt-templates`
+
+**查询参数**:
+- `category`: 模板分类 (business, education, academic)
+- `page`: 页码
+- `per_page`: 每页数量
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "templates": [
+      {
+        "id": "template_001",
+        "name": "商务汇报模板",
+        "description": "适用于商业演示和项目汇报",
+        "category": "business",
+        "preview_url": "/api/ppt-templates/template_001/preview",
+        "file_path": "/templates/business_template.pptx",
+        "created_at": "2024-01-20T10:30:00Z",
+        "updated_at": "2024-01-20T10:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 15,
+      "pages": 1
+    }
+  }
+}
+```
+
+### 13.2 获取PPT模板详情
+
+**接口地址**: `GET /ppt-templates/{template_id}`
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "template_001",
+    "name": "商务汇报模板",
+    "description": "适用于商业演示和项目汇报的专业模板",
+    "category": "business",
+    "preview_url": "/api/ppt-templates/template_001/preview",
+    "file_path": "/templates/business_template.pptx",
+    "file_size": 2048576,
+    "slide_count": 12,
+    "created_at": "2024-01-20T10:30:00Z",
+    "updated_at": "2024-01-20T10:30:00Z"
+  }
+}
+```
+
+### 13.3 上传PPT模板
+
+**接口地址**: `POST /ppt-templates/upload`
+
+**请求参数** (multipart/form-data):
+- `file`: PPT模板文件 (.pptx格式)
+- `name`: 模板名称
+- `description`: 模板描述
+- `category`: 模板分类
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "PPT模板上传成功",
+  "data": {
+    "id": "template_002",
+    "name": "自定义教育模板",
+    "description": "用户上传的教育类PPT模板",
+    "category": "education",
+    "preview_url": "/api/ppt-templates/template_002/preview",
+    "file_path": "/templates/custom_education_template.pptx"
+  }
+}
+```
+
+### 13.4 生成PPT
+
+**接口地址**: `POST /ppt-templates/generate`
+
+**请求参数**:
+```json
+{
+  "template_id": "template_001",
+  "content": "PPT主题：人工智能在教育中的应用\n\n第一部分：AI技术概述\n- 机器学习基础\n- 深度学习应用\n\n第二部分：教育场景应用\n- 个性化学习\n- 智能评估\n- 自适应教学",
+  "title": "AI教育应用报告",
+  "author": "张三"
+}
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "PPT生成成功",
+  "data": {
+    "generation_id": "gen_001",
+    "download_url": "/api/ppt-templates/download/gen_001",
+    "file_name": "AI教育应用报告.pptx",
+    "file_size": 3145728,
+    "slide_count": 8,
+    "expires_at": "2024-01-21T10:30:00Z"
+  }
+}
+```
+
+### 13.5 下载生成的PPT
+
+**接口地址**: `GET /ppt-templates/download/{generation_id}`
+
+**响应**: 直接返回PPT文件流
+
+**响应头**:
+```
+Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+Content-Disposition: attachment; filename="AI教育应用报告.pptx"
+```
+
+### 13.6 删除PPT模板
+
+**接口地址**: `DELETE /ppt-templates/{template_id}`
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "PPT模板删除成功"
+}
+```
+
+## 14. 统计分析接口 (Analytics)
+
+### 14.1 获取学习统计
 
 **接口地址**: `GET /analytics/learning-stats`
 
@@ -1478,7 +1619,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 13.2 获取能力分析
+### 14.2 获取能力分析
 
 **接口地址**: `GET /analytics/ability-analysis`
 
