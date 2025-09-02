@@ -343,7 +343,12 @@ tmux attach -t ai-score
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本项目采用 Apache License 2.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+**重要说明：**
+- 本软件不得用于多租户服务或SaaS服务
+- 不得移除或修改原始的版权声明、许可证信息、LOGO和归属声明
+- 必须保留对原始项目的引用和归属
 
 ## 支持
 

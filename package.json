@@ -1,4 +1,13 @@
 {
+  "name": "ai-score",
+  "version": "1.2.0",
+  "description": "AI智能学习系统 - 基于人工智能的个性化学习平台",
+  "license": "Apache-2.0",
+  "author": "Chang Xinglong",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/changxinglong/ai-score.git"
+  },
   "dependencies": {
     "@types/d3": "^7.4.3",
     "d3": "^7.9.0"

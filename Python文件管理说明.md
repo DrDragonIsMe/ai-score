@@ -202,7 +202,7 @@ if __name__ == '__main__':
             "Author: Chang Xinglong",
             "Date: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
             "Version: 1.0.0",
-            "License: MIT",
+            "License: Apache License 2.0",
             "\"\"\"",
             "",
             "$0"

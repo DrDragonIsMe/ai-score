@@ -10,8 +10,8 @@
 - **认证方式**: JWT Bearer Token
 - **内容类型**: `application/json`
 - **字符编码**: UTF-8
-- **版本**: v1.1.0
-- **最后更新**: 2025-08-30
+- **版本**: v1.2.0
+- **最后更新**: 2025-01-15
 
 ### 通用响应格式
 
@@ -211,6 +211,113 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "message": "密码修改成功"
+}
+```
+
+### 2.4 获取用户个人资料 🆕
+
+**接口地址**: `GET /users/profile/details`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_001",
+    "email": "user@example.com",
+    "username": "张三",
+    "nickname": "小明",
+    "phone": "13800138000",
+    "avatar": "https://example.com/avatar.jpg",
+    "bio": "热爱学习的学生",
+    "learning_preferences": {
+      "preferred_subjects": ["数学", "物理"],
+      "study_time": "evening",
+      "difficulty_level": "intermediate"
+    },
+    "privacy_settings": {
+      "show_email": false,
+      "show_phone": false,
+      "allow_ai_personalization": true
+    },
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-20T10:30:00Z"
+  }
+}
+```
+
+### 2.5 更新用户个人资料 🆕
+
+**接口地址**: `PUT /users/profile/details`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**请求参数**:
+```json
+{
+  "username": "李四",
+  "nickname": "小李",
+  "phone": "13900139000",
+  "bio": "积极向上的学习者",
+  "learning_preferences": {
+    "preferred_subjects": ["数学", "化学"],
+    "study_time": "morning",
+    "difficulty_level": "advanced"
+  },
+  "privacy_settings": {
+    "show_email": true,
+    "show_phone": false,
+    "allow_ai_personalization": true
+  }
+}
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "个人资料更新成功",
+  "data": {
+    "id": "user_001",
+    "username": "李四",
+    "nickname": "小李",
+    "phone": "13900139000",
+    "bio": "积极向上的学习者",
+    "updated_at": "2024-01-20T11:00:00Z"
+  }
+}
+```
+
+### 2.6 上传用户头像 🆕
+
+**接口地址**: `POST /users/profile/avatar`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+```
+
+**请求参数**:
+- `avatar`: 头像文件 (支持JPG、PNG格式，最大2MB)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "头像上传成功",
+  "data": {
+    "avatar_url": "https://example.com/avatars/user_001_1642680600.jpg",
+    "updated_at": "2024-01-20T11:30:00Z"
+  }
 }
 ```
 
@@ -808,9 +915,190 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 9. 记忆强化接口 (Memory Enhancement)
+## 9. AI助手接口 (AI Assistant) 🆕
 
-### 9.1 创建记忆卡片
+### 9.1 发送消息给AI助手
+
+**接口地址**: `POST /ai-assistant/chat`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**请求参数**:
+```json
+{
+  "message": "请帮我解释一下有理数的概念",
+  "context": {
+    "subject_id": "subject_001",
+    "knowledge_point_id": "kp_001",
+    "conversation_id": "conv_001"
+  },
+  "options": {
+    "use_nickname": true,
+    "response_style": "friendly",
+    "include_examples": true
+  }
+}
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "message_id": "msg_001",
+    "response": "你好小明！有理数是可以表示为两个整数之比的数，包括正整数、负整数、零和分数。比如：1, -2, 0, 1/2, -3/4 都是有理数。",
+    "conversation_id": "conv_001",
+    "user_nickname": "小明",
+    "timestamp": "2024-01-20T10:30:00Z",
+    "related_resources": [
+      {
+        "type": "knowledge_point",
+        "id": "kp_001",
+        "title": "有理数概念"
+      }
+    ]
+  }
+}
+```
+
+### 9.2 获取对话历史
+
+**接口地址**: `GET /ai-assistant/conversations/{conversation_id}`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**查询参数**:
+- `page`: 页码 (默认: 1)
+- `per_page`: 每页消息数量 (默认: 20)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "conversation_id": "conv_001",
+    "messages": [
+      {
+        "message_id": "msg_001",
+        "role": "user",
+        "content": "请帮我解释一下有理数的概念",
+        "timestamp": "2024-01-20T10:30:00Z"
+      },
+      {
+        "message_id": "msg_002",
+        "role": "assistant",
+        "content": "你好小明！有理数是可以表示为两个整数之比的数...",
+        "timestamp": "2024-01-20T10:30:15Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 10,
+      "pages": 1
+    }
+  }
+}
+```
+
+### 9.3 创建新对话
+
+**接口地址**: `POST /ai-assistant/conversations`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**请求参数**:
+```json
+{
+  "title": "数学学习讨论",
+  "subject_id": "subject_001",
+  "initial_message": "我想学习有理数相关的知识"
+}
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "对话创建成功",
+  "data": {
+    "conversation_id": "conv_002",
+    "title": "数学学习讨论",
+    "subject_id": "subject_001",
+    "created_at": "2024-01-20T11:00:00Z",
+    "first_response": "你好小明！我很高兴帮助你学习有理数相关的知识。有理数是数学中的基础概念..."
+  }
+}
+```
+
+### 9.4 获取用户对话列表
+
+**接口地址**: `GET /ai-assistant/conversations`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**查询参数**:
+- `page`: 页码 (默认: 1)
+- `per_page`: 每页数量 (默认: 10)
+- `subject_id`: 学科筛选 (可选)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "conversations": [
+      {
+        "conversation_id": "conv_001",
+        "title": "有理数概念学习",
+        "subject_name": "数学",
+        "message_count": 10,
+        "last_message_time": "2024-01-20T10:30:00Z",
+        "created_at": "2024-01-20T09:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 10,
+      "total": 5,
+      "pages": 1
+    }
+  }
+}
+```
+
+### 9.5 删除对话
+
+**接口地址**: `DELETE /ai-assistant/conversations/{conversation_id}`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "对话删除成功"
+}
+```
+
+## 10. 记忆强化接口 (Memory Enhancement)
+
+### 10.1 创建记忆卡片
 
 **接口地址**: `POST /memory/cards`
 
@@ -839,7 +1127,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 9.2 获取待复习卡片
+### 10.2 获取待复习卡片
 
 **接口地址**: `GET /memory/cards/due`
 
@@ -867,7 +1155,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 9.3 提交复习结果
+### 10.3 提交复习结果
 
 **接口地址**: `POST /memory/cards/{card_id}/review`
 
