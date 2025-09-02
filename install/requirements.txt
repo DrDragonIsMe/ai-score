@@ -1,90 +1,125 @@
 # AI智能学习系统 - Python依赖包
 
-# Flask核心框架
+# Web框架
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-Migrate==4.0.5
 Flask-JWT-Extended==4.5.3
 Flask-CORS==4.0.0
 Flask-Mail==0.9.1
+Flask-Caching==2.1.0
+Flask-Limiter==3.5.0
+Flask-Uploads==0.2.1
 
 # 数据库
 SQLAlchemy==2.0.21
 psycopg2-binary==2.9.7
 redis==4.6.0
 
-# 密码加密
-Werkzeug==2.3.7
-bcrypt==4.0.1
-
-# HTTP请求
-requests==2.31.0
-urllib3==2.0.4
-
 # 数据处理
 numpy==1.24.3
 pandas==2.0.3
 scipy==1.11.2
 
-# 机器学习
+# AI/机器学习
 scikit-learn==1.3.0
+openai==1.3.0
+
+# 文档处理
+PyMuPDF==1.23.0
+Pillow==10.0.0
 
 # 自然语言处理
 jieba==0.42.1
+beautifulsoup4==4.12.2
 
-# 图像处理
-Pillow==10.0.0
+# 网络爬虫
+requests==2.31.0
+urllib3==2.0.4
+
+# 文件处理
+openpyxl==3.1.2
+
+# 异步任务
+celery==5.3.1
+
+# 工具库
+Werkzeug==2.3.7
+bcrypt==4.0.1
+validators==0.22.0
+psutil==5.9.5
+
+# 数据验证
+marshmallow==3.20.1
+
+# 安全加密
+cryptography==41.0.4
 
 # 配置管理
 python-dotenv==1.0.0
+python-decouple==3.8
 
-# 日期时间处理
+# 时间和地理处理
 python-dateutil==2.8.2
+pytz==2023.3
 
-# JSON处理
-orjson==3.9.5
+# 图像和媒体处理
+opencv-python==4.8.0.76
 
-# 验证
-validators==0.22.0
+# 缓存和性能
+Flask-Caching==2.1.0
 
-# 任务队列
-celery==5.3.1
-
-# 监控
+# 日志和监控
 psutil==5.9.5
 
-# 开发工具
+# 模板引擎
+Jinja2==3.1.2
+
+# 部署和生产
+gunicorn==21.2.0
+
+# 开发和测试工具
 pytest==7.4.2
 pytest-flask==1.2.0
 flake8==6.0.0
 black==23.7.0
 
-# 生产环境
-gunicorn==21.2.0
-
-# 环境变量
-python-decouple==3.8
-
-# 缓存
-Flask-Caching==2.1.0
-
 # API文档
 flasgger==0.9.7.1
 
-# 限流
-Flask-Limiter==3.5.0
+# 文本处理
+regex==2023.8.8
 
-# 文件上传
-Flask-Uploads==0.2.1
+# 文件监控
+watchdog==3.0.0
 
-# 时区处理
-pytz==2023.3
+# 数学和统计
+sympy==1.12
+
+# 并行计算
+joblib==1.3.2
+
+# 压缩
+zstandard==0.21.0
+
+# 版本控制
+GitPython==3.1.32
+
+# 健康检查
+Flask-HealthCheck==1.0.0
+
+# 环境管理
+virtualenv==20.24.2
+
+# 文档生成
+Sphinx==7.1.2
+
+# 包管理
+setuptools==68.0.0
+wheel==0.41.0
+
+# JSON处理
+orjson==3.9.5
 
 # UUID
 uuid==1.30
-
-# 加密
-cryptography==41.0.4
-
-# 正则表达式
-regex==2023.8.8

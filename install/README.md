@@ -12,7 +12,8 @@
 - Python 3.8 或更高版本
 - PostgreSQL 12 或更高版本
 - Redis 6.0 或更高版本
-- Node.js 16 或更高版本（如需前端开发）
+- Node.js 16 或更高版本
+- npm 或 yarn 包管理器
 
 ## 快速安装（推荐）
 
@@ -39,9 +40,10 @@ cd install
 安装脚本将自动完成以下操作：
 - 检查系统环境
 - 安装 Homebrew（如未安装）
-- 安装 Python、PostgreSQL、Redis
+- 安装 Python、PostgreSQL、Redis、Node.js
 - 创建 Python 虚拟环境
-- 安装项目依赖
+- 安装后端 Python 依赖
+- 安装前端 Node.js 依赖
 - 初始化数据库
 - 创建配置文件
 
@@ -100,6 +102,9 @@ brew services start postgresql@15
 # 安装 Redis
 brew install redis
 brew services start redis
+
+# 安装 Node.js
+brew install node
 ```
 
 ### 3. 创建数据库
@@ -116,11 +121,26 @@ python3 -m venv venv
 # 激活虚拟环境
 source venv/bin/activate
 
-# 安装依赖
+# 安装后端依赖
 pip install -r install/requirements.txt
 ```
 
-### 5. 配置环境变量
+### 5. 安装前端依赖
+```bash
+# 进入前端目录
+cd frontend
+
+# 安装前端依赖
+npm install
+
+# 或使用 yarn
+# yarn install
+
+# 返回项目根目录
+cd ..
+```
+
+### 6. 配置环境变量
 ```bash
 # 复制配置模板
 cp install/.env.example .env
@@ -129,7 +149,7 @@ cp install/.env.example .env
 nano .env
 ```
 
-### 6. 初始化数据库
+### 7. 初始化数据库
 ```bash
 # 设置 Flask 应用
 export FLASK_APP=backend/app.py
@@ -140,10 +160,14 @@ flask db migrate -m "Initial migration"
 flask db upgrade
 ```
 
-### 7. 启动应用
+### 8. 启动应用
 ```bash
-# 启动开发服务器
+# 启动后端开发服务器
 flask run --host=0.0.0.0 --port=5000
+
+# 在新终端中启动前端开发服务器
+cd frontend
+npm run dev
 ```
 
 ## 配置说明
@@ -228,8 +252,19 @@ source venv/bin/activate
 export FLASK_ENV=development
 export FLASK_DEBUG=True
 
-# 启动服务器
+# 启动后端服务器
 flask run --host=0.0.0.0 --port=5000
+```
+
+### 启动前端开发服务器
+```bash
+# 在新终端中进入前端目录
+cd frontend
+
+# 启动前端开发服务器
+npm run dev
+
+# 前端服务器通常运行在 http://localhost:3000
 ```
 
 ### 数据库操作
@@ -295,6 +330,16 @@ ai-score/
 │   ├── services/     # 业务逻辑
 │   ├── utils/        # 工具函数
 │   └── config/       # 配置文件
+├── frontend/         # 前端代码
+│   ├── src/         # 源代码
+│   │   ├── components/  # React 组件
+│   │   ├── pages/      # 页面组件
+│   │   ├── services/   # API 服务
+│   │   ├── stores/     # 状态管理
+│   │   └── types/      # TypeScript 类型
+│   ├── public/      # 静态资源
+│   ├── package.json # 前端依赖配置
+│   └── vite.config.ts # 构建配置
 ├── install/          # 安装脚本和文档
 ├── logs/            # 日志文件
 ├── uploads/         # 上传文件
