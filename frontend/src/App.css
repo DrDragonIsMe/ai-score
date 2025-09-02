@@ -10,26 +10,31 @@
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: var(--background-primary);
+  color: var(--text-primary);
 }
 
-/* 自定义滚动条 */
+/* 自定义滚动条 - 清新淡雅风格 */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+  transform: scale(1.1);
 }
 
 /* 响应式设计 */
@@ -59,6 +64,24 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 用户头像悬停效果 */
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-medium) !important;
+}
+
+/* 按钮悬停效果增强 */
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* 菜单项悬停效果 */
+.ant-menu-item:hover {
+  transform: translateX(2px);
+  transition: all 0.2s ease-in-out;
 }
 
 /* 卡片悬停效果 */

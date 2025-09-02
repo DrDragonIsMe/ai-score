@@ -53,18 +53,23 @@ def chat_with_assistant():
     if not message.strip():
         return error_response("消息内容不能为空", 400)
     
-    # 调用AI助理服务（暂时使用固定用户ID）
-    result = ai_assistant_service.chat_with_user(
-        user_id="1",
-        message=message,
-        context=context,
-        model_id=model_id
-    )
-    
-    if result['success']:
-        return success_response(result, "对话成功")
-    else:
-        return error_response(result.get('error', '对话失败'), 500)
+    try:
+        # 调用AI助理服务（暂时使用固定用户ID）
+        result = ai_assistant_service.chat_with_user(
+            user_id="1",
+            message=message,
+            context=context,
+            model_id=model_id
+        )
+        
+        if result['success']:
+            return success_response(result, "对话成功")
+        else:
+            logger.error(f"AI助理对话失败: {result.get('error', '未知错误')}")
+            return error_response("AI助理暂时不可用，请检查模型配置", 503)
+    except Exception as e:
+        logger.error(f"AI助理API异常: {str(e)}")
+        return error_response("AI助理服务异常，请稍后重试", 503)
 
 @ai_assistant_bp.route('/recognize-image', methods=['POST'])
 def recognize_question_image():

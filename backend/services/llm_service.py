@@ -223,6 +223,38 @@ class LLMService:
         
         return self.generate_text(prompt)
     
+    @staticmethod
+    def generate_content(prompt: str, max_tokens: int = 1000, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
+        """
+        静态方法：生成内容（兼容其他服务的静态调用）
+        
+        Args:
+            prompt: 输入提示
+            max_tokens: 最大token数
+            temperature: 温度参数
+            **kwargs: 其他参数
+            
+        Returns:
+            Dict: 包含生成内容的字典
+        """
+        try:
+            content = llm_service.generate_text(
+                prompt=prompt, 
+                max_tokens=max_tokens, 
+                temperature=temperature, 
+                **kwargs
+            )
+            return {
+                'content': content,
+                'success': True
+            }
+        except Exception as e:
+            logger.error(f"内容生成失败: {str(e)}")
+            return {
+                'content': f"生成失败: {str(e)}",
+                'success': False
+            }
+    
     def generate_study_plan(self, weak_points: List[str], study_time: int) -> str:
         """
         生成学习计划

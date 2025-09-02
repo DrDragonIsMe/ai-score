@@ -22,6 +22,10 @@ import {
   ArrowDownOutlined,
   PlayCircleOutlined,
   CheckCircleOutlined,
+  RobotOutlined,
+  BulbOutlined,
+  MessageOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
@@ -35,6 +39,15 @@ interface DashboardStats {
   totalStudyTime: number;
   weeklyProgress: number;
   accuracy: number;
+}
+
+interface AIStats {
+  totalInteractions: number;
+  questionsAnswered: number;
+  aiAccuracy: number;
+  personalizedRecommendations: number;
+  aiStudyTime: number;
+  intelligentAnalysis: number;
 }
 
 interface RecentActivity {
@@ -66,6 +79,15 @@ const Dashboard: React.FC = () => {
     totalStudyTime: 1250,
     weeklyProgress: 75,
     accuracy: 85,
+  });
+
+  const [aiStats, setAiStats] = useState<AIStats>({
+    totalInteractions: 156,
+    questionsAnswered: 89,
+    aiAccuracy: 94,
+    personalizedRecommendations: 23,
+    aiStudyTime: 420,
+    intelligentAnalysis: 15,
   });
 
   const [recentActivities] = useState<RecentActivity[]>([
@@ -165,11 +187,80 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Title level={2}>学习仪表盘</Title>
+        <Title level={2}>
+          <RobotOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+          AI智能学习仪表盘
+        </Title>
         <Text type="secondary">
-          欢迎回来，{user?.full_name || user?.username}！继续您的学习之旅。
+          欢迎回来，{user?.full_name || user?.username}！AI助手已为您准备了个性化学习方案。
         </Text>
       </div>
+
+      {/* AI功能统计卡片 */}
+      <Card 
+        title={
+          <Space>
+            <RobotOutlined style={{ color: '#1890ff' }} />
+            <span>AI学习助手统计</span>
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+        extra={<Button type="primary" ghost>查看AI详情</Button>}
+      >
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={4}>
+            <Statistic
+              title="AI互动次数"
+              value={aiStats.totalInteractions}
+              prefix={<MessageOutlined style={{ color: '#1890ff' }} />}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
+            <Statistic
+              title="AI解答问题"
+              value={aiStats.questionsAnswered}
+              prefix={<BulbOutlined style={{ color: '#52c41a' }} />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
+            <Statistic
+              title="AI准确率"
+              value={aiStats.aiAccuracy}
+              suffix="%"
+              prefix={<StarOutlined style={{ color: '#faad14' }} />}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
+            <Statistic
+              title="个性化推荐"
+              value={aiStats.personalizedRecommendations}
+              prefix={<TrophyOutlined style={{ color: '#722ed1' }} />}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
+            <Statistic
+              title="AI辅助学习"
+              value={aiStats.aiStudyTime}
+              suffix="分钟"
+              prefix={<ClockCircleOutlined style={{ color: '#fa541c' }} />}
+              valueStyle={{ color: '#fa541c' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
+            <Statistic
+              title="智能分析"
+              value={aiStats.intelligentAnalysis}
+              suffix="次"
+              prefix={<BookOutlined style={{ color: '#13c2c2' }} />}
+              valueStyle={{ color: '#13c2c2' }}
+            />
+          </Col>
+        </Row>
+      </Card>
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>

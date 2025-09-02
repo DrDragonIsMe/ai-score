@@ -34,7 +34,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import AIAssistant from '../components/AIAssistant/AIAssistant';
+import AIDisplayManager from '../components/AIDisplayManager';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -42,7 +42,6 @@ const { Text } = Typography;
 const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [switchAccountModalVisible, setSwitchAccountModalVisible] = useState(false);
-  const [aiAssistantVisible, setAiAssistantVisible] = useState(false);
   const [switchAccountForm] = Form.useForm();
   const { user, logout, login } = useAuthStore();
   const navigate = useNavigate();
@@ -177,91 +176,112 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div
+    <AIDisplayManager defaultMode="hidden">
+      <Layout style={{ minHeight: '100vh' }}>
+        <Sider 
+          trigger={null} 
+          collapsible 
+          collapsed={collapsed}
+          width={260}
+          collapsedWidth={80}
           style={{
-            height: 32,
-            margin: 16,
-            background: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: 6,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 'bold',
+            background: 'var(--background-gradient)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: 'var(--shadow-elegant)',
+            borderRight: '1px solid var(--border-color)',
+            position: 'relative',
+            zIndex: 10,
           }}
         >
-          {collapsed ? 'AI' : 'AI学习系统'}
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          onClick={handleMenuClick}
-        />
-      </Sider>
-      <Layout>
-        <Header
-          style={{
-            padding: '0 16px',
-            background: colorBgContainer,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+          <div
             style={{
-              fontSize: '16px',
-              width: 64,
-              height: 64,
+              height: 32,
+              margin: 16,
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: 6,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 'bold',
             }}
+          >
+            {collapsed ? 'AI' : 'AI学习系统'}
+          </div>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            onClick={handleMenuClick}
           />
-          <Space>
+        </Sider>
+        <Layout>
+          <Header
+            style={{
+              padding: '0 24px',
+              background: 'var(--background-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: 'var(--shadow-soft)',
+              borderBottom: '1px solid var(--border-color)',
+              backdropFilter: 'blur(10px)',
+              position: 'sticky',
+              top: 0,
+              zIndex: 100,
+            }}
+          >
             <Button
-              type="primary"
-              icon={<RobotOutlined />}
-              onClick={() => setAiAssistantVisible(true)}
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
               style={{
-                borderRadius: '20px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none',
-                boxShadow: '0 4px 15px 0 rgba(116, 75, 162, 0.3)',
+                fontSize: '16px',
+                width: 64,
+                height: 64,
+                transition: 'all 0.2s ease-in-out',
+                borderRadius: 'var(--border-radius)',
               }}
-            >
-              高小分
-            </Button>
-            <Text>欢迎回来，{user?.full_name || user?.username}</Text>
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              arrow
-            >
-              <Avatar
-                size="large"
-                icon={<UserOutlined />}
-                src={user?.avatar_url}
-                style={{ cursor: 'pointer' }}
-              />
-            </Dropdown>
-          </Space>
-        </Header>
-        <Content
-          style={{
-            margin: '24px 16px',
-            padding: 24,
-            minHeight: 280,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
-        >
-          {children}
-        </Content>
+            />
+            <Space>
+              <Text>欢迎回来，{user?.full_name || user?.username}</Text>
+              <Dropdown
+                menu={{ items: userMenuItems }}
+                placement="bottomRight"
+                arrow
+              >
+                <Avatar
+                  size="large"
+                  icon={<UserOutlined />}
+                  src={user?.avatar_url}
+                  style={{ 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    boxShadow: 'var(--shadow-light)'
+                  }}
+                  className="user-avatar"
+                />
+              </Dropdown>
+            </Space>
+          </Header>
+          <Content
+            style={{
+              margin: '16px',
+              padding: '32px',
+              minHeight: 'calc(100vh - 120px)',
+              background: colorBgContainer,
+              borderRadius: 'var(--border-radius-large)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: 'var(--shadow-medium)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {children}
+          </Content>
+        </Layout>
       </Layout>
 
       {/* 切换账号模态框 */}
@@ -317,13 +337,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           </Typography.Text>
         </div>
       </Modal>
-
-      {/* AI助理组件 */}
-      <AIAssistant
-        visible={aiAssistantVisible}
-        onClose={() => setAiAssistantVisible(false)}
-      />
-    </Layout>
+    </AIDisplayManager>
   );
 };
 

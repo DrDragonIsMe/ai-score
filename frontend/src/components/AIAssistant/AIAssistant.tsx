@@ -16,6 +16,10 @@ import {
   Tag,
   Tooltip
 } from 'antd';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw';
 import {
   SendOutlined,
   CameraOutlined,
@@ -32,6 +36,7 @@ import {
   PaperClipOutlined
 } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
+import CameraCapture from './CameraCapture';
 import './AIAssistant.css';
 
 const { TextArea } = Input;
@@ -75,6 +80,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -105,14 +111,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
 
     try {
       // 调用AI助理API
-      const response = await fetch('/api/ai-assistant/chat', {
+      const response = await fetch('http://localhost:5001/api/ai-assistant/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           message: inputValue,
-          context: messages.slice(-5) // 发送最近5条消息作为上下文
+          context: messages.slice(-5).map(msg => ({
+            type: msg.type,
+            content: msg.content,
+            timestamp: msg.timestamp.toISOString()
+          }))
         })
       });
 
@@ -122,7 +132,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'assistant',
-          content: result.data.response,
+          content: result.data.response || result.response,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMessage]);
@@ -170,13 +180,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
       setMessages(prev => [...prev, imageMessage]);
 
       // 调用图片识别API
-      const response = await fetch('/api/ai-assistant/recognize-image', {
+      const response = await fetch('http://localhost:5001/api/ai-assistant/recognize-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          image_data: base64
+          image_data: base64.split(',')[1] // 移除data:image前缀
         })
       });
 
@@ -254,7 +264,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
       setMessages(prev => [...prev, pdfMessage]);
 
       // 调用PDF上传API
-      const response = await fetch('/api/document/upload', {
+      const response = await fetch('http://localhost:5001/api/document/upload', {
         method: 'POST',
         body: formData
       });
@@ -277,7 +287,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
         ));
         
         // 自动分析PDF内容
-        const analysisResponse = await fetch('/api/ai-assistant/analyze-document', {
+        const analysisResponse = await fetch('http://localhost:5001/api/ai-assistant/analyze-document', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -328,7 +338,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
     console.log('开始分析题目:', questionText);
 
     try {
-      const response = await fetch('/api/ai-assistant/analyze-question', {
+      const response = await fetch('http://localhost:5001/api/ai-assistant/analyze-question', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -387,7 +397,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
 
     try {
       console.log('发送快速帮助请求:', helpType);
-      const response = await fetch('/api/ai-assistant/quick-help', {
+      const response = await fetch('http://localhost:5001/api/ai-assistant/quick-help', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -561,7 +571,78 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
               </div>
             ) : (
               <div className="text-message">
-                <Text style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Text>
+                {isUser ? (
+                  <Text style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Text>
+                ) : (
+                  <div className="markdown-content">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                      components={{
+                        code: ({ node, inline, className, children, ...props }: any) => {
+                           const match = /language-(\w+)/.exec(className || '');
+                           return !inline && match ? (
+                             <pre className={className}>
+                               <code>{children}</code>
+                             </pre>
+                           ) : (
+                             <code className={className}>
+                               {children}
+                             </code>
+                           );
+                         },
+                        p: ({ children }) => <div style={{ marginBottom: '8px' }}>{children}</div>,
+                        h1: ({ children }) => <h3 style={{ margin: '16px 0 8px 0', color: '#1890ff' }}>{children}</h3>,
+                        h2: ({ children }) => <h4 style={{ margin: '12px 0 6px 0', color: '#1890ff' }}>{children}</h4>,
+                        h3: ({ children }) => <h5 style={{ margin: '8px 0 4px 0', color: '#1890ff' }}>{children}</h5>,
+                        ul: ({ children }) => <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>{children}</ul>,
+                        ol: ({ children }) => <ol style={{ paddingLeft: '20px', margin: '8px 0' }}>{children}</ol>,
+                        li: ({ children }) => <li style={{ marginBottom: '4px' }}>{children}</li>,
+                        blockquote: ({ children }) => (
+                          <blockquote style={{
+                            borderLeft: '4px solid #1890ff',
+                            paddingLeft: '12px',
+                            margin: '8px 0',
+                            fontStyle: 'italic',
+                            backgroundColor: '#f6f8fa'
+                          }}>
+                            {children}
+                          </blockquote>
+                        ),
+                        table: ({ children }) => (
+                          <table style={{
+                            borderCollapse: 'collapse',
+                            width: '100%',
+                            margin: '8px 0',
+                            fontSize: '14px'
+                          }}>
+                            {children}
+                          </table>
+                        ),
+                        th: ({ children }) => (
+                          <th style={{
+                            border: '1px solid #d9d9d9',
+                            padding: '8px',
+                            backgroundColor: '#fafafa',
+                            fontWeight: 'bold'
+                          }}>
+                            {children}
+                          </th>
+                        ),
+                        td: ({ children }) => (
+                          <td style={{
+                            border: '1px solid #d9d9d9',
+                            padding: '8px'
+                          }}>
+                            {children}
+                          </td>
+                        )
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
                 {msg.questionAnalysis && (
                   <Card size="small" style={{ marginTop: '8px' }}>
                     <Space direction="vertical" size="small" style={{ width: '100%' }}>
@@ -709,8 +790,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                         <Button
                           type="text"
                           icon={<CameraOutlined />}
-                          onClick={() => fileInputRef.current?.click()}
+                          onClick={() => setShowCamera(true)}
                           disabled={loading}
+                          title="拍照识别题目"
                         />
                         <Button
                           type="text"
@@ -808,6 +890,25 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
           ]}
         />
       </div>
+      
+      {/* 相机拍照组件 */}
+      <CameraCapture
+        visible={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={(imageData: string) => {
+          // 将base64字符串转换为File对象
+          fetch(imageData)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+              handleImageUpload(file);
+            })
+            .catch(error => {
+              console.error('处理拍照图片失败:', error);
+              message.error('处理拍照图片失败');
+            });
+        }}
+      />
     </Modal>
   );
 };

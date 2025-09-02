@@ -1,0 +1,407 @@
+/* AI显示管理器样式 */
+.ai-display-manager {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 主内容区域 */
+.main-content {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--background-secondary);
+}
+
+.main-content.with-sidebar {
+  /* 侧边栏模式时的布局 */
+}
+
+.main-content.full-width {
+  /* 全宽模式时的布局 */
+}
+
+/* AI侧边栏容器 */
+.ai-sidebar-container {
+  width: 380px;
+  min-width: 380px;
+  height: 100vh;
+  background: var(--background-gradient);
+  border-left: 1px solid var(--border-color);
+  box-shadow: var(--shadow-elegant);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+/* 内容区域 */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  min-height: 100%;
+  position: relative;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 确保在抽屉模式下内容区域占满全宽 */
+.main-content.full-width .content-area {
+  width: 100vw;
+  max-width: 100%;
+}
+
+/* 侧边栏模式下的内容区域调整 */
+.main-content.with-sidebar .content-area {
+  width: calc(100vw - 380px);
+  max-width: calc(100vw - 380px);
+  margin-right: 0;
+}
+
+/* AI控制栏 */
+.ai-control-bar {
+  padding: 16px 24px;
+  background: var(--background-card);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 模式切换按钮组 */
+.ai-mode-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ai-mode-buttons .ant-btn {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background: var(--background-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-light);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.ai-mode-buttons .ant-btn:hover {
+  background: var(--background-primary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.ai-mode-buttons .ant-btn-primary {
+  background: var(--primary-gradient);
+  border-color: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+.ai-mode-buttons .ant-btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
+}
+
+/* AI组件模式样式 */
+.ai-sidebar-mode {
+  height: 100%;
+  padding: 0;
+}
+
+.ai-drawer-mode {
+  height: 100%;
+  padding: 0;
+}
+
+.ai-fullscreen-mode {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+}
+
+/* 抽屉样式 */
+.ai-drawer .ant-drawer-header {
+  background: var(--background-card);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+}
+
+.ai-drawer .ant-drawer-body {
+  padding: 0;
+  background: var(--background-secondary);
+}
+
+.ai-drawer .ant-drawer-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* 全屏模态框样式 */
+.ai-fullscreen-modal .ant-modal-content {
+  height: 100vh;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ai-fullscreen-modal .ant-modal-header {
+  background: var(--background-card);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
+  backdrop-filter: blur(12px);
+}
+
+.ai-fullscreen-modal .ant-modal-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.ai-fullscreen-modal .ant-modal-body {
+  background: var(--background-secondary);
+}
+
+/* AI快速访问按钮 */
+.ai-quick-access {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-quick-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+  overflow: hidden;
+}
+
+.ai-quick-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 35px rgba(74, 144, 226, 0.4);
+}
+
+.ai-quick-btn .ai-icon {
+  font-size: 24px;
+  color: white;
+  z-index: 2;
+}
+
+.ai-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  animation: aiPulse 2s infinite;
+}
+
+@keyframes aiPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* 模式选择菜单 */
+.ai-mode-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.ai-quick-access:hover .ai-mode-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.mode-menu-btn {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: var(--background-card) !important;
+  border: 1px solid var(--border-color) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-secondary) !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mode-menu-btn:hover {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border-color: var(--primary-color) !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3) !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ai-sidebar-container {
+    width: 300px;
+    min-width: 300px;
+  }
+  
+  .ai-control-bar {
+    padding: 8px 12px;
+  }
+  
+  .ai-mode-buttons .ant-btn {
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-sidebar-container {
+    width: 280px;
+    min-width: 280px;
+  }
+  
+  .main-content.with-sidebar {
+    flex-direction: column;
+  }
+  
+  .ai-sidebar-container {
+    width: 100%;
+    height: 200px;
+    min-width: auto;
+  }
+}
+
+/* 动画效果 */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ai-sidebar-mode {
+  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-drawer-mode {
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-fullscreen-mode {
+  animation: zoomIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 浮动按钮动画 */
+.ant-float-btn-group {
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 清新淡雅的配色方案 */
+:root {
+  --ai-primary-color: #52c41a;
+  --ai-secondary-color: #73d13d;
+  --ai-background-light: #fafafa;
+  --ai-background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --ai-text-primary: #2c3e50;
+  --ai-text-secondary: #7f8c8d;
+  --ai-border-color: rgba(0, 0, 0, 0.06);
+  --ai-shadow-light: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --ai-shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
