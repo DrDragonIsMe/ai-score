@@ -33,10 +33,12 @@ import {
   SearchOutlined,
   FileTextOutlined,
   FilePdfOutlined,
-  PaperClipOutlined
+  PaperClipOutlined,
+  FileAddOutlined
 } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import CameraCapture from './CameraCapture';
+import PPTTemplateSelector from './PPTTemplateSelector';
 import './AIAssistant.css';
 
 const { TextArea } = Input;
@@ -87,6 +89,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [showPPTTemplateSelector, setShowPPTTemplateSelector] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplateName, setSelectedTemplateName] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -128,7 +133,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
             type: msg.type,
             content: msg.content,
             timestamp: msg.timestamp.toISOString()
-          }))
+          })),
+          template_id: selectedTemplateId // 传递选中的模板ID
         })
       });
 
@@ -155,6 +161,74 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: '抱歉，我现在遇到了一些问题，请稍后再试。如果问题持续存在，请联系技术支持。',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理PPT模板选择
+  const handleTemplateSelect = (templateId: string, templateName: string) => {
+    setSelectedTemplateId(templateId);
+    setSelectedTemplateName(templateName);
+    message.success(`已选择模板：${templateName}`);
+  };
+
+  // 生成PPT
+  const handleGeneratePPT = async () => {
+    if (!inputValue.trim()) {
+      message.warning('请输入PPT内容描述');
+      return;
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: `生成PPT：${inputValue}${selectedTemplateName ? ` (使用模板：${selectedTemplateName})` : ''}`,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5001/api/ai-assistant/generate-ppt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: inputValue,
+          template_id: selectedTemplateId,
+          user_id: '1', // 暂时使用固定用户ID
+          tenant_id: '1' // 暂时使用固定租户ID
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: `PPT生成成功！\n\n文件名：${result.data.filename}\n下载链接：[点击下载](${result.data.download_url})`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        throw new Error(result.message || 'PPT生成失败');
+      }
+    } catch (error) {
+      console.error('PPT生成失败:', error);
+      message.error('PPT生成失败，请重试');
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: '抱歉，PPT生成失败，请稍后再试。',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -788,6 +862,30 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                     </div>
                     
                     <div className="message-input">
+                      {selectedTemplateName && (
+                        <div style={{ 
+                          padding: '8px 12px', 
+                          backgroundColor: '#f0f8ff', 
+                          border: '1px solid #d9d9d9', 
+                          borderRadius: '6px 6px 0 0',
+                          fontSize: '12px',
+                          color: '#1890ff'
+                        }}>
+                          已选择模板：{selectedTemplateName}
+                          <Button 
+                            type="text" 
+                            size="small" 
+                            onClick={() => {
+                              setSelectedTemplateId(null);
+                              setSelectedTemplateName(null);
+                              message.info('已取消模板选择');
+                            }}
+                            style={{ padding: '0 4px', marginLeft: '8px', fontSize: '12px' }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      )}
                       <TextArea
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
@@ -798,6 +896,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                             e.preventDefault();
                             handleSendMessage();
                           }
+                        }}
+                        style={{
+                          borderRadius: selectedTemplateName ? '0 0 6px 6px' : '6px'
                         }}
                       />
                       <div className="input-actions">
@@ -837,7 +938,27 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
                           icon={<PaperClipOutlined />}
                           onClick={() => pdfInputRef.current?.click()}
                           disabled={loading}
+                          title="上传PDF文档"
                         />
+                        <Button
+                          type="text"
+                          icon={<FileAddOutlined />}
+                          onClick={() => setShowPPTTemplateSelector(true)}
+                          disabled={loading}
+                          title="选择PPT模板"
+                          style={{
+                            color: selectedTemplateId ? '#1890ff' : undefined,
+                            backgroundColor: selectedTemplateId ? '#f0f8ff' : undefined
+                          }}
+                        />
+                        <Button
+                          type="default"
+                          onClick={handleGeneratePPT}
+                          disabled={loading || !inputValue.trim()}
+                          style={{ marginRight: '8px' }}
+                        >
+                          生成PPT
+                        </Button>
                         <Button
                           type="primary"
                           icon={<SendOutlined />}
@@ -946,6 +1067,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
               message.error('处理拍照图片失败');
             });
         }}
+      />
+      
+      {/* PPT模板选择器 */}
+      <PPTTemplateSelector
+        visible={showPPTTemplateSelector}
+        onClose={() => setShowPPTTemplateSelector(false)}
+        onSelect={handleTemplateSelect}
       />
     </Modal>
   );

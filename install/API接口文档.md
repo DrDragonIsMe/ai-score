@@ -1096,9 +1096,169 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 10. 记忆强化接口 (Memory Enhancement)
+## 10. PPT模板管理接口 (PPT Templates) 🆕
 
-### 10.1 创建记忆卡片
+### 10.1 获取模板列表
+
+**接口地址**: `GET /api/ppt-templates/list`
+
+**查询参数**:
+- `category`: 模板分类 (可选)
+- `tenant_id`: 租户ID (默认: default)
+- `page`: 页码 (默认: 1)
+- `per_page`: 每页数量 (默认: 20)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "templates": [
+      {
+        "id": "template_001",
+        "name": "商务演示模板",
+        "description": "适用于商业演示和项目汇报",
+        "category": "business",
+        "preview_image_path": "/uploads/previews/template_001.jpg",
+        "is_default": true,
+        "usage_count": 156,
+        "created_at": "2024-01-20T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 15,
+      "pages": 1
+    }
+  }
+}
+```
+
+### 10.2 上传PPT模板
+
+**接口地址**: `POST /api/ppt-templates/upload`
+
+**请求类型**: `multipart/form-data`
+
+**请求参数**:
+- `file`: PPT模板文件 (.pptx 或 .potx)
+- `name`: 模板名称
+- `description`: 模板描述 (可选)
+- `category`: 模板分类 (默认: general)
+- `user_id`: 用户ID
+- `tenant_id`: 租户ID (默认: default)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "template": {
+      "id": "template_002",
+      "name": "教育课件模板",
+      "description": "适用于教学课件制作",
+      "category": "education",
+      "template_file_path": "/uploads/ppt_templates/template_002.pptx",
+      "file_size": 2048576,
+      "created_at": "2024-01-20T11:00:00Z"
+    },
+    "message": "模板上传成功"
+  }
+}
+```
+
+### 10.3 生成PPT
+
+**接口地址**: `POST /ai-assistant/generate-ppt`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**请求参数**:
+```json
+{
+  "content": "制作一个关于数学函数的教学PPT，包含：1. 函数的定义 2. 函数的性质 3. 常见函数类型 4. 实际应用例题",
+  "template_id": "template_001",
+  "user_id": "user_001",
+  "tenant_id": "default"
+}
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "ppt_id": "ppt_001",
+    "download_url": "/api/ppt/download/ppt_001",
+    "preview_url": "/api/ppt/preview/ppt_001",
+    "file_name": "数学函数教学PPT.pptx",
+    "pages_count": 8,
+    "generated_at": "2024-01-20T12:00:00Z",
+    "message": "PPT生成成功"
+  }
+}
+```
+
+### 10.4 下载模板
+
+**接口地址**: `GET /api/ppt-templates/{template_id}/download`
+
+**响应**: 直接返回PPT文件流
+
+### 10.5 删除模板
+
+**接口地址**: `DELETE /api/ppt-templates/{template_id}`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "模板删除成功"
+}
+```
+
+### 10.6 获取模板分类
+
+**接口地址**: `GET /api/ppt-templates/categories`
+
+**查询参数**:
+- `tenant_id`: 租户ID (默认: default)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "categories": [
+      {
+        "value": "business",
+        "label": "商务"
+      },
+      {
+        "value": "education",
+        "label": "教育"
+      },
+      {
+        "value": "academic",
+        "label": "学术"
+      }
+    ]
+  }
+}
+```
+
+## 11. 记忆强化接口 (Memory Enhancement)
+
+### 11.1 创建记忆卡片
 
 **接口地址**: `POST /memory/cards`
 
@@ -1127,7 +1287,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 10.2 获取待复习卡片
+### 11.2 获取待复习卡片
 
 **接口地址**: `GET /memory/cards/due`
 
@@ -1155,7 +1315,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 10.3 提交复习结果
+### 11.3 提交复习结果
 
 **接口地址**: `POST /memory/cards/{card_id}/review`
 
@@ -1182,9 +1342,9 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 10. 考试接口 (Exams)
+## 12. 考试接口 (Exams)
 
-### 10.1 创建考试
+### 12.1 创建考试
 
 **接口地址**: `POST /exams`
 
@@ -1221,7 +1381,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 10.2 开始考试
+### 12.2 开始考试
 
 **接口地址**: `POST /exams/{exam_id}/start`
 
@@ -1246,7 +1406,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 10.3 提交考试答案
+### 12.3 提交考试答案
 
 **接口地址**: `POST /exams/{exam_id}/submit`
 
@@ -1278,9 +1438,9 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 11. 统计分析接口 (Analytics)
+## 13. 统计分析接口 (Analytics)
 
-### 11.1 获取学习统计
+### 13.1 获取学习统计
 
 **接口地址**: `GET /analytics/learning-stats`
 
@@ -1318,7 +1478,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 11.2 获取能力分析
+### 13.2 获取能力分析
 
 **接口地址**: `GET /analytics/ability-analysis`
 
@@ -1350,9 +1510,9 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 12. 系统配置接口 (System)
+## 14. 系统配置接口 (System)
 
-### 12.1 获取系统配置
+### 14.1 获取系统配置
 
 **接口地址**: `GET /system/config`
 
@@ -1377,7 +1537,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 12.2 健康检查
+### 14.2 健康检查
 
 **接口地址**: `GET /system/health`
 

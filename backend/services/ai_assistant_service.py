@@ -32,6 +32,7 @@ from services.llm_service import llm_service
 from services.diagnosis_service import DiagnosisService
 from services.document_service import get_document_service
 from services.vector_database_service import vector_db_service
+from services.ppt_generation_service import ppt_generation_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -83,6 +84,10 @@ class AIAssistantService:
             AI助理回复
         """
         try:
+            # 检测是否需要生成PPT
+            if self._should_generate_ppt(message):
+                return self._handle_ppt_generation(user_id, message)
+            
             # 获取用户信息和学习情况
             user_profile = self._get_user_learning_profile(user_id)
             
@@ -1441,6 +1446,121 @@ class AIAssistantService:
         except Exception as e:
             logger.error(f"获取学习分析数据失败: {str(e)}")
             return {}
+    
+    def _should_generate_ppt(self, message: str) -> bool:
+        """
+        检测用户消息是否包含生成PPT的请求
+        """
+        ppt_keywords = [
+            'ppt', 'PPT', 'powerpoint', 'PowerPoint', 
+            '幻灯片', '演示文稿', '课件', '生成ppt', 
+            '制作ppt', '创建ppt', '做个ppt', '做一个ppt'
+        ]
+        
+        message_lower = message.lower()
+        return any(keyword.lower() in message_lower for keyword in ppt_keywords)
+    
+    def _handle_ppt_generation(self, user_id: str, message: str, template_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        处理PPT生成请求
+        """
+        try:
+            # 调用PPT生成服务
+            result = ppt_generation_service.generate_ppt_from_text(
+                user_id=user_id,
+                tenant_id="default",
+                content=message,
+                title="AI生成的演示文稿",
+                template_id=template_id
+            )
+            
+            if result['success']:
+                data = result['data']
+                filename = data['title'] + '.pptx'
+                return {
+                    "success": True,
+                    "response": f"我已经为您生成了PPT！\n\n📄 文件名: {filename}\n🔗 下载链接: {data['download_url']}\n\n该PPT已自动保存到您的文档管理中，您可以随时查看和下载。",
+                    "assistant_name": self.assistant_name,
+                    "timestamp": datetime.now().isoformat(),
+                    "ppt_info": {
+                        "filename": filename,
+                        "download_url": data['download_url'],
+                        "document_id": data.get('document_id'),
+                        "slides_count": data.get('slides_count')
+                    },
+                    "suggestions": [
+                        "您可以点击下载链接获取PPT文件",
+                        "PPT已保存在文档管理中，可随时查看",
+                        "如需修改PPT内容，请告诉我具体要求"
+                    ]
+                }
+            else:
+                return {
+                    "success": False,
+                    "response": f"抱歉，PPT生成失败：{result.get('error', '未知错误')}。请稍后重试或提供更详细的内容要求。",
+                    "assistant_name": self.assistant_name,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"PPT生成处理失败: {str(e)}")
+            return {
+                "success": False,
+                "response": "抱歉，PPT生成功能暂时不可用，请稍后重试。",
+                "error": str(e),
+                "assistant_name": self.assistant_name,
+                "timestamp": datetime.now().isoformat()
+            }
+    
+    def generate_ppt(self, content: str, template_id: Optional[str] = None, 
+                    user_id: str = "1", tenant_id: str = "default") -> Dict[str, Any]:
+        """
+        生成PPT
+        
+        Args:
+            content: PPT内容描述
+            template_id: 模板ID（可选）
+            user_id: 用户ID
+            tenant_id: 租户ID
+            
+        Returns:
+            Dict: 包含生成结果的字典
+        """
+        try:
+            logger.info(f"开始生成PPT，用户ID: {user_id}, 模板ID: {template_id}")
+            
+            # 调用PPT生成服务
+            result = ppt_generation_service.generate_ppt_from_text(
+                content=content,
+                user_id=user_id,
+                tenant_id=tenant_id,
+                template_id=template_id
+            )
+            
+            if result.get('success'):
+                logger.info(f"PPT生成成功: {result.get('filename')}")
+                return {
+                    "success": True,
+                    "filename": result.get('filename'),
+                    "download_url": result.get('download_url'),
+                    "file_path": result.get('file_path'),
+                    "message": "PPT生成成功"
+                }
+            else:
+                logger.error(f"PPT生成失败: {result.get('error')}")
+                return {
+                    "success": False,
+                    "message": result.get('error', 'PPT生成失败'),
+                    "error": result.get('error')
+                }
+                
+        except Exception as e:
+            logger.error(f"PPT生成异常: {str(e)}")
+            return {
+                "success": False,
+                "message": f"PPT生成失败: {str(e)}",
+                "error": str(e)
+            }
 
 # 创建全局实例
 ai_assistant_service = AIAssistantService()

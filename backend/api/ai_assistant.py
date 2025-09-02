@@ -319,6 +319,42 @@ def search_documents():
     else:
         return error_response(result.get('message', '文档搜索失败'), 500)
 
+@ai_assistant_bp.route('/generate-ppt', methods=['POST'])
+def generate_ppt():
+    """
+    生成PPT
+    
+    请求参数:
+    - content: PPT内容描述
+    - template_id: 模板ID（可选）
+    - user_id: 用户ID
+    - tenant_id: 租户ID
+    """
+    data = request.get_json()
+    
+    if not data or 'content' not in data:
+        return error_response("缺少必要参数：content", 400)
+    
+    try:
+        content = data['content']
+        template_id = data.get('template_id')
+        user_id = data.get('user_id', '1')  # 默认用户ID
+        tenant_id = data.get('tenant_id', 'default')  # 默认租户ID
+        
+        # 调用AI助理服务生成PPT
+        result = ai_assistant_service.generate_ppt(
+            content=content,
+            template_id=template_id,
+            user_id=user_id,
+            tenant_id=tenant_id
+        )
+        
+        return success_response(result, "PPT生成成功")
+        
+    except Exception as e:
+        logger.error(f"PPT生成失败: {str(e)}")
+        return error_response(f"PPT生成失败: {str(e)}", 500)
+
 # 错误处理
 @ai_assistant_bp.errorhandler(400)
 def bad_request(error):

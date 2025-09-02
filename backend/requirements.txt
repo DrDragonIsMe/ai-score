@@ -39,6 +39,7 @@ Pillow>=10.0.0
 pytesseract>=0.3.10
 opencv-python==4.8.1.78
 opencv-contrib-python==4.8.1.78
+python-pptx==0.6.21
 
 # 自然语言处理
 jieba==0.42.1

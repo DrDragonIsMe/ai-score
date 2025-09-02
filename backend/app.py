@@ -28,7 +28,8 @@ from models import (
     DiagnosisReport, WeaknessPoint, LearningProfile, AIModelConfig,
     MistakeRecord, TutoringSession, ExamSession, TimeAllocation, ScoringStrategy,
     ExamAnalytics, LearningMetric, PerformanceSnapshot, LearningReport,
-    GoalTracking, FeedbackRecord, ExamKnowledgeMapping, ExamKnowledgeStatistics
+    GoalTracking, FeedbackRecord, ExamKnowledgeMapping, ExamKnowledgeStatistics,
+    PPTTemplate
 )
 
 # 创建扩展实例
@@ -116,11 +117,13 @@ def create_app(config_class=Config):
     from api.subject_initializer import subject_initializer_bp
     from api.settings import settings_bp
     from api.document import document_bp
+    from api.ppt_template import ppt_template_bp
     from routes.learning_analytics import learning_analytics_bp
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(subject_initializer_bp)
     app.register_blueprint(settings_bp, url_prefix='/api')
     app.register_blueprint(document_bp)
+    app.register_blueprint(ppt_template_bp)
     app.register_blueprint(learning_analytics_bp)
     
     return app

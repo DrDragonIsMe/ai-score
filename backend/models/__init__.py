@@ -26,6 +26,7 @@ from .mistake import MistakeRecord, TutoringSession
 from .exam import ExamSession, TimeAllocation, ScoringStrategy, ExamAnalytics
 from .tracking import LearningMetric, PerformanceSnapshot, LearningReport, GoalTracking, FeedbackRecord
 from .document import Document, DocumentCategory, DocumentPage, DocumentAnnotation, DocumentAnalysis
+from .ppt_template import PPTTemplate
 
 __all__ = [
     'Tenant', 'User', 'UserProfile',
@@ -38,5 +39,6 @@ __all__ = [
     'MistakeRecord', 'TutoringSession',
     'ExamSession', 'TimeAllocation', 'ScoringStrategy', 'ExamAnalytics',
     'LearningMetric', 'PerformanceSnapshot', 'LearningReport', 'GoalTracking', 'FeedbackRecord',
-    'Document', 'DocumentCategory', 'DocumentPage', 'DocumentAnnotation', 'DocumentAnalysis'
+    'Document', 'DocumentCategory', 'DocumentPage', 'DocumentAnnotation', 'DocumentAnalysis',
+    'PPTTemplate'
 ]

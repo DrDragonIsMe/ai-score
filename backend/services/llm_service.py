@@ -45,14 +45,23 @@ class LLMService:
         try:
             from flask import current_app
             with current_app.app_context():
+                # 首先查找设置为默认的模型
                 self.default_model = AIModelConfig.query.filter_by(
                     is_active=True,
                     is_default=True
                 ).first()
                 
+                # 如果没有默认模型，查找任何可用的模型
                 if not self.default_model:
-                    logger.warning("未找到默认AI模型，创建备用模型")
+                    self.default_model = AIModelConfig.query.filter_by(
+                        is_active=True
+                    ).first()
+                
+                if not self.default_model:
+                    logger.warning("未找到任何AI模型配置，创建备用模型")
                     self.default_model = self._create_fallback_model()
+                else:
+                    logger.info(f"加载AI模型: {self.default_model.model_name} ({self.default_model.model_type})")
                     
         except Exception as e:
             logger.error(f"加载默认模型失败: {str(e)}")
@@ -295,6 +304,7 @@ class LLMService:
         
         if model_name:
             return AIModelConfig.query.filter_by(
+                tenant_id="default",
                 model_name=model_name,
                 is_active=True
             ).first()
@@ -391,10 +401,14 @@ class LLMService:
                 base_url = getattr(model, 'api_url', getattr(model, 'api_endpoint', ''))
             
             # 对于Azure OpenAI，需要添加特定的路径和参数
-            if 'azure.com' in base_url:
-                api_url = f"{base_url}/openai/deployments/{model.model_id}/chat/completions?api-version=2024-02-15-preview"
+            if 'azure.com' in base_url or model.model_type == 'azure_openai':
+                # Azure OpenAI的URL格式
+                if not base_url.endswith('/'):
+                    base_url += '/'
+                api_url = f"{base_url}openai/deployments/{model.model_id}/chat/completions?api-version=2024-02-15-preview"
                 headers["api-key"] = model.api_key
-                del headers["Authorization"]  # Azure使用api-key而不是Authorization
+                if "Authorization" in headers:
+                    del headers["Authorization"]  # Azure使用api-key而不是Authorization
             else:
                 api_url = base_url if base_url.endswith('/chat/completions') else f"{base_url}/chat/completions"
             

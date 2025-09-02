@@ -13,6 +13,9 @@ import {
   Card,
   Tag,
   Divider,
+  Modal,
+  Select,
+  Form,
 } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -32,6 +35,9 @@ import {
   PictureOutlined,
   FileOutlined,
   CloseOutlined,
+  FileAddOutlined,
+  UploadOutlined,
+  CloudUploadOutlined,
 } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -56,6 +62,14 @@ interface Message {
   documentId?: string;
 }
 
+interface PPTTemplate {
+  id: number;
+  name: string;
+  category: string;
+  preview?: string;
+  description: string;
+}
+
 interface AIFullscreenProps {
   onClose?: () => void;
 }
@@ -73,6 +87,12 @@ const AIFullscreen: React.FC<AIFullscreenProps> = ({ onClose }) => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showPPTTemplateModal, setShowPPTTemplateModal] = useState(false);
+  const [pptTemplates, setPptTemplates] = useState<PPTTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<PPTTemplate | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadForm, setUploadForm] = useState({ name: '', category: '', file: null as File | null });
+  const [uploadLoading, setUploadLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
@@ -156,11 +176,82 @@ const AIFullscreen: React.FC<AIFullscreenProps> = ({ onClose }) => {
     }
   };
 
+  // 处理PPT模板选择
+  const handlePPTTemplateSelection = () => {
+    setShowPPTTemplateModal(true);
+    // 这里可以加载PPT模板数据
+    setPptTemplates([
+      { id: 1, name: '学习总结模板', category: '学术类', description: '适用于知识点总结和学习回顾' },
+      { id: 2, name: '课程展示模板', category: '教育类', description: '适用于课程内容展示' },
+      { id: 3, name: '项目汇报模板', category: '商务类', description: '适用于项目成果展示' }
+    ]);
+  };
+
+  // 处理模板上传
+  const handleUploadTemplate = async () => {
+    if (!uploadForm.name || !uploadForm.category || !uploadForm.file) {
+      message.error('请填写完整的模板信息');
+      return;
+    }
+
+    setUploadLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', uploadForm.name);
+      formData.append('category', uploadForm.category);
+      formData.append('file', uploadForm.file);
+
+      const response = await fetch('http://localhost:5001/api/ppt-templates/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        message.success('模板上传成功');
+        setShowUploadModal(false);
+        setUploadForm({ name: '', category: '', file: null });
+        // 重新加载模板列表
+        handlePPTTemplateSelection();
+      } else {
+        message.error(result.message || '上传失败');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      message.error('上传失败，请重试');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  // 处理文件选择
+  const handleFileChange = (file: File) => {
+    const isValidType = file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || 
+                       file.type === 'application/vnd.ms-powerpoint';
+    if (!isValidType) {
+      message.error('只支持 .ppt 和 .pptx 格式的文件');
+      return false;
+    }
+    
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error('文件大小不能超过 10MB');
+      return false;
+    }
+    
+    setUploadForm(prev => ({ ...prev, file }));
+    return false; // 阻止自动上传
+  };
+
   // 快捷操作
   const quickActions = [
     { icon: <BulbOutlined />, text: '学习建议', action: () => setInputValue('给我一些学习建议') },
     { icon: <ThunderboltOutlined />, text: '知识点总结', action: () => setInputValue('帮我总结重要知识点') },
     { icon: <StarOutlined />, text: '制定计划', action: () => setInputValue('帮我制定学习计划') },
+    { icon: <FileTextOutlined />, text: 'PPT模板', action: () => handlePPTTemplateSelection() },
     { icon: <HeartOutlined />, text: '学习鼓励', action: () => setInputValue('给我一些学习鼓励') },
   ];
 
@@ -569,6 +660,420 @@ const AIFullscreen: React.FC<AIFullscreenProps> = ({ onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* PPT模板选择弹窗 */}
+      <Modal
+        title={
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <div style={{
+                width: '24px',
+                height: '24px',
+                background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <FileTextOutlined style={{ fontSize: '12px', color: 'white' }} />
+              </div>
+              <span style={{ 
+                fontSize: '14px', 
+                fontWeight: 500, 
+                color: '#262626'
+              }}>
+                选择PPT模板
+              </span>
+            </div>
+            <Button 
+              type="primary" 
+              icon={<UploadOutlined />} 
+              size="small"
+              onClick={() => setShowUploadModal(true)}
+            >
+              上传模板
+            </Button>
+          </div>
+        }
+        open={showPPTTemplateModal}
+        onCancel={() => setShowPPTTemplateModal(false)}
+        onOk={() => {
+          if (selectedTemplate) {
+            setInputValue(`请帮我使用"${selectedTemplate.name}"创建一个PPT`);
+            setShowPPTTemplateModal(false);
+            setSelectedTemplate(null);
+          }
+        }}
+        okText={selectedTemplate ? '应用模板' : '请选择模板'}
+        cancelText="取消"
+        width={800}
+        okButtonProps={{
+          disabled: !selectedTemplate
+        }}
+      >
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          {/* 按分类显示模板 */}
+          {Object.entries(
+            pptTemplates.reduce((groups, template) => {
+              const category = template.category || '其他';
+              if (!groups[category]) groups[category] = [];
+              groups[category].push(template);
+              return groups;
+            }, {} as Record<string, PPTTemplate[]>)
+          ).map(([category, templates]) => {
+            const categoryIcons: Record<string, string> = {
+              '学术类': '📚',
+              '教育类': '🎓', 
+              '商务类': '💼',
+              '创意类': '🎨',
+              '其他': '📋'
+            };
+            const categoryColors: Record<string, string> = {
+              '学术类': '#1890ff',
+              '教育类': '#52c41a',
+              '商务类': '#fa8c16', 
+              '创意类': '#eb2f96',
+              '其他': '#722ed1'
+            };
+            
+            return (
+               <div key={category} style={{ marginBottom: '24px' }}>
+                 <Title level={5} style={{ 
+                   marginBottom: '8px', 
+                   color: categoryColors[category],
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '4px',
+                   fontSize: '12px'
+                 }}>
+                   <span>{categoryIcons[category]}</span>
+                   {category}
+                 </Title>
+                
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                  gap: '12px'
+                }}>
+                  {templates.map((template: PPTTemplate) => {
+                    const isSelected = selectedTemplate?.id === template.id;
+                    return (
+                      <Card
+                        key={template.id}
+                        size="small"
+                        hoverable
+                        style={{
+                          border: isSelected ? `2px solid ${categoryColors[category]}` : '1px solid #f0f0f0',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={() => setSelectedTemplate(template)}
+                      >
+                        <Card.Meta
+                          title={template.name}
+                          description={template.description}
+                        />
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Modal>
+
+      {/* 上传模板弹窗 */}
+       <Modal
+         title={
+           <div style={{ 
+             display: 'flex', 
+             alignItems: 'center', 
+             gap: '8px',
+             fontSize: '18px',
+             fontWeight: 600,
+             color: '#1890ff'
+           }}>
+             <UploadOutlined style={{ fontSize: '20px' }} />
+             <span>上传PPT模板</span>
+           </div>
+         }
+         open={showUploadModal}
+         onCancel={() => {
+           setShowUploadModal(false);
+           setUploadForm({ name: '', category: '', file: null });
+         }}
+         footer={[
+           <Button 
+             key="cancel" 
+             size="large"
+             onClick={() => {
+               setShowUploadModal(false);
+               setUploadForm({ name: '', category: '', file: null });
+             }}
+             style={{
+               borderRadius: '8px',
+               height: '40px',
+               fontWeight: 500
+             }}
+           >
+             取消
+           </Button>,
+           <Button 
+             key="upload" 
+             type="primary" 
+             size="large"
+             loading={uploadLoading}
+             onClick={handleUploadTemplate}
+             icon={<UploadOutlined />}
+             style={{
+               borderRadius: '8px',
+               height: '40px',
+               fontWeight: 600,
+               background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+               border: 'none',
+               boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)'
+             }}
+           >
+             {uploadLoading ? '上传中...' : '立即上传'}
+           </Button>
+         ]}
+         width={600}
+         centered
+         maskClosable={false}
+         style={{
+           borderRadius: '12px'
+         }}
+       >
+         <div style={{
+           padding: '20px 0',
+           background: 'linear-gradient(135deg, #f6f9ff 0%, #e6f7ff 100%)',
+           borderRadius: '8px',
+           margin: '0 -24px 20px -24px',
+           paddingLeft: '24px',
+           paddingRight: '24px'
+         }}>
+           <div style={{
+             textAlign: 'center',
+             marginBottom: '16px'
+           }}>
+             <div style={{
+               width: '60px',
+               height: '60px',
+               background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+               borderRadius: '50%',
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               margin: '0 auto 12px',
+               boxShadow: '0 4px 16px rgba(24, 144, 255, 0.3)'
+             }}>
+               <FileAddOutlined style={{ fontSize: '28px', color: 'white' }} />
+             </div>
+             <Text style={{ 
+               fontSize: '16px', 
+               color: '#1890ff',
+               fontWeight: 500
+             }}>
+               上传您的PPT模板，让AI助手更好地为您服务
+             </Text>
+           </div>
+         </div>
+
+         <Form layout="vertical" style={{ marginTop: '8px' }}>
+           <Form.Item 
+             label={
+               <span style={{ 
+                 fontSize: '14px', 
+                 fontWeight: 600, 
+                 color: '#262626',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '6px'
+               }}>
+                 <FileTextOutlined style={{ color: '#1890ff' }} />
+                 模板名称
+               </span>
+             } 
+             required
+             style={{ marginBottom: '20px' }}
+           >
+             <Input
+               placeholder="请输入一个有意义的模板名称"
+               value={uploadForm.name}
+               onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
+               size="large"
+               style={{
+                 borderRadius: '8px',
+                 border: '2px solid #f0f0f0',
+                 transition: 'all 0.3s ease'
+               }}
+               onFocus={(e) => {
+                 e.target.style.borderColor = '#1890ff';
+                 e.target.style.boxShadow = '0 0 0 2px rgba(24, 144, 255, 0.1)';
+               }}
+               onBlur={(e) => {
+                 e.target.style.borderColor = '#f0f0f0';
+                 e.target.style.boxShadow = 'none';
+               }}
+             />
+           </Form.Item>
+           
+           <Form.Item 
+             label={
+               <span style={{ 
+                 fontSize: '14px', 
+                 fontWeight: 600, 
+                 color: '#262626',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '6px'
+               }}>
+                 <StarOutlined style={{ color: '#1890ff' }} />
+                 模板分类
+               </span>
+             } 
+             required
+             style={{ marginBottom: '20px' }}
+           >
+             <Select
+               placeholder="请选择适合的模板分类"
+               value={uploadForm.category}
+               onChange={(value) => setUploadForm(prev => ({ ...prev, category: value }))}
+               size="large"
+               style={{ 
+                 width: '100%',
+                 borderRadius: '8px'
+               }}
+             >
+               <Select.Option value="学术类">
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <span style={{ color: '#1890ff' }}>📚</span>
+                   学术类
+                 </div>
+               </Select.Option>
+               <Select.Option value="教育类">
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <span style={{ color: '#52c41a' }}>🎓</span>
+                   教育类
+                 </div>
+               </Select.Option>
+               <Select.Option value="商务类">
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <span style={{ color: '#fa8c16' }}>💼</span>
+                   商务类
+                 </div>
+               </Select.Option>
+               <Select.Option value="创意类">
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <span style={{ color: '#eb2f96' }}>🎨</span>
+                   创意类
+                 </div>
+               </Select.Option>
+               <Select.Option value="其他">
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <span style={{ color: '#722ed1' }}>📋</span>
+                   其他
+                 </div>
+               </Select.Option>
+             </Select>
+           </Form.Item>
+           
+           <Form.Item 
+             label={
+               <span style={{ 
+                 fontSize: '14px', 
+                 fontWeight: 600, 
+                 color: '#262626',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '6px'
+               }}>
+                 <CloudUploadOutlined style={{ color: '#1890ff' }} />
+                 PPT文件
+               </span>
+             } 
+             required
+           >
+             <Upload
+               beforeUpload={handleFileChange}
+               showUploadList={false}
+               accept=".ppt,.pptx"
+             >
+               <div style={{
+                 border: uploadForm.file ? '2px dashed #52c41a' : '2px dashed #d9d9d9',
+                 borderRadius: '8px',
+                 padding: '24px',
+                 textAlign: 'center',
+                 background: uploadForm.file ? '#f6ffed' : '#fafafa',
+                 cursor: 'pointer',
+                 transition: 'all 0.3s ease'
+               }}>
+                 {uploadForm.file ? (
+                   <div>
+                     <div style={{
+                       fontSize: '48px',
+                       color: '#52c41a',
+                       marginBottom: '12px'
+                     }}>
+                       ✅
+                     </div>
+                     <div style={{
+                       fontSize: '16px',
+                       fontWeight: 600,
+                       color: '#52c41a',
+                       marginBottom: '4px'
+                     }}>
+                       {uploadForm.file.name}
+                     </div>
+                     <div style={{
+                       fontSize: '12px',
+                       color: '#8c8c8c'
+                     }}>
+                       文件大小: {(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB
+                     </div>
+                   </div>
+                 ) : (
+                   <div>
+                     <div style={{
+                       fontSize: '48px',
+                       color: '#d9d9d9',
+                       marginBottom: '12px'
+                     }}>
+                       📎
+                     </div>
+                     <div style={{
+                       fontSize: '16px',
+                       fontWeight: 600,
+                       color: '#1890ff',
+                       marginBottom: '8px'
+                     }}>
+                       点击选择PPT文件
+                     </div>
+                     <div style={{
+                       fontSize: '12px',
+                       color: '#8c8c8c',
+                       lineHeight: '1.5'
+                     }}>
+                       支持 .ppt 和 .pptx 格式<br/>
+                       文件大小不超过 10MB
+                     </div>
+                   </div>
+                 )}
+               </div>
+             </Upload>
+           </Form.Item>
+         </Form>
+       </Modal>
     </div>
   );
 };

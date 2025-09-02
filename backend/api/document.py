@@ -178,12 +178,10 @@ def download_document(document_id: str):
     - document_id: 文档ID
     """
     try:
-        # 暂时使用固定的用户ID
-        user_id = "1"
-        
-        document = Document.query.filter_by(id=document_id, user_id=user_id).first()
+        # 查找文档，不限制用户ID（因为PPT生成的文档应该可以被任何用户下载）
+        document = Document.query.filter_by(id=document_id).first()
         if not document:
-            return error_response("文档不存在或无权限访问", 404)
+            return error_response("文档不存在", 404)
         
         if not os.path.exists(document.file_path):
             return error_response("文件不存在", 404)
