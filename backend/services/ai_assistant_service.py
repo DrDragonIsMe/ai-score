@@ -70,7 +70,7 @@ class AIAssistantService:
         }
     
     def chat_with_user(self, user_id: str, message: str, context: Optional[Dict] = None, 
-                      model_id: Optional[str] = None) -> Dict[str, Any]:
+                      model_id: Optional[str] = None, template_id: Optional[str] = None) -> Dict[str, Any]:
         """
         与用户进行智能对话
         
@@ -79,6 +79,7 @@ class AIAssistantService:
             message: 用户消息
             context: 对话上下文
             model_id: 指定使用的AI模型ID
+            template_id: PPT模板ID（用于PPT生成）
         
         Returns:
             AI助理回复
@@ -86,7 +87,7 @@ class AIAssistantService:
         try:
             # 检测是否需要生成PPT
             if self._should_generate_ppt(message):
-                return self._handle_ppt_generation(user_id, message)
+                return self._handle_ppt_generation(user_id, message, template_id)
             
             # 获取用户信息和学习情况
             user_profile = self._get_user_learning_profile(user_id)

@@ -51,6 +51,7 @@ def chat_with_assistant():
     message = data['message']
     context = data.get('context')
     model_id = data.get('model_id')
+    template_id = data.get('template_id')
     
     if not message.strip():
         return error_response("消息内容不能为空", 400)
@@ -65,7 +66,8 @@ def chat_with_assistant():
             user_id=user_id,
             message=message,
             context=context,
-            model_id=model_id
+            model_id=model_id,
+            template_id=template_id
         )
         
         if result['success']:

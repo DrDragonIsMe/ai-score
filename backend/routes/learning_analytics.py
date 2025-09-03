@@ -21,6 +21,18 @@ from services.learning_analytics_service import LearningAnalyticsService
 from utils.logger import logger
 from utils.response import success_response, error_response
 
+# 导入API适配器函数
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from api_adapter import (
+    adapt_dashboard_summary,
+    adapt_learning_progress,
+    adapt_knowledge_mastery,
+    adapt_study_statistics,
+    adapt_learning_recommendations
+)
+
 # 创建蓝图
 learning_analytics_bp = Blueprint('learning_analytics', __name__, url_prefix='/api/learning-analytics')
 
@@ -53,7 +65,10 @@ def get_learning_progress():
         if not progress_data:
             return error_response('获取学习进度分析失败', 500)
         
-        return success_response(progress_data, '获取学习进度分析成功')
+        # 适配数据格式
+        adapted_data = adapt_learning_progress(progress_data)
+        
+        return success_response(adapted_data, '获取学习进度分析成功')
         
     except Exception as e:
         logger.error(f"获取学习进度分析失败: {str(e)}")
@@ -81,7 +96,10 @@ def get_knowledge_mastery():
         if not mastery_data:
             return error_response('获取知识点掌握分析失败', 500)
         
-        return success_response(mastery_data, '获取知识点掌握分析成功')
+        # 适配数据格式
+        adapted_data = adapt_knowledge_mastery(mastery_data)
+        
+        return success_response(adapted_data, '获取知识点掌握分析成功')
         
     except Exception as e:
         logger.error(f"获取知识点掌握分析失败: {str(e)}")
@@ -212,32 +230,14 @@ def get_study_statistics():
         if period_days <= 0 or period_days > 365:
             return error_response('统计周期必须在1-365天之间', 400)
         
-        # 获取学习进度分析（包含统计数据）
+        # 获取学习进度分析
         progress_data = analytics_service.analyze_learning_progress(user_id, period_days)
         
-        if not progress_data or 'overall_progress' not in progress_data:
+        if not progress_data:
             return error_response('获取学习统计数据失败', 500)
         
-        # 提取统计数据
-        overall_progress = progress_data['overall_progress']
-        time_distribution = progress_data.get('time_distribution', {})
-        efficiency_trend = progress_data.get('efficiency_trend', [])
-        
-        statistics_data = {
-            'period': {
-                'days': period_days,
-                'end_date': datetime.now().isoformat()
-            },
-            'study_summary': {
-                'total_study_time': overall_progress.get('total_study_time', 0),
-                'total_questions': overall_progress.get('total_questions', 0),
-                'average_accuracy': overall_progress.get('average_accuracy', 0),
-                'study_days': overall_progress.get('study_days', 0),
-                'daily_average_time': overall_progress.get('daily_average_time', 0)
-            },
-            'time_distribution': time_distribution,
-            'recent_efficiency': efficiency_trend[-7:] if efficiency_trend else []  # 最近7天效率
-        }
+        # 使用适配器转换数据格式
+        statistics_data = adapt_study_statistics(progress_data)
         
         return success_response(statistics_data, '获取学习统计数据成功')
         
@@ -257,25 +257,16 @@ def get_learning_recommendations():
     try:
         user_id = get_jwt_identity()
         
-        # 获取知识点掌握分析（包含学习建议）
+        # 获取知识点掌握分析
         mastery_data = analytics_service.analyze_knowledge_mastery(user_id)
         
-        if not mastery_data or 'recommendations' not in mastery_data:
+        if not mastery_data:
             return error_response('获取学习建议失败', 500)
         
-        recommendations = mastery_data['recommendations']
+        # 使用适配器转换数据格式
+        recommendations_data = adapt_learning_recommendations(mastery_data)
         
-        # 获取综合分析报告中的改进建议
-        report_data = analytics_service.generate_comprehensive_report(user_id, 30)
-        improvement_suggestions = report_data.get('improvement_suggestions', []) if report_data else []
-        goal_suggestions = report_data.get('goal_suggestions', []) if report_data else []
-        
-        return success_response({
-            'knowledge_recommendations': recommendations,
-            'improvement_suggestions': improvement_suggestions,
-            'goal_suggestions': goal_suggestions,
-            'generated_at': datetime.now().isoformat()
-        }, '获取学习建议成功')
+        return success_response(recommendations_data, '获取学习建议成功')
         
     except Exception as e:
         logger.error(f"获取学习建议失败: {str(e)}")
@@ -404,69 +395,16 @@ def get_dashboard_summary():
     try:
         user_id = get_jwt_identity()
         
-        # 获取最近7天的学习统计
-        recent_progress = analytics_service.analyze_learning_progress(user_id, 7)
+        # 获取最近30天的学习进度
+        recent_progress = analytics_service.analyze_learning_progress(user_id, 30)
         
-        # 获取最近30天的综合报告
-        comprehensive_report = analytics_service.generate_comprehensive_report(user_id, 30)
-        
-        # 获取知识点掌握情况
-        knowledge_mastery = analytics_service.analyze_knowledge_mastery(user_id)
-        
-        if not recent_progress or not comprehensive_report:
+        if not recent_progress:
             return error_response('获取仪表板数据失败', 500)
         
-        # 构建摘要数据
-        overall_progress = recent_progress.get('overall_progress', {})
-        overall_score = comprehensive_report.get('overall_score', {})
-        key_insights = comprehensive_report.get('key_insights', [])
+        # 使用适配器转换数据格式
+        dashboard_data = adapt_dashboard_summary(recent_progress)
         
-        # 知识点掌握统计
-        mastery_stats = knowledge_mastery.get('overall_statistics', {}) if knowledge_mastery else {}
-        
-        summary_data = {
-            'performance_overview': {
-                'overall_score': overall_score.get('total_score', 0),
-                'grade': overall_score.get('grade', 'N/A'),
-                'recent_accuracy': overall_progress.get('average_accuracy', 0),
-                'study_days_this_week': overall_progress.get('study_days', 0)
-            },
-            'learning_statistics': {
-                'total_study_time_week': overall_progress.get('total_study_time', 0),
-                'questions_answered_week': overall_progress.get('total_questions', 0),
-                'daily_average_time': overall_progress.get('daily_average_time', 0)
-            },
-            'knowledge_mastery': {
-                'total_knowledge_points': mastery_stats.get('total_knowledge_points', 0),
-                'mastered_count': mastery_stats.get('mastered_count', 0),
-                'mastery_rate': mastery_stats.get('mastery_rate', 0),
-                'struggling_count': mastery_stats.get('struggling_count', 0)
-            },
-            'key_insights': key_insights[:3],  # 显示前3个关键洞察
-            'quick_actions': [
-                {
-                    'type': 'review_weak_points',
-                    'title': '复习薄弱知识点',
-                    'description': '重点关注掌握不佳的知识点',
-                    'priority': 'high' if mastery_stats.get('struggling_count', 0) > 0 else 'medium'
-                },
-                {
-                    'type': 'daily_practice',
-                    'title': '每日练习',
-                    'description': '保持每天学习的习惯',
-                    'priority': 'medium'
-                },
-                {
-                    'type': 'view_progress',
-                    'title': '查看详细进度',
-                    'description': '了解学习进度和趋势',
-                    'priority': 'low'
-                }
-            ],
-            'generated_at': datetime.now().isoformat()
-        }
-        
-        return success_response(summary_data, '获取仪表板摘要成功')
+        return success_response(dashboard_data, '获取仪表板摘要成功')
         
     except Exception as e:
         logger.error(f"获取仪表板摘要失败: {str(e)}")

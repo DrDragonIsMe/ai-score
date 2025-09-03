@@ -119,12 +119,14 @@ def create_app(config_class=Config):
     from api.document import document_bp
     from api.ppt_template import ppt_template_bp
     from routes.learning_analytics import learning_analytics_bp
+    from routes.advanced_analytics import advanced_analytics_bp
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(subject_initializer_bp)
     app.register_blueprint(settings_bp, url_prefix='/api')
     app.register_blueprint(document_bp)
     app.register_blueprint(ppt_template_bp)
     app.register_blueprint(learning_analytics_bp)
+    app.register_blueprint(advanced_analytics_bp)
     
     return app
 

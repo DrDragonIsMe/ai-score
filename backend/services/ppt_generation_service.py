@@ -266,6 +266,57 @@ class PPTGenerationService:
         except Exception as e:
             logger.warning(f"获取模板配置失败，使用默认配置: {str(e)}")
             return self.templates['default']
+    
+    def _parse_color(self, color_value):
+        """解析颜色值，支持字符串和RGBColor对象"""
+        if isinstance(color_value, str):
+            # 移除#号并转换为RGB
+            hex_color = color_value.lstrip('#')
+            if len(hex_color) == 6:
+                r = int(hex_color[0:2], 16)
+                g = int(hex_color[2:4], 16)
+                b = int(hex_color[4:6], 16)
+                return RGBColor(r, g, b)
+        elif hasattr(color_value, 'rgb'):
+            return color_value
+        # 默认返回黑色
+        return RGBColor(0, 0, 0)
+    
+    def _load_template_file(self, template_id: Optional[str], tenant_id: str):
+        """
+        加载模板文件
+        
+        Args:
+            template_id: 模板ID
+            tenant_id: 租户ID
+            
+        Returns:
+            Presentation: PPT演示文稿对象
+        """
+        try:
+            # 如果提供了template_id，尝试从数据库获取模板文件
+            if template_id:
+                db_template = PPTTemplate.query.filter_by(
+                    id=template_id,
+                    tenant_id=tenant_id,
+                    is_active=True
+                ).first()
+                
+                if db_template and db_template.template_file_path:
+                    template_path = db_template.template_file_path
+                    if os.path.exists(template_path):
+                        logger.info(f"使用用户模板文件: {template_path}")
+                        return Presentation(template_path)
+                    else:
+                        logger.warning(f"模板文件不存在: {template_path}")
+            
+            # 如果没有找到用户模板文件，使用空白演示文稿
+            logger.info("使用空白演示文稿")
+            return Presentation()
+            
+        except Exception as e:
+            logger.warning(f"加载模板文件失败，使用空白演示文稿: {str(e)}")
+            return Presentation()
 
     def _create_ppt_file(self, ppt_data: Dict[str, Any], title: str, template: str,
                         template_id: Optional[str] = None, tenant_id: str = "default") -> Dict[str, Any]:
@@ -281,11 +332,30 @@ class PPTGenerationService:
             Dict: 创建结果
         """
         try:
-            # 创建演示文稿
-            prs = Presentation()
-
+            # 尝试加载用户上传的模板文件
+            prs = self._load_template_file(template_id, tenant_id)
+            
             # 获取模板配置
             template_config = self._get_template_config(template_id, template, tenant_id)
+            
+            # 如果使用了用户模板文件，清空现有幻灯片（保留布局）
+            if template_id and len(prs.slides) > 0:
+                # 记录可用的布局
+                available_layouts = prs.slide_layouts
+                # 删除所有现有幻灯片
+                try:
+                    while len(prs.slides) > 0:
+                        # 获取第一个幻灯片的关系ID
+                        slide_part = prs.slides[0].part
+                        # 从幻灯片列表中移除
+                        prs.slides._sldIdLst.remove(prs.slides._sldIdLst[0])
+                        # 从部件中删除关系
+                        if hasattr(slide_part, 'package'):
+                            prs.part.drop_rel(slide_part.partname)
+                except Exception as clear_error:
+                    logger.warning(f"清空模板幻灯片时出现问题，继续使用原模板: {str(clear_error)}")
+                    # 如果清空失败，重新加载模板
+                    prs = self._load_template_file(template_id, tenant_id)
 
             # 创建幻灯片
             for slide_data in ppt_data.get('slides', []):
@@ -332,7 +402,7 @@ class PPTGenerationService:
         title = slide.shapes.title
         title.text = slide_data.get('title', '')
         title.text_frame.paragraphs[0].font.size = Pt(template_config['title_font_size'])
-        title.text_frame.paragraphs[0].font.color.rgb = template_config['title_color']
+        title.text_frame.paragraphs[0].font.color.rgb = self._parse_color(template_config['title_color'])
         # 设置居中对齐 - 使用数字常量 1 表示居中
         title.text_frame.paragraphs[0].alignment = 1
 
@@ -341,7 +411,7 @@ class PPTGenerationService:
             subtitle = slide.placeholders[1]
             subtitle.text = slide_data['subtitle']
             subtitle.text_frame.paragraphs[0].font.size = Pt(template_config['content_font_size'])
-            subtitle.text_frame.paragraphs[0].font.color.rgb = template_config['content_color']
+            subtitle.text_frame.paragraphs[0].font.color.rgb = self._parse_color(template_config['content_color'])
             # 设置居中对齐 - 使用数字常量 1 表示居中
             subtitle.text_frame.paragraphs[0].alignment = 1
 
@@ -356,7 +426,7 @@ class PPTGenerationService:
         title = slide.shapes.title
         title.text = slide_data.get('title', '')
         title.text_frame.paragraphs[0].font.size = Pt(template_config['title_font_size'] - 8)
-        title.text_frame.paragraphs[0].font.color.rgb = template_config['title_color']
+        title.text_frame.paragraphs[0].font.color.rgb = self._parse_color(template_config['title_color'])
 
         # 设置内容
         content_placeholder = slide.placeholders[1]
@@ -368,7 +438,7 @@ class PPTGenerationService:
             p = text_frame.paragraphs[0] if i == 0 else text_frame.add_paragraph()
             p.text = content_item
             p.font.size = Pt(template_config['content_font_size'])
-            p.font.color.rgb = template_config['content_color']
+            p.font.color.rgb = self._parse_color(template_config['content_color'])
             p.level = 0
 
     def _create_two_column_slide(self, prs, slide_data: Dict, template_config: Dict):
@@ -382,7 +452,7 @@ class PPTGenerationService:
         title = slide.shapes.title
         title.text = slide_data.get('title', '')
         title.text_frame.paragraphs[0].font.size = Pt(template_config['title_font_size'] - 8)
-        title.text_frame.paragraphs[0].font.color.rgb = template_config['title_color']
+        title.text_frame.paragraphs[0].font.color.rgb = self._parse_color(template_config['title_color'])
 
         # 左侧内容
         left_placeholder = slide.placeholders[1]
@@ -394,7 +464,7 @@ class PPTGenerationService:
             p = left_text_frame.paragraphs[0] if i == 0 else left_text_frame.add_paragraph()
             p.text = content_item
             p.font.size = Pt(template_config['content_font_size'])
-            p.font.color.rgb = template_config['content_color']
+            p.font.color.rgb = self._parse_color(template_config['content_color'])
             p.level = 0
 
         # 右侧内容
@@ -407,7 +477,7 @@ class PPTGenerationService:
             p = right_text_frame.paragraphs[0] if i == 0 else right_text_frame.add_paragraph()
             p.text = content_item
             p.font.size = Pt(template_config['content_font_size'])
-            p.font.color.rgb = template_config['content_color']
+            p.font.color.rgb = self._parse_color(template_config['content_color'])
             p.level = 0
 
     def _save_ppt_to_documents(self, user_id: str, tenant_id: str, file_path: str,
