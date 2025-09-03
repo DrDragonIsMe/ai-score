@@ -1,0 +1,116 @@
+.ppt-template-selector .template-selector-content {
+  padding: 0;
+}
+
+.ppt-template-selector .template-header {
+  margin-bottom: 16px;
+}
+
+.ppt-template-selector .template-header .ant-typography {
+  margin-bottom: 8px;
+}
+
+.template-card {
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.template-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.template-card.selected {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.25);
+}
+
+.template-preview {
+  position: relative;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 6px 6px 0 0;
+}
+
+.selected-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(24, 144, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px 6px 0 0;
+}
+
+.template-card .ant-card-meta-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.template-card .ant-card-meta-description {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ppt-template-selector {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .ppt-template-selector .ant-modal-content {
+    margin: 0;
+  }
+  
+  .template-preview {
+    height: 100px;
+  }
+  
+  .template-card .ant-card-meta-title {
+    font-size: 13px;
+  }
+  
+  .template-card .ant-card-meta-description {
+    font-size: 11px;
+  }
+}
+
+/* 全屏模式下的特殊样式 */
+.ai-fullscreen .ppt-template-selector {
+  z-index: 2000;
+}
+
+.ai-fullscreen .ppt-template-selector .ant-modal-mask {
+  z-index: 1999;
+}
+
+.ppt-template-selector-modal .ant-modal {
+  z-index: 1001;
+}
+
+/* 全屏模式下的模态框层级 */
+.ai-fullscreen .ppt-template-selector-modal .ant-modal {
+  z-index: 1100;
+}
+
+.ai-fullscreen .ppt-template-selector-modal .ant-modal-mask {
+  z-index: 1099;
+}
+
+/* 上传模态框样式 */
+.ppt-template-selector + .ant-modal-root .ant-modal {
+  z-index: 2100;
+}
+
+.ppt-template-selector + .ant-modal-root .ant-modal-mask {
+  z-index: 2099;
+}

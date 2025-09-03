@@ -10,8 +10,8 @@
 - **认证方式**: JWT Bearer Token
 - **内容类型**: `application/json`
 - **字符编码**: UTF-8
-- **版本**: v1.2.1
-- **最后更新**: 2025-01-22
+- **版本**: v1.2.2
+- **最后更新**: 2025-01-24
 
 ### 通用响应格式
 
@@ -1579,27 +1579,28 @@ Content-Disposition: attachment; filename="AI教育应用报告.pptx"
 }
 ```
 
-## 14. 统计分析接口 (Analytics)
+## 14. 学习分析接口 (Learning Analytics)
 
-### 14.1 获取学习统计
+### 14.1 获取学习分析仪表板数据
 
-**接口地址**: `GET /analytics/learning-stats`
+**接口地址**: `GET /learning-analytics/dashboard`
 
 **查询参数**:
 - `period`: 统计周期 (day, week, month, year)
-- `start_date`: 开始日期
-- `end_date`: 结束日期
+- `start_date`: 开始日期 (可选)
+- `end_date`: 结束日期 (可选)
 
 **响应示例**:
 ```json
 {
   "success": true,
   "data": {
+    "total_questions": 245,
     "total_study_time": 1800,
-    "questions_answered": 245,
-    "accuracy_rate": 0.87,
     "knowledge_points_mastered": 23,
-    "daily_stats": [
+    "weak_points_count": 5,
+    "accuracy_rate": 0.87,
+    "recent_activity": [
       {
         "date": "2024-01-20",
         "study_time": 120,
@@ -1607,21 +1608,82 @@ Content-Disposition: attachment; filename="AI教育应用报告.pptx"
         "accuracy": 0.9
       }
     ],
-    "subject_breakdown": [
+    "subject_progress": [
       {
         "subject_id": "subject_001",
         "subject_name": "数学",
-        "study_time": 900,
-        "progress": 0.65
+        "mastered_points": 15,
+        "total_points": 20,
+        "progress_rate": 0.75
+      }
+    ],
+    "knowledge_mastery": [
+      {
+        "knowledge_point": "二次函数",
+        "mastery_level": 0.85,
+        "practice_count": 12,
+        "last_practiced": "2024-01-20T10:30:00Z"
+      }
+    ],
+    "weak_areas": [
+      {
+        "knowledge_point": "三角函数",
+        "accuracy_rate": 0.45,
+        "practice_count": 8,
+        "recommended_practice": 5
       }
     ]
   }
 }
 ```
 
-### 14.2 获取能力分析
+### 14.2 获取学习进度统计
 
-**接口地址**: `GET /analytics/ability-analysis`
+**接口地址**: `GET /learning-analytics/progress`
+
+**查询参数**:
+- `subject_id`: 学科ID (可选)
+- `time_range`: 时间范围 (7d, 30d, 90d, 1y)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "overall_progress": 0.68,
+    "subjects": [
+      {
+        "subject_id": "subject_001",
+        "subject_name": "数学",
+        "progress": 0.75,
+        "chapters": [
+          {
+            "chapter_id": "chapter_001",
+            "chapter_name": "函数",
+            "progress": 0.80,
+            "knowledge_points": 15,
+            "mastered_points": 12
+          }
+        ]
+      }
+    ],
+    "timeline": [
+      {
+        "date": "2024-01-15",
+        "progress": 0.60
+      },
+      {
+        "date": "2024-01-20",
+        "progress": 0.68
+      }
+    ]
+  }
+}
+```
+
+### 14.3 获取能力分析报告
+
+**接口地址**: `GET /learning-analytics/ability-analysis`
 
 **响应示例**:
 ```json
@@ -1646,7 +1708,53 @@ Content-Disposition: attachment; filename="AI教育应用报告.pptx"
       }
     ],
     "strengths": ["计算能力强", "基础概念掌握好"],
-    "weaknesses": ["逻辑推理需加强", "应用题解题思路不够清晰"]
+    "weaknesses": ["逻辑推理需加强", "应用题解题思路不够清晰"],
+    "recommendations": [
+      {
+        "type": "practice",
+        "content": "建议加强逻辑推理题目练习",
+        "priority": "high"
+      }
+    ]
+  }
+}
+```
+
+### 14.4 获取学习时间统计
+
+**接口地址**: `GET /learning-analytics/time-stats`
+
+**查询参数**:
+- `granularity`: 统计粒度 (hour, day, week, month)
+- `limit`: 返回数据条数 (默认30)
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "total_time": 1800,
+    "average_daily_time": 60,
+    "time_distribution": [
+      {
+        "period": "2024-01-20",
+        "study_time": 120,
+        "subjects": {
+          "数学": 80,
+          "物理": 40
+        }
+      }
+    ],
+    "peak_hours": [
+      {
+        "hour": 19,
+        "average_time": 45
+      },
+      {
+        "hour": 20,
+        "average_time": 38
+      }
+    ]
   }
 }
 ```

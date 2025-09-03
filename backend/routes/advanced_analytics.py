@@ -388,7 +388,7 @@ def _calculate_learning_health_score(efficiency_data, time_data, pattern_data):
     if time_data and time_data.get('weekly_distribution'):
         weekly_dist = time_data['weekly_distribution']
         active_days = sum(1 for day in weekly_dist if day.get('question_count', 0) > 0)
-        scores['balance_score'] = (active_days / 7) * 100
+        scores['balance_score'] = int((active_days / 7) * 100)
     
     # 习惯评分
     if pattern_data and pattern_data.get('habit_assessment'):

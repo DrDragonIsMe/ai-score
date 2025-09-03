@@ -161,9 +161,9 @@ const LearningAnalytics: React.FC = () => {
   // 获取仪表板摘要数据
   const fetchDashboardSummary = async () => {
     try {
-      const response = await api.get('/learning-analytics/dashboard-summary');
-      if (response.data.success) {
-        setDashboardData(response.data.data);
+      const response: any = await api.get('/learning-analytics/dashboard-summary');
+      if (response.success) {
+        setDashboardData(response.data);
       }
     } catch (error) {
       console.error('获取仪表板数据失败:', error);
@@ -174,9 +174,9 @@ const LearningAnalytics: React.FC = () => {
   // 获取学习进度数据
   const fetchLearningProgress = async () => {
     try {
-      const response = await api.get('/learning-analytics/progress');
-      if (response.data.success) {
-        setProgressData(response.data.data);
+      const response: any = await api.get('/learning-analytics/progress');
+      if (response.success) {
+        setProgressData(response.data);
       }
     } catch (error) {
       console.error('获取学习进度数据失败:', error);
@@ -187,9 +187,9 @@ const LearningAnalytics: React.FC = () => {
   // 获取知识点掌握情况
   const fetchKnowledgeMastery = async () => {
     try {
-      const response = await api.get('/learning-analytics/knowledge-mastery');
-      if (response.data.success) {
-        setMasteryData(response.data.data);
+      const response: any = await api.get('/learning-analytics/knowledge-mastery');
+      if (response.success) {
+        setMasteryData(response.data);
       }
     } catch (error) {
       console.error('获取知识点掌握数据失败:', error);
@@ -200,9 +200,9 @@ const LearningAnalytics: React.FC = () => {
   // 获取学习建议
   const fetchRecommendations = async () => {
     try {
-      const response = await api.get('/learning-analytics/learning-recommendations');
-      if (response.data.success) {
-        setRecommendationsData(response.data.data);
+      const response: any = await api.get('/learning-analytics/learning-recommendations');
+      if (response.success) {
+        setRecommendationsData(response.data);
       }
     } catch (error) {
       console.error('获取学习建议失败:', error);
@@ -213,9 +213,9 @@ const LearningAnalytics: React.FC = () => {
   // 获取学习统计
   const fetchStudyStatistics = async () => {
     try {
-      const response = await api.get('/learning-analytics/study-statistics');
-      if (response.data.success) {
-        setStatisticsData(response.data.data);
+      const response: any = await api.get('/learning-analytics/study-statistics');
+      if (response.success) {
+        setStatisticsData(response.data);
       }
     } catch (error) {
       console.error('获取学习统计失败:', error);
