@@ -1,0 +1,323 @@
+{
+  "success": true,
+  "subject_code": "english",
+  "star_map": {
+    "canvas": {
+      "width": 1200,
+      "height": 800,
+      "background": "#0B1426"
+    },
+    "stars": [
+      {
+        "id": "subject_english",
+        "name": "english",
+        "type": "subject",
+        "position": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "size": 20,
+        "color": "#FFD700",
+        "brightness": 0.8,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": null
+        }
+      },
+      {
+        "id": "chapter_1",
+        "name": "听力理解",
+        "type": "chapter",
+        "position": {
+          "x": 741.4213562373095,
+          "y": 541.4213562373095
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 1
+        }
+      },
+      {
+        "id": "chapter_2",
+        "name": "阅读理解",
+        "type": "chapter",
+        "position": {
+          "x": 458.5786437626905,
+          "y": 541.4213562373095
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 2
+        }
+      },
+      {
+        "id": "chapter_3",
+        "name": "语言知识运用",
+        "type": "chapter",
+        "position": {
+          "x": 458.5786437626905,
+          "y": 258.5786437626905
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 3
+        }
+      },
+      {
+        "id": "chapter_4",
+        "name": "写作",
+        "type": "chapter",
+        "position": {
+          "x": 741.4213562373095,
+          "y": 258.5786437626905
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 4
+        }
+      }
+    ],
+    "constellation_lines": [
+      {
+        "id": "line_subject_english_chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 741.4213562373095,
+          "y": 541.4213562373095
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_english_chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 458.5786437626905,
+          "y": 541.4213562373095
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_english_chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 458.5786437626905,
+          "y": 258.5786437626905
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_english_chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 741.4213562373095,
+          "y": 258.5786437626905
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_1_chapter_2",
+        "start": {
+          "x": 741.4213562373095,
+          "y": 541.4213562373095
+        },
+        "end": {
+          "x": 458.5786437626905,
+          "y": 541.4213562373095
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_2_chapter_3",
+        "start": {
+          "x": 458.5786437626905,
+          "y": 541.4213562373095
+        },
+        "end": {
+          "x": 458.5786437626905,
+          "y": 258.5786437626905
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_3_chapter_4",
+        "start": {
+          "x": 458.5786437626905,
+          "y": 258.5786437626905
+        },
+        "end": {
+          "x": 741.4213562373095,
+          "y": 258.5786437626905
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_4_chapter_1",
+        "start": {
+          "x": 741.4213562373095,
+          "y": 258.5786437626905
+        },
+        "end": {
+          "x": 741.4213562373095,
+          "y": 541.4213562373095
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      }
+    ],
+    "learning_paths": [
+      {
+        "id": "path_subject_english_chapter_1",
+        "source": "subject_english",
+        "target": "chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 741.4213562373095,
+          "y": 541.4213562373095
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_english_chapter_2",
+        "source": "subject_english",
+        "target": "chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 458.5786437626905,
+          "y": 541.4213562373095
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_english_chapter_3",
+        "source": "subject_english",
+        "target": "chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 458.5786437626905,
+          "y": 258.5786437626905
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_english_chapter_4",
+        "source": "subject_english",
+        "target": "chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 741.4213562373095,
+          "y": 258.5786437626905
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      }
+    ],
+    "metadata": {
+      "constellation_name": "英语座",
+      "constellation_pattern": "diamond",
+      "total_stars": 5,
+      "total_constellation_lines": 8,
+      "total_learning_paths": 4,
+      "star_type_distribution": {
+        "subject": 1,
+        "chapter": 4
+      },
+      "learning_path_distribution": {
+        "contains": 4
+      },
+      "brightness_range": {
+        "min": 0.6400000000000001,
+        "max": 0.8
+      },
+      "generated_at": "2025-09-05T00:28:36.509300"
+    }
+  },
+  "generated_at": "2025-09-05T00:28:36.509309"
+}

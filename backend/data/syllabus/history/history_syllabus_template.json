@@ -1,0 +1,235 @@
+{
+  "subject_code": "history",
+  "subject_name": "历史",
+  "version": "2023版",
+  "source": "内置模板",
+  "created_at": "2025-09-05T01:47:22.867675",
+  "curriculum_standards": {
+    "core_competencies": [
+      "唯物史观",
+      "时空观念",
+      "史料实证",
+      "历史解释",
+      "家国情怀"
+    ],
+    "learning_objectives": [],
+    "content_standards": []
+  },
+  "knowledge_structure": {
+    "modules": [
+      "中国古代史",
+      "中国近现代史",
+      "世界古代史",
+      "世界近现代史"
+    ],
+    "chapters": [
+      {
+        "id": 1,
+        "title": "中华文明的起源与早期国家",
+        "sections": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "title": "中古时期的中华文明",
+        "sections": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 3,
+        "title": "中华文明的辉煌与危机",
+        "sections": [
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "id": 4,
+        "title": "中华民族的抗争与求索",
+        "sections": [
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "id": 5,
+        "title": "中华人民共和国成立和社会主义革命与建设",
+        "sections": [
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "id": 6,
+        "title": "改革开放与社会主义现代化建设新时期",
+        "sections": [
+          16,
+          17
+        ]
+      },
+      {
+        "id": 7,
+        "title": "古代文明的产生与发展",
+        "sections": [
+          18,
+          19,
+          20
+        ]
+      },
+      {
+        "id": 8,
+        "title": "中古时期的世界",
+        "sections": [
+          21,
+          22,
+          23
+        ]
+      },
+      {
+        "id": 9,
+        "title": "走向整体的世界",
+        "sections": [
+          24,
+          25,
+          26
+        ]
+      }
+    ],
+    "knowledge_points": [
+      {
+        "id": 1,
+        "content": "中华文明的起源",
+        "chapter_id": 1,
+        "section_id": 1,
+        "difficulty_level": "理解",
+        "keywords": [
+          "文明起源",
+          "新石器时代",
+          "农业革命"
+        ]
+      },
+      {
+        "id": 2,
+        "content": "夏商西周的政治制度",
+        "chapter_id": 1,
+        "section_id": 2,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "夏商西周",
+          "政治制度",
+          "分封制"
+        ]
+      },
+      {
+        "id": 3,
+        "content": "春秋战国的变革",
+        "chapter_id": 1,
+        "section_id": 3,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "春秋战国",
+          "社会变革",
+          "百家争鸣"
+        ]
+      },
+      {
+        "id": 4,
+        "content": "秦汉统一多民族国家的建立",
+        "chapter_id": 2,
+        "section_id": 4,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "秦汉",
+          "统一",
+          "多民族国家"
+        ]
+      },
+      {
+        "id": 5,
+        "content": "三国两晋南北朝的民族交融",
+        "chapter_id": 2,
+        "section_id": 5,
+        "difficulty_level": "理解",
+        "keywords": [
+          "魏晋南北朝",
+          "民族交融",
+          "政权更替"
+        ]
+      },
+      {
+        "id": 6,
+        "content": "隋唐统一多民族国家的发展",
+        "chapter_id": 2,
+        "section_id": 6,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "隋唐",
+          "盛世",
+          "开放包容"
+        ]
+      },
+      {
+        "id": 7,
+        "content": "宋元时期的经济发展",
+        "chapter_id": 3,
+        "section_id": 7,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "宋元",
+          "经济发展",
+          "商品经济"
+        ]
+      },
+      {
+        "id": 8,
+        "content": "明清统一多民族国家的巩固与发展",
+        "chapter_id": 3,
+        "section_id": 8,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "明清",
+          "统一",
+          "专制主义"
+        ]
+      },
+      {
+        "id": 9,
+        "content": "明清时期的对外关系",
+        "chapter_id": 3,
+        "section_id": 9,
+        "difficulty_level": "理解",
+        "keywords": [
+          "明清",
+          "对外关系",
+          "海禁政策"
+        ]
+      },
+      {
+        "id": 10,
+        "content": "鸦片战争与中国社会的变化",
+        "chapter_id": 4,
+        "section_id": 10,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "鸦片战争",
+          "半殖民地",
+          "社会变化"
+        ]
+      }
+    ]
+  },
+  "assessment_standards": {
+    "exam_format": "",
+    "score_distribution": {},
+    "difficulty_levels": []
+  }
+}

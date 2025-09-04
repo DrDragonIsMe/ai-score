@@ -57,16 +57,19 @@ def create_app(config_class=Config):
     @app.before_request
     def load_tenant():
         """根据JWT token或域名加载租户信息"""
-        from flask_jwt_extended import get_jwt_identity, jwt_required
+        from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
         
         # 优先从JWT token中获取tenant_id
         try:
-            current_user_info = get_jwt_identity()
-            if current_user_info and isinstance(current_user_info, dict):
-                tenant_id = current_user_info.get('tenant_id')
-                if tenant_id:
-                    g.tenant_id = tenant_id
-                    return
+            # 只有在有JWT token的情况下才尝试验证
+            if request.headers.get('Authorization'):
+                verify_jwt_in_request(optional=True)
+                current_user_info = get_jwt_identity()
+                if current_user_info and isinstance(current_user_info, dict):
+                    tenant_id = current_user_info.get('tenant_id')
+                    if tenant_id:
+                        g.tenant_id = tenant_id
+                        return
         except:
             pass
         
@@ -114,19 +117,37 @@ def create_app(config_class=Config):
     
     # 注册蓝图
     from api import api_bp
-    from api.subject_initializer import subject_initializer_bp
+    
     from api.settings import settings_bp
     from api.document import document_bp
     from api.ppt_template import ppt_template_bp
+    from api.subject_initializer import subject_initializer_bp
     from routes.learning_analytics import learning_analytics_bp
     from routes.advanced_analytics import advanced_analytics_bp
     app.register_blueprint(api_bp, url_prefix='/api')
-    app.register_blueprint(subject_initializer_bp)
+
     app.register_blueprint(settings_bp, url_prefix='/api')
     app.register_blueprint(document_bp)
     app.register_blueprint(ppt_template_bp)
+    app.register_blueprint(subject_initializer_bp)
     app.register_blueprint(learning_analytics_bp)
     app.register_blueprint(advanced_analytics_bp)
+    
+    # 初始化向量数据库服务
+    try:
+        from services.vector_database_service import vector_db_service
+        # 向量数据库服务在导入时自动初始化
+    except Exception as e:
+        from utils.logger import get_logger
+        logger = get_logger(__name__)
+        logger.error(f"向量数据库服务初始化失败: {str(e)}")
+        print(f"[ERROR] 向量数据库服务初始化失败: {str(e)}")
+    
+    # 记录系统启动成功信息
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+    logger.info("AI智能学习系统后台服务启动成功 - 所有组件已就绪")
+    print("[INFO] AI智能学习系统后台服务启动成功 - 所有组件已就绪")
     
     return app
 

@@ -1,0 +1,234 @@
+{
+  "subject_code": "geography",
+  "subject_name": "地理",
+  "version": "2023版",
+  "source": "内置模板",
+  "created_at": "2025-09-05T01:47:24.122185",
+  "curriculum_standards": {
+    "core_competencies": [
+      "人地协调观",
+      "综合思维",
+      "区域认知",
+      "地理实践力"
+    ],
+    "learning_objectives": [],
+    "content_standards": []
+  },
+  "knowledge_structure": {
+    "modules": [
+      "自然地理",
+      "人文地理",
+      "区域地理",
+      "地理信息技术"
+    ],
+    "chapters": [
+      {
+        "id": 1,
+        "title": "地球的宇宙环境",
+        "sections": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "title": "地球的圈层结构",
+        "sections": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 3,
+        "title": "大气的运动",
+        "sections": [
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "id": 4,
+        "title": "水的运动",
+        "sections": [
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "id": 5,
+        "title": "地表形态的塑造",
+        "sections": [
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "id": 6,
+        "title": "自然环境的整体性与差异性",
+        "sections": [
+          16,
+          17
+        ]
+      },
+      {
+        "id": 7,
+        "title": "人口",
+        "sections": [
+          18,
+          19,
+          20
+        ]
+      },
+      {
+        "id": 8,
+        "title": "城市与环境",
+        "sections": [
+          21,
+          22,
+          23
+        ]
+      },
+      {
+        "id": 9,
+        "title": "生产活动与地域联系",
+        "sections": [
+          24,
+          25,
+          26
+        ]
+      }
+    ],
+    "knowledge_points": [
+      {
+        "id": 1,
+        "content": "地球在宇宙中的位置",
+        "chapter_id": 1,
+        "section_id": 1,
+        "difficulty_level": "理解",
+        "keywords": [
+          "宇宙",
+          "太阳系",
+          "地球位置"
+        ]
+      },
+      {
+        "id": 2,
+        "content": "太阳对地球的影响",
+        "chapter_id": 1,
+        "section_id": 2,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "太阳辐射",
+          "太阳活动",
+          "地球影响"
+        ]
+      },
+      {
+        "id": 3,
+        "content": "地球的运动",
+        "chapter_id": 1,
+        "section_id": 3,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "地球自转",
+          "地球公转",
+          "地理意义"
+        ]
+      },
+      {
+        "id": 4,
+        "content": "地球的内部圈层",
+        "chapter_id": 2,
+        "section_id": 4,
+        "difficulty_level": "理解",
+        "keywords": [
+          "地壳",
+          "地幔",
+          "地核"
+        ]
+      },
+      {
+        "id": 5,
+        "content": "地球的外部圈层",
+        "chapter_id": 2,
+        "section_id": 5,
+        "difficulty_level": "理解",
+        "keywords": [
+          "大气圈",
+          "水圈",
+          "生物圈"
+        ]
+      },
+      {
+        "id": 6,
+        "content": "岩石圈与地表形态",
+        "chapter_id": 2,
+        "section_id": 6,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "岩石圈",
+          "地表形态",
+          "地质作用"
+        ]
+      },
+      {
+        "id": 7,
+        "content": "大气的组成和垂直分层",
+        "chapter_id": 3,
+        "section_id": 7,
+        "difficulty_level": "理解",
+        "keywords": [
+          "大气组成",
+          "大气分层",
+          "对流层"
+        ]
+      },
+      {
+        "id": 8,
+        "content": "大气的热状况与大气运动",
+        "chapter_id": 3,
+        "section_id": 8,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "大气热状况",
+          "大气运动",
+          "热力环流"
+        ]
+      },
+      {
+        "id": 9,
+        "content": "全球性大气环流",
+        "chapter_id": 3,
+        "section_id": 9,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "大气环流",
+          "三圈环流",
+          "季风环流"
+        ]
+      },
+      {
+        "id": 10,
+        "content": "水循环",
+        "chapter_id": 4,
+        "section_id": 10,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "水循环",
+          "水循环过程",
+          "水循环意义"
+        ]
+      }
+    ]
+  },
+  "assessment_standards": {
+    "exam_format": "",
+    "score_distribution": {},
+    "difficulty_levels": []
+  }
+}

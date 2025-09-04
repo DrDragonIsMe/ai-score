@@ -1,0 +1,568 @@
+{
+  "nodes": [
+    {
+      "id": "subject_mathematics",
+      "name": "mathematics",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "集合与常用逻辑用语",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -600.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "函数",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -450.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "三角函数",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -300.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "平面向量",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -150.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "chapter_5",
+      "name": "数列",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 0.0,
+        "y": -200.0
+      },
+      "original_id": 5
+    },
+    {
+      "id": "chapter_6",
+      "name": "不等式",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 150.0,
+        "y": -200.0
+      },
+      "original_id": 6
+    },
+    {
+      "id": "chapter_7",
+      "name": "立体几何",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 300.0,
+        "y": -200.0
+      },
+      "original_id": 7
+    },
+    {
+      "id": "chapter_8",
+      "name": "解析几何",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 450.0,
+        "y": -200.0
+      },
+      "original_id": 8
+    },
+    {
+      "id": "chapter_9",
+      "name": "统计与概率",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 600.0,
+        "y": -200.0
+      },
+      "original_id": 9
+    },
+    {
+      "id": "kp_1",
+      "name": "集合的概念与运算",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "集合",
+        "运算",
+        "交并补"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "常用逻辑用语",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "理解",
+      "keywords": [
+        "逻辑",
+        "命题",
+        "量词"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "函数的概念与性质",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 2,
+      "section_id": 3,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "函数",
+        "定义域",
+        "值域"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "基本初等函数",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "指数函数",
+        "对数函数",
+        "幂函数"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "函数的应用",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "运用",
+      "keywords": [
+        "函数",
+        "应用",
+        "建模"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "三角函数的概念",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 3,
+      "section_id": 6,
+      "difficulty_level": "理解",
+      "keywords": [
+        "三角函数",
+        "弧度制",
+        "单位圆"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "三角恒等变换",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "三角恒等式",
+        "和差公式",
+        "倍角公式"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "三角函数的图像与性质",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "三角函数",
+        "图像",
+        "周期性"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "平面向量的概念",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 4,
+      "section_id": 9,
+      "difficulty_level": "理解",
+      "keywords": [
+        "向量",
+        "坐标",
+        "模长"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "平面向量的运算",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 4,
+      "section_id": 10,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "向量",
+        "数量积",
+        "夹角"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_mathematics",
+      "target": "chapter_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_1",
+      "target": "kp_2",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_1",
+      "target": "kp_4",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_1",
+      "target": "kp_5",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_1",
+      "target": "kp_7",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_1",
+      "target": "kp_8",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_1",
+      "target": "kp_10",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_3",
+      "target": "kp_2",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_3",
+      "target": "kp_4",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_3",
+      "target": "kp_5",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_3",
+      "target": "kp_7",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_3",
+      "target": "kp_8",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_3",
+      "target": "kp_10",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_6",
+      "target": "kp_2",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_6",
+      "target": "kp_4",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_6",
+      "target": "kp_5",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_6",
+      "target": "kp_7",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_6",
+      "target": "kp_8",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_6",
+      "target": "kp_10",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_9",
+      "target": "kp_2",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_9",
+      "target": "kp_4",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_9",
+      "target": "kp_5",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_9",
+      "target": "kp_7",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_9",
+      "target": "kp_8",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_9",
+      "target": "kp_10",
+      "relation": "prerequisite",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 20,
+    "edge_count": 43,
+    "generated_at": "2025-09-05T01:47:15.111182"
+  }
+}

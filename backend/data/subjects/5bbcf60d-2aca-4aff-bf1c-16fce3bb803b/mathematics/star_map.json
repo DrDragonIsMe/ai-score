@@ -1,0 +1,658 @@
+{
+  "success": true,
+  "subject_code": "mathematics",
+  "star_map": {
+    "canvas": {
+      "width": 1200,
+      "height": 800,
+      "background": "#0B1426"
+    },
+    "stars": [
+      {
+        "id": "subject_mathematics",
+        "name": "mathematics",
+        "type": "subject",
+        "position": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "size": 20,
+        "color": "#FFD700",
+        "brightness": 0.8,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": null
+        }
+      },
+      {
+        "id": "chapter_1",
+        "name": "集合与常用逻辑用语",
+        "type": "chapter",
+        "position": {
+          "x": 400.0,
+          "y": 200.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 1
+        }
+      },
+      {
+        "id": "chapter_2",
+        "name": "函数",
+        "type": "chapter",
+        "position": {
+          "x": 600.0,
+          "y": 200.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 2
+        }
+      },
+      {
+        "id": "chapter_3",
+        "name": "三角函数",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 3
+        }
+      },
+      {
+        "id": "chapter_4",
+        "name": "平面向量",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 4
+        }
+      },
+      {
+        "id": "chapter_5",
+        "name": "数列",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 5
+        }
+      },
+      {
+        "id": "chapter_6",
+        "name": "不等式",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 6
+        }
+      },
+      {
+        "id": "chapter_7",
+        "name": "立体几何",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 7
+        }
+      },
+      {
+        "id": "chapter_8",
+        "name": "解析几何",
+        "type": "chapter",
+        "position": {
+          "x": 600.0,
+          "y": 600.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 8
+        }
+      },
+      {
+        "id": "chapter_9",
+        "name": "统计与概率",
+        "type": "chapter",
+        "position": {
+          "x": 400.0,
+          "y": 600.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 9
+        }
+      }
+    ],
+    "constellation_lines": [
+      {
+        "id": "line_subject_mathematics_chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 400.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 600.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_5",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_6",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_7",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_8",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 600.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_mathematics_chapter_9",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 400.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_1_chapter_2",
+        "start": {
+          "x": 400.0,
+          "y": 200.0
+        },
+        "end": {
+          "x": 600.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_2_chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 200.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_3_chapter_4",
+        "start": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_4_chapter_5",
+        "start": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_5_chapter_6",
+        "start": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_6_chapter_7",
+        "start": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_7_chapter_8",
+        "start": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "end": {
+          "x": 600.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_8_chapter_9",
+        "start": {
+          "x": 600.0,
+          "y": 600.0
+        },
+        "end": {
+          "x": 400.0,
+          "y": 600.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_9_chapter_1",
+        "start": {
+          "x": 400.0,
+          "y": 600.0
+        },
+        "end": {
+          "x": 400.0,
+          "y": 200.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      }
+    ],
+    "learning_paths": [
+      {
+        "id": "path_subject_mathematics_chapter_1",
+        "source": "subject_mathematics",
+        "target": "chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 400.0,
+          "y": 200.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_2",
+        "source": "subject_mathematics",
+        "target": "chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 600.0,
+          "y": 200.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_3",
+        "source": "subject_mathematics",
+        "target": "chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_4",
+        "source": "subject_mathematics",
+        "target": "chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 200.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_5",
+        "source": "subject_mathematics",
+        "target": "chapter_5",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_6",
+        "source": "subject_mathematics",
+        "target": "chapter_6",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_7",
+        "source": "subject_mathematics",
+        "target": "chapter_7",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 600.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_8",
+        "source": "subject_mathematics",
+        "target": "chapter_8",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 600.0,
+          "y": 600.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_mathematics_chapter_9",
+        "source": "subject_mathematics",
+        "target": "chapter_9",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 400.0,
+          "y": 600.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      }
+    ],
+    "metadata": {
+      "constellation_name": "数学座",
+      "constellation_pattern": "square",
+      "total_stars": 10,
+      "total_constellation_lines": 18,
+      "total_learning_paths": 9,
+      "star_type_distribution": {
+        "subject": 1,
+        "chapter": 9
+      },
+      "learning_path_distribution": {
+        "contains": 9
+      },
+      "brightness_range": {
+        "min": 0.6400000000000001,
+        "max": 0.8
+      },
+      "generated_at": "2025-09-05T01:47:15.123117"
+    }
+  },
+  "generated_at": "2025-09-05T01:47:15.123124"
+}

@@ -1,0 +1,424 @@
+{
+  "nodes": [
+    {
+      "id": "subject_history",
+      "name": "history",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "中华文明的起源与早期国家",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -600.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "中古时期的中华文明",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -450.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "中华文明的辉煌与危机",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -300.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "中华民族的抗争与求索",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -150.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "chapter_5",
+      "name": "中华人民共和国成立和社会主义革命与建设",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 0.0,
+        "y": -200.0
+      },
+      "original_id": 5
+    },
+    {
+      "id": "chapter_6",
+      "name": "改革开放与社会主义现代化建设新时期",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 150.0,
+        "y": -200.0
+      },
+      "original_id": 6
+    },
+    {
+      "id": "chapter_7",
+      "name": "古代文明的产生与发展",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 300.0,
+        "y": -200.0
+      },
+      "original_id": 7
+    },
+    {
+      "id": "chapter_8",
+      "name": "中古时期的世界",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 450.0,
+        "y": -200.0
+      },
+      "original_id": 8
+    },
+    {
+      "id": "chapter_9",
+      "name": "走向整体的世界",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 600.0,
+        "y": -200.0
+      },
+      "original_id": 9
+    },
+    {
+      "id": "kp_1",
+      "name": "中华文明的起源",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "文明起源",
+        "新石器时代",
+        "农业革命"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "夏商西周的政治制度",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "夏商西周",
+        "政治制度",
+        "分封制"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "春秋战国的变革",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 1,
+      "section_id": 3,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "春秋战国",
+        "社会变革",
+        "百家争鸣"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "秦汉统一多民族国家的建立",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "秦汉",
+        "统一",
+        "多民族国家"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "三国两晋南北朝的民族交融",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "理解",
+      "keywords": [
+        "魏晋南北朝",
+        "民族交融",
+        "政权更替"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "隋唐统一多民族国家的发展",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 2,
+      "section_id": 6,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "隋唐",
+        "盛世",
+        "开放包容"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "宋元时期的经济发展",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "宋元",
+        "经济发展",
+        "商品经济"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "明清统一多民族国家的巩固与发展",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "明清",
+        "统一",
+        "专制主义"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "明清时期的对外关系",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 3,
+      "section_id": 9,
+      "difficulty_level": "理解",
+      "keywords": [
+        "明清",
+        "对外关系",
+        "海禁政策"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "鸦片战争与中国社会的变化",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 4,
+      "section_id": 10,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "鸦片战争",
+        "半殖民地",
+        "社会变化"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_history",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_history",
+      "target": "chapter_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 20,
+    "edge_count": 19,
+    "generated_at": "2025-09-05T01:47:22.868786"
+  }
+}

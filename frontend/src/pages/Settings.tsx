@@ -25,7 +25,14 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
-  Snackbar
+  Snackbar,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Grid,
+  Paper
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -35,10 +42,18 @@ import {
   Star as StarIcon,
   StarBorder as StarBorderIcon,
   Info as InfoIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  School as SchoolIcon,
+  PlayArrow as PlayIcon,
+  Stop as StopIcon,
+  CheckCircle as CheckCircleIcon,
+  Warning as WarningIcon,
+  Error as ErrorIcon
 } from '@mui/icons-material';
-import { settingsApi } from '../api/settings';
+import { type SubjectInitProgress } from '../api/settings';
 import { useAuthStore } from '../stores/authStore';
+import { useSubjectInitStore } from '../stores/subjectInitStore';
+import settingsApi from '../services/settings';
 
 interface AIModel {
   id: string;
@@ -103,7 +118,7 @@ function TabPanel(props: TabPanelProps) {
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logout, user } = useAuthStore();
   const [tabValue, setTabValue] = useState(0);
   const [models, setModels] = useState<AIModel[]>([]);
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -111,7 +126,104 @@ const Settings: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<AIModel | null>(null);
   const [testingModel, setTestingModel] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' | 'warning' | 'info' });
+
+  // 格式化时长显示
+  const formatDuration = (startTime: string, endTime?: string) => {
+    try {
+      // 确保时间字符串格式正确
+      const start = new Date(startTime);
+      const end = endTime ? new Date(endTime) : new Date();
+      
+      // 检查时间是否有效
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return '时间格式错误';
+      }
+      
+      const durationMs = end.getTime() - start.getTime();
+      
+      // 如果时间差为负数，说明数据有问题
+      if (durationMs < 0) {
+        return '时间数据异常';
+      }
+      
+      const totalSeconds = Math.floor(durationMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}小时${minutes}分钟${seconds}秒`;
+      } else if (minutes > 0) {
+        return `${minutes}分钟${seconds}秒`;
+      } else {
+        return `${seconds}秒`;
+      }
+    } catch (error) {
+      console.error('时间格式化错误:', error, { startTime, endTime });
+      return '时间计算错误';
+    }
+  };
+
+  // 计算预计完成时间
+  const getEstimatedCompletionTime = (startTime: string, progressPercent: number) => {
+    try {
+      if (progressPercent <= 0) return '计算中...';
+      if (progressPercent >= 100) return '即将完成';
+      
+      const start = new Date(startTime);
+      const now = new Date();
+      
+      // 检查时间是否有效
+      if (isNaN(start.getTime())) {
+        return '开始时间无效';
+      }
+      
+      const elapsed = now.getTime() - start.getTime();
+      
+      // 如果已用时间为负数或过小，说明数据有问题
+      if (elapsed <= 0) {
+        return '计算中...';
+      }
+      
+      // 根据当前进度估算总时间
+      const totalEstimated = (elapsed / progressPercent) * 100;
+      const remaining = totalEstimated - elapsed;
+      
+      if (remaining <= 0) return '即将完成';
+      
+      const estimatedEnd = new Date(now.getTime() + remaining);
+      return estimatedEnd.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch (error) {
+      console.error('预计完成时间计算错误:', error, { startTime, progressPercent });
+      return '计算错误';
+    }
+  };
+  
+  // 使用全局状态管理学科初始化
+  const {
+    initProgress,
+    isInitializing,
+    forceUpdate,
+    setForceUpdate,
+    startSubjectInitialization,
+    stopSubjectInitialization,
+    clearInitializationProgress,
+    checkAndRestoreInitializationState,
+    cleanup
+  } = useSubjectInitStore();
+  
+  // 检查是否为管理员
+  const isAdmin = user?.role === 'admin';
+
+
 
   const [formData, setFormData] = useState({
     name: '',
@@ -144,7 +256,17 @@ const Settings: React.FC = () => {
     
     fetchModels();
     fetchSystemInfo();
-  }, [isAuthenticated, navigate]);
+    if (isAdmin) {
+      checkAndRestoreInitializationState(showSnackbar);
+    }
+  }, [isAuthenticated, navigate, isAdmin, checkAndRestoreInitializationState]);
+
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
 
   const fetchModels = async () => {
     try {
@@ -183,9 +305,13 @@ const Settings: React.FC = () => {
     }
   };
 
-  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
     setSnackbar({ open: true, message, severity });
   };
+
+
+
+
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -335,6 +461,7 @@ const Settings: React.FC = () => {
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="AI模型管理" />
           <Tab label="系统信息" />
+          {isAdmin && <Tab label="学科初始化" />}
         </Tabs>
       </Box>
 
@@ -515,6 +642,268 @@ const Settings: React.FC = () => {
           </Box>
         )}
       </TabPanel>
+
+      {/* 学科初始化标签页 */}
+        {isAdmin && tabValue === 2 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              <SchoolIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+              学科初始化
+            </Typography>
+          
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                初始化九大学科的基础数据，包括学科结构、知识点和题目等。此操作将从外部数据源抓取最新的学科信息。
+              </Typography>
+              
+              <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={isInitializing ? <StopIcon /> : <PlayIcon />}
+                  onClick={isInitializing ? () => stopSubjectInitialization(showSnackbar) : () => startSubjectInitialization(forceUpdate, showSnackbar)}
+                  disabled={loading}
+                >
+                  {isInitializing ? '停止初始化' : '开始初始化'}
+                </Button>
+                
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={forceUpdate}
+                      onChange={(e) => setForceUpdate(e.target.checked)}
+                      disabled={isInitializing}
+                    />
+                  }
+                  label="强制更新现有学科"
+                />
+                
+                {initProgress && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => clearInitializationProgress(showSnackbar)}
+                    disabled={isInitializing}
+                  >
+                    清除进度记录
+                  </Button>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* 初始化进度显示 */}
+          {initProgress && (
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {isInitializing ? <CircularProgress size={20} /> : 
+                   initProgress.status === 'completed' ? <CheckCircleIcon color="success" /> :
+                   initProgress.status === 'failed' ? <ErrorIcon color="error" /> :
+                   <WarningIcon color="warning" />}
+                  学科初始化进度
+                </Typography>
+                
+                {/* 状态概览 */}
+                <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      状态: {initProgress.status === 'running' ? '🔄 进行中' : 
+                             initProgress.status === 'completed' ? '✅ 已完成' : 
+                             initProgress.status === 'failed' ? '❌ 失败' : 
+                             initProgress.status === 'waiting_for_conflicts' ? '⚠️ 等待处理冲突' :
+                             initProgress.status}
+                    </Typography>
+                    <Typography variant="h6" color="primary">
+                      {initProgress.progress_percent ? initProgress.progress_percent.toFixed(1) : '0.0'}%
+                    </Typography>
+                  </Box>
+                  
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={initProgress.progress_percent || 0} 
+                    sx={{ height: 10, borderRadius: 5, mb: 2 }}
+                  />
+                  
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2, mb: 2 }}>
+                    <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'success.light', borderRadius: 1 }}>
+                      <Typography variant="h6" color="success.contrastText">
+                        {initProgress.created_count || 0}
+                      </Typography>
+                      <Typography variant="body2" color="success.contrastText">
+                        已创建
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'info.light', borderRadius: 1 }}>
+                      <Typography variant="h6" color="info.contrastText">
+                        {initProgress.updated_count || 0}
+                      </Typography>
+                      <Typography variant="body2" color="info.contrastText">
+                        已更新
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
+                      <Typography variant="h6" color="warning.contrastText">
+                        {initProgress.conflicts ? initProgress.conflicts.length : 0}
+                      </Typography>
+                      <Typography variant="body2" color="warning.contrastText">
+                        冲突数
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  {initProgress.message && (
+                    <Typography variant="body2" color="text.secondary" sx={{ 
+                      p: 1, 
+                      bgcolor: 'action.hover', 
+                      borderRadius: 1,
+                      fontFamily: 'monospace',
+                      fontSize: '0.875rem'
+                    }}>
+                      💬 {initProgress.message}
+                    </Typography>
+                  )}
+                  
+                  {initProgress.current_subject && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold' }}>
+                        🎯 当前学科: {initProgress.current_subject}
+                      </Typography>
+                      {initProgress.current_stage && (
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                          📋 处理阶段: {initProgress.current_stage}
+                        </Typography>
+                      )}
+                      {initProgress.stage_progress !== undefined && (
+                        <Box sx={{ ml: 2, mt: 0.5 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            阶段进度: {initProgress.stage_progress}%
+                          </Typography>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={initProgress.stage_progress} 
+                            sx={{ height: 4, borderRadius: 2, mt: 0.5 }}
+                          />
+                        </Box>
+                      )}
+                      {initProgress.download_source && (
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                          📥 数据来源: {initProgress.download_source}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+
+                {/* 已完成的学科 */}
+                {initProgress.completed_subjects && initProgress.completed_subjects.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CheckCircleIcon color="success" />
+                      已完成学科 ({initProgress.completed_subjects.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, maxHeight: 200, overflow: 'auto', p: 1, bgcolor: 'success.light', borderRadius: 1 }}>
+                      {initProgress.completed_subjects.map((subject, index) => (
+                        <Chip
+                          key={index}
+                          label={`${subject.subject_code} - ${subject.name || ''}`}
+                          color="success"
+                          size="small"
+                          variant="outlined"
+                          sx={{ bgcolor: 'success.main', color: 'success.contrastText' }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* 冲突信息 */}
+                {initProgress.conflicts && initProgress.conflicts.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <WarningIcon color="warning" />
+                      发现冲突 ({initProgress.conflicts.length})
+                    </Typography>
+                    <Box sx={{ maxHeight: 200, overflow: 'auto', p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                      {initProgress.conflicts.map((conflict, index) => (
+                        <Box key={index} sx={{ mb: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+                          <Typography variant="body2" fontWeight="bold">
+                            {conflict.subject_code}
+                          </Typography>
+                          {conflict.conflicts && conflict.conflicts.length > 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                              冲突项: {conflict.conflicts.join(', ')}
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* 错误信息 */}
+                {initProgress.errors && initProgress.errors.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <ErrorIcon color="error" />
+                      处理错误 ({initProgress.errors.length})
+                    </Typography>
+                    <Box sx={{ maxHeight: 200, overflow: 'auto', p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
+                      {initProgress.errors.map((error, index) => (
+                        <Box key={index} sx={{ mb: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+                          <Typography variant="body2" fontWeight="bold" color="error">
+                            {error.subject_code}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontFamily: 'monospace' }}>
+                            {error.error || '未知错误'}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+
+
+                {/* 时间信息 */}
+                <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        🕐 开始时间: {initProgress.start_time ? new Date(initProgress.start_time).toLocaleString() : '等待开始...'}
+                      </Typography>
+                      {initProgress.end_time && (
+                        <Typography variant="body2" color="text.secondary">
+                          🏁 结束时间: {new Date(initProgress.end_time).toLocaleString()}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Box>
+                      {initProgress.task_id && (
+                        <Typography variant="body2" color="text.secondary">
+                          🆔 任务ID: {initProgress.task_id.substring(0, 8)}...
+                        </Typography>
+                      )}
+                      {initProgress.start_time && (
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            ⏱️ 运行时长: {formatDuration(initProgress.start_time, initProgress.end_time)}
+                          </Typography>
+                          {initProgress.status === 'running' && initProgress.progress_percent > 0 && (
+                            <Typography variant="body2" color="text.secondary">
+                              ⏰ 预计完成时间: {getEstimatedCompletionTime(initProgress.start_time, initProgress.progress_percent)}
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+               </CardContent>
+             </Card>
+           )}
+          </Box>
+        )}
 
       {/* AI模型编辑对话框 */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>

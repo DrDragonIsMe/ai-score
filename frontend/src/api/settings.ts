@@ -35,6 +35,52 @@ export interface SystemInfo {
   default_model: string;
 }
 
+export interface SubjectInitProgress {
+  task_id?: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'waiting_for_conflicts';
+  progress_percent: number;
+  message: string;
+  current_subject?: string;
+  current_stage?: string;
+  stage_progress?: number;
+  download_source?: string;
+  completed_subjects: Array<{
+    subject_code: string;
+    name: string;
+  }>;
+  conflicts: Array<{
+    subject_code: string;
+    conflicts: string[];
+  }>;
+  errors: Array<{
+    subject_code: string;
+    error: string;
+  }>;
+  start_time: string;
+  end_time?: string;
+  created_count?: number;
+  updated_count?: number;
+  error?: string;
+}
+
+export interface SubjectPreview {
+  code: string;
+  name: string;
+  name_en: string;
+  description: string;
+  category: string;
+  grade_range: string;
+}
+
+export interface SubjectInitResult {
+  created_count: number;
+  updated_count: number;
+  total_subjects: number;
+  conflicts?: string[];
+}
+
+
+
 export const settingsApi = {
   // 获取AI模型列表
   getAIModels: () => {
@@ -79,5 +125,41 @@ export const settingsApi = {
   // 获取系统信息
   getSystemInfo: () => {
     return api.get('/settings/system-info');
-  }
+  },
+
+  // 九大学科初始化相关API
+  // 获取初始化状态
+  getSubjectInitStatus: () => {
+    return api.get('/subjects/initialize/status');
+  },
+
+  // 预览将要初始化的学科
+  previewSubjects: () => {
+    return api.get('/subjects/initialize/preview');
+  },
+
+  // 初始化九大学科
+  initializeSubjects: (forceUpdate: boolean = false) => {
+    return api.post('/subjects/initialize', { force_update: forceUpdate });
+  },
+
+  // 获取初始化进度
+  getInitializationProgress: (taskId?: string) => {
+    const url = taskId ? `/subjects/initialize/progress?task_id=${taskId}` : '/subjects/initialize/progress';
+    return api.get(url);
+  },
+
+  // 解决初始化冲突
+  resolveConflicts: (action: 'skip' | 'overwrite', conflicts: string[]) => {
+    return api.post('/subjects/initialize/conflicts/resolve', {
+      action,
+      conflicts
+    });
+  },
+
+  // 清除初始化进度记录
+  clearProgress: (taskId: string) => {
+    return api.delete(`/subjects/initialize/progress/${taskId}`);
+  },
+
 };

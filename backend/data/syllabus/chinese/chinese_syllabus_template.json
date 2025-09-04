@@ -1,0 +1,188 @@
+{
+  "subject_code": "chinese",
+  "subject_name": "语文",
+  "version": "2023版",
+  "source": "内置模板",
+  "created_at": "2025-09-05T01:47:13.831755",
+  "curriculum_standards": {
+    "core_competencies": [
+      "语言建构与运用",
+      "思维发展与提升",
+      "审美鉴赏与创造",
+      "文化传承与理解"
+    ],
+    "learning_objectives": [],
+    "content_standards": []
+  },
+  "knowledge_structure": {
+    "modules": [
+      "现代文阅读",
+      "古代诗文阅读",
+      "语言文字运用",
+      "写作"
+    ],
+    "chapters": [
+      {
+        "id": 1,
+        "title": "现代文阅读",
+        "sections": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "title": "古代诗文阅读",
+        "sections": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 3,
+        "title": "语言文字运用",
+        "sections": [
+          7,
+          8
+        ]
+      },
+      {
+        "id": 4,
+        "title": "写作",
+        "sections": [
+          9,
+          10
+        ]
+      }
+    ],
+    "knowledge_points": [
+      {
+        "id": 1,
+        "content": "论述类文本阅读",
+        "chapter_id": 1,
+        "section_id": 1,
+        "difficulty_level": "理解",
+        "keywords": [
+          "论述",
+          "文本",
+          "阅读"
+        ]
+      },
+      {
+        "id": 2,
+        "content": "实用类文本阅读",
+        "chapter_id": 1,
+        "section_id": 2,
+        "difficulty_level": "理解",
+        "keywords": [
+          "实用",
+          "文本",
+          "阅读"
+        ]
+      },
+      {
+        "id": 3,
+        "content": "文学类文本阅读",
+        "chapter_id": 1,
+        "section_id": 3,
+        "difficulty_level": "分析",
+        "keywords": [
+          "文学",
+          "文本",
+          "阅读"
+        ]
+      },
+      {
+        "id": 4,
+        "content": "文言文阅读",
+        "chapter_id": 2,
+        "section_id": 4,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "文言文",
+          "阅读",
+          "翻译"
+        ]
+      },
+      {
+        "id": 5,
+        "content": "古代诗歌阅读",
+        "chapter_id": 2,
+        "section_id": 5,
+        "difficulty_level": "分析",
+        "keywords": [
+          "古诗",
+          "鉴赏",
+          "意境"
+        ]
+      },
+      {
+        "id": 6,
+        "content": "名篇名句默写",
+        "chapter_id": 2,
+        "section_id": 6,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "默写",
+          "名句",
+          "背诵"
+        ]
+      },
+      {
+        "id": 7,
+        "content": "语言文字运用",
+        "chapter_id": 3,
+        "section_id": 7,
+        "difficulty_level": "运用",
+        "keywords": [
+          "语言",
+          "文字",
+          "运用"
+        ]
+      },
+      {
+        "id": 8,
+        "content": "语言表达连贯",
+        "chapter_id": 3,
+        "section_id": 8,
+        "difficulty_level": "运用",
+        "keywords": [
+          "表达",
+          "连贯",
+          "逻辑"
+        ]
+      },
+      {
+        "id": 9,
+        "content": "记叙文写作",
+        "chapter_id": 4,
+        "section_id": 9,
+        "difficulty_level": "综合",
+        "keywords": [
+          "记叙文",
+          "写作",
+          "叙述"
+        ]
+      },
+      {
+        "id": 10,
+        "content": "议论文写作",
+        "chapter_id": 4,
+        "section_id": 10,
+        "difficulty_level": "综合",
+        "keywords": [
+          "议论文",
+          "写作",
+          "论证"
+        ]
+      }
+    ]
+  },
+  "assessment_standards": {
+    "exam_format": "",
+    "score_distribution": {},
+    "difficulty_levels": []
+  }
+}

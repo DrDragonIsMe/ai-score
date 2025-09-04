@@ -112,7 +112,7 @@ def create_subject():
         db.session.rollback()
         return error_response(f'Failed to create subject: {str(e)}', 500)
 
-@api_bp.route('/subjects/<int:subject_id>', methods=['GET'])
+@api_bp.route('/subjects/<subject_id>', methods=['GET'])
 @jwt_required()
 def get_subject(subject_id):
     """获取学科详情"""
@@ -145,7 +145,7 @@ def get_subject(subject_id):
     except Exception as e:
         return error_response(f'Failed to get subject: {str(e)}', 500)
 
-@api_bp.route('/subjects/<int:subject_id>', methods=['PUT'])
+@api_bp.route('/subjects/<subject_id>', methods=['PUT'])
 @jwt_required()
 @admin_required
 def update_subject(subject_id):
@@ -190,13 +190,16 @@ def update_subject(subject_id):
         db.session.rollback()
         return error_response(f'Failed to update subject: {str(e)}', 500)
 
-@api_bp.route('/subjects/<int:subject_id>', methods=['DELETE'])
+@api_bp.route('/subjects/<subject_id>', methods=['DELETE'])
 @jwt_required()
 @admin_required
 def delete_subject(subject_id):
     """删除学科"""
     try:
-        tenant_id = g.get('tenant_id')
+        # 从JWT token中获取tenant_id
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id') if isinstance(current_user_identity, dict) else g.get('tenant_id')
+        
         subject = Subject.query.filter_by(
             id=subject_id,
             tenant_id=tenant_id
@@ -215,7 +218,7 @@ def delete_subject(subject_id):
         db.session.rollback()
         return error_response(f'Failed to delete subject: {str(e)}', 500)
 
-@api_bp.route('/subjects/<int:subject_id>/chapters', methods=['GET'])
+@api_bp.route('/subjects/<subject_id>/chapters', methods=['GET'])
 @jwt_required()
 def get_chapters(subject_id):
     """获取学科章节列表"""
@@ -260,7 +263,7 @@ def get_chapters(subject_id):
     except Exception as e:
         return error_response(f'Failed to get chapters: {str(e)}', 500)
 
-@api_bp.route('/subjects/<int:subject_id>/chapters', methods=['POST'])
+@api_bp.route('/subjects/<subject_id>/chapters', methods=['POST'])
 @jwt_required()
 @admin_required
 def create_chapter(subject_id):
@@ -424,125 +427,7 @@ def delete_chapter(chapter_id):
         db.session.rollback()
         return error_response(f'Failed to delete chapter: {str(e)}', 500)
 
-@api_bp.route('/subjects/initialize-default', methods=['POST'])
-@jwt_required()
-@admin_required
-def initialize_default_subjects():
-    """初始化九大学科"""
-    try:
-        tenant_id = g.get('tenant_id')
-        
-        # 九大学科配置
-        default_subjects = [
-            {
-                'code': 'chinese',
-                'name': '语文',
-                'name_en': 'Chinese',
-                'category': 'language',
-                'description': '语文学科，包含现代文阅读、古诗文阅读、写作等',
-                'total_score': 150,
-                'sort_order': 1
-            },
-            {
-                'code': 'math',
-                'name': '数学',
-                'name_en': 'Mathematics',
-                'category': 'science',
-                'description': '数学学科，包含代数、几何、概率统计等',
-                'total_score': 150,
-                'sort_order': 2
-            },
-            {
-                'code': 'english',
-                'name': '英语',
-                'name_en': 'English',
-                'category': 'language',
-                'description': '英语学科，包含听力、阅读、写作等',
-                'total_score': 150,
-                'sort_order': 3
-            },
-            {
-                'code': 'physics',
-                'name': '物理',
-                'name_en': 'Physics',
-                'category': 'science',
-                'description': '物理学科，包含力学、电磁学、光学等',
-                'total_score': 100,
-                'sort_order': 4
-            },
-            {
-                'code': 'chemistry',
-                'name': '化学',
-                'name_en': 'Chemistry',
-                'category': 'science',
-                'description': '化学学科，包含无机化学、有机化学、物理化学等',
-                'total_score': 100,
-                'sort_order': 5
-            },
-            {
-                'code': 'biology',
-                'name': '生物',
-                'name_en': 'Biology',
-                'category': 'science',
-                'description': '生物学科，包含细胞生物学、遗传学、生态学等',
-                'total_score': 100,
-                'sort_order': 6
-            },
-            {
-                'code': 'history',
-                'name': '历史',
-                'name_en': 'History',
-                'category': 'liberal_arts',
-                'description': '历史学科，包含中国古代史、中国近现代史、世界史等',
-                'total_score': 100,
-                'sort_order': 7
-            },
-            {
-                'code': 'geography',
-                'name': '地理',
-                'name_en': 'Geography',
-                'category': 'liberal_arts',
-                'description': '地理学科，包含自然地理、人文地理、区域地理等',
-                'total_score': 100,
-                'sort_order': 8
-            },
-            {
-                'code': 'politics',
-                'name': '政治',
-                'name_en': 'Politics',
-                'category': 'liberal_arts',
-                'description': '政治学科，包含马克思主义基本原理、思想政治教育等',
-                'total_score': 100,
-                'sort_order': 9
-            }
-        ]
-        
-        created_subjects = []
-        
-        for subject_data in default_subjects:
-            # 检查是否已存在
-            existing = Subject.query.filter_by(
-                tenant_id=tenant_id,
-                code=subject_data['code']
-            ).first()
-            
-            if not existing:
-                subject = Subject(
-                    tenant_id=tenant_id,
-                    **subject_data
-                )
-                db.session.add(subject)
-                created_subjects.append(subject_data['name'])
-        
-        db.session.commit()
-        
-        return success_response({
-            'message': f'Successfully initialized {len(created_subjects)} subjects',
-            'created_subjects': created_subjects
-        })
-        
-    except Exception as e:
-        return error_response(f'Failed to initialize subjects: {str(e)}', 500)
+
 
 @api_bp.route('/subjects/<subject_id>/statistics', methods=['GET'])
 @jwt_required()

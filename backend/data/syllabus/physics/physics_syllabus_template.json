@@ -1,0 +1,235 @@
+{
+  "subject_code": "physics",
+  "subject_name": "物理",
+  "version": "2023版",
+  "source": "内置模板",
+  "created_at": "2025-09-05T01:47:19.052354",
+  "curriculum_standards": {
+    "core_competencies": [
+      "物理观念",
+      "科学思维",
+      "科学探究",
+      "科学态度与责任"
+    ],
+    "learning_objectives": [],
+    "content_standards": []
+  },
+  "knowledge_structure": {
+    "modules": [
+      "力学",
+      "热学",
+      "电磁学",
+      "光学",
+      "原子物理"
+    ],
+    "chapters": [
+      {
+        "id": 1,
+        "title": "运动的描述",
+        "sections": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "title": "相互作用",
+        "sections": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 3,
+        "title": "牛顿运动定律",
+        "sections": [
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "id": 4,
+        "title": "曲线运动",
+        "sections": [
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "id": 5,
+        "title": "万有引力与宇宙航行",
+        "sections": [
+          13,
+          14
+        ]
+      },
+      {
+        "id": 6,
+        "title": "机械能",
+        "sections": [
+          15,
+          16,
+          17
+        ]
+      },
+      {
+        "id": 7,
+        "title": "电场",
+        "sections": [
+          18,
+          19,
+          20
+        ]
+      },
+      {
+        "id": 8,
+        "title": "恒定电流",
+        "sections": [
+          21,
+          22,
+          23
+        ]
+      },
+      {
+        "id": 9,
+        "title": "磁场",
+        "sections": [
+          24,
+          25,
+          26
+        ]
+      }
+    ],
+    "knowledge_points": [
+      {
+        "id": 1,
+        "content": "质点、参考系和坐标系",
+        "chapter_id": 1,
+        "section_id": 1,
+        "difficulty_level": "理解",
+        "keywords": [
+          "质点",
+          "参考系",
+          "坐标系"
+        ]
+      },
+      {
+        "id": 2,
+        "content": "时间和位移",
+        "chapter_id": 1,
+        "section_id": 2,
+        "difficulty_level": "理解",
+        "keywords": [
+          "时间",
+          "位移",
+          "路程"
+        ]
+      },
+      {
+        "id": 3,
+        "content": "运动快慢的描述——速度",
+        "chapter_id": 1,
+        "section_id": 3,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "速度",
+          "平均速度",
+          "瞬时速度"
+        ]
+      },
+      {
+        "id": 4,
+        "content": "重力基本相互作用",
+        "chapter_id": 2,
+        "section_id": 4,
+        "difficulty_level": "理解",
+        "keywords": [
+          "重力",
+          "基本相互作用",
+          "引力"
+        ]
+      },
+      {
+        "id": 5,
+        "content": "弹力",
+        "chapter_id": 2,
+        "section_id": 5,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "弹力",
+          "胡克定律",
+          "弹性形变"
+        ]
+      },
+      {
+        "id": 6,
+        "content": "摩擦力",
+        "chapter_id": 2,
+        "section_id": 6,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "摩擦力",
+          "静摩擦",
+          "滑动摩擦"
+        ]
+      },
+      {
+        "id": 7,
+        "content": "牛顿第一定律",
+        "chapter_id": 3,
+        "section_id": 7,
+        "difficulty_level": "理解",
+        "keywords": [
+          "牛顿第一定律",
+          "惯性",
+          "惯性定律"
+        ]
+      },
+      {
+        "id": 8,
+        "content": "牛顿第二定律",
+        "chapter_id": 3,
+        "section_id": 8,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "牛顿第二定律",
+          "加速度",
+          "力"
+        ]
+      },
+      {
+        "id": 9,
+        "content": "牛顿第三定律",
+        "chapter_id": 3,
+        "section_id": 9,
+        "difficulty_level": "理解",
+        "keywords": [
+          "牛顿第三定律",
+          "作用力",
+          "反作用力"
+        ]
+      },
+      {
+        "id": 10,
+        "content": "抛物运动",
+        "chapter_id": 4,
+        "section_id": 10,
+        "difficulty_level": "运用",
+        "keywords": [
+          "抛物运动",
+          "平抛运动",
+          "斜抛运动"
+        ]
+      }
+    ]
+  },
+  "assessment_standards": {
+    "exam_format": "",
+    "score_distribution": {},
+    "difficulty_levels": []
+  }
+}

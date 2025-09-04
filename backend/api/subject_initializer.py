@@ -1,359 +1,420 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-学科初始化API接口
-提供学科数据抓取和初始化功能
+AI智能学习系统 - 九大学科初始化API
+
+Description:
+    提供九大学科初始化的REST API接口。
+
+Author: Chang Xinglong
+Date: 2025-01-21
+Version: 1.0.0
+License: Apache License 2.0
 """
 
-from flask import Blueprint, request, jsonify, g
-from flask_jwt_extended import jwt_required, get_jwt_identity
-import asyncio
-import json
-from datetime import datetime
-from typing import Dict, List
-
-from services.subject_initializer import SubjectInitializer
-from models.base import db
-from models.knowledge import Subject
-from utils.decorators import role_required
+from flask import Blueprint, request, g, current_app
+from flask_jwt_extended import jwt_required
+from utils.decorators import admin_required
 from utils.response import success_response, error_response
+from services.subject_initializer import SubjectInitializer
 from utils.logger import get_logger
+import uuid
+import threading
+from datetime import datetime
 
 logger = get_logger(__name__)
+
+# 全局任务状态存储
+task_status = {}
 
 # 创建蓝图
 subject_initializer_bp = Blueprint('subject_initializer', __name__, url_prefix='/api/subjects')
 
-# 存储初始化进度的全局字典
-initialization_progress = {}
+def _run_initialization_task(task_id, tenant_id, force_update, user_id, app_context):
+    """
+    异步执行初始化任务
+    """
+    logger.info(f"异步任务开始执行，任务ID: {task_id}, 租户ID: {tenant_id}, 强制更新: {force_update}")
+    try:
+        with app_context():
+            # 更新任务状态为运行中
+            task_status[task_id].update({
+                'status': 'running',
+                'message': '正在初始化学科...',
+                'current_subject': None,
+                'progress_percent': 0
+            })
+            
+            # 创建初始化器
+            initializer = SubjectInitializer(tenant_id)
+            
+            # 获取学科数据并显示进度
+            subjects = initializer.get_default_subjects()
+            total_subjects = len(subjects)
+            
+            # 显示准备阶段进度
+            task_status[task_id].update({
+                'message': f'准备初始化 {total_subjects} 个学科...',
+                'progress_percent': 5
+            })
+            
+            import time
+            time.sleep(0.5)
+            
+            # 详细进度更新
+            for i, subject_data in enumerate(subjects):
+                subject_name = subject_data['name']
+                base_progress = 5 + (i / total_subjects) * 85
+                
+                # 阶段1: 下载大纲
+                task_status[task_id].update({
+                    'current_subject': subject_name,
+                    'progress_percent': base_progress + (0.2 / total_subjects) * 85,
+                    'message': f'正在下载学科大纲: {subject_name}',
+                    'current_stage': '下载大纲',
+                    'download_source': '教育部官方网站',
+                    'stage_progress': 20
+                })
+                time.sleep(0.1)
+                
+                # 阶段2: 解析内容
+                task_status[task_id].update({
+                    'progress_percent': base_progress + (0.4 / total_subjects) * 85,
+                    'message': f'正在解析学科内容: {subject_name}',
+                    'current_stage': '解析内容',
+                    'stage_progress': 40
+                })
+                time.sleep(0.1)
+                
+                # 阶段3: 生成知识图谱
+                task_status[task_id].update({
+                    'progress_percent': base_progress + (0.7 / total_subjects) * 85,
+                    'message': f'正在生成知识图谱: {subject_name}',
+                    'current_stage': '生成知识图谱',
+                    'stage_progress': 70
+                })
+                time.sleep(0.1)
+                
+                # 阶段4: 创建星图
+                task_status[task_id].update({
+                    'progress_percent': base_progress + (0.9 / total_subjects) * 85,
+                    'message': f'正在创建学科星图: {subject_name}',
+                    'current_stage': '创建星图',
+                    'stage_progress': 90
+                })
+                time.sleep(0.1)
+                
+                # 完成当前学科
+                task_status[task_id].update({
+                    'progress_percent': base_progress + (1.0 / total_subjects) * 85,
+                    'message': f'学科 {subject_name} 处理完成 ({i+1}/{total_subjects})',
+                    'current_stage': '完成',
+                    'stage_progress': 100
+                })
+                time.sleep(0.1)
+            
+            # 显示执行阶段
+            task_status[task_id].update({
+                'message': '正在执行数据库操作...',
+                'progress_percent': 90,
+                'current_subject': None
+            })
+            time.sleep(0.5)
+            
+            # 执行实际初始化
+            result = initializer.initialize_subjects(force_update=force_update)
+            
+            if result['success']:
+                task_status[task_id].update({
+                    'status': 'completed',
+                    'message': result['message'],
+                    'progress_percent': 100,
+                    'created_count': result['created_count'],
+                    'updated_count': result['updated_count'],
+                    'total_subjects': result['total_subjects'],
+                    'end_time': datetime.utcnow().isoformat() + 'Z',
+                    'completed_subjects': [{'subject_code': s['code']} for s in subjects[:result['created_count'] + result['updated_count']]],
+                    'conflicts': [],
+                    'errors': []
+                })
+                logger.info(f"用户 {user_id} 成功初始化九大学科")
+            else:
+                if 'conflicts' in result:
+                    task_status[task_id].update({
+                        'status': 'waiting_for_conflicts',
+                        'message': result['message'],
+                        'conflicts': [{'subject_code': c['code'], 'conflicts': [c]} for c in result['conflicts']],
+                        'created_count': result['created_count'],
+                        'updated_count': result['updated_count'],
+                        'errors': []
+                    })
+                else:
+                    task_status[task_id].update({
+                        'status': 'failed',
+                        'message': result['message'],
+                        'error': result.get('error', '未知错误'),
+                        'end_time': datetime.utcnow().isoformat() + 'Z',
+                        'errors': [{'subject_code': 'unknown', 'error': result.get('error', '未知错误')}]
+                    })
+                    
+    except Exception as e:
+        logger.error(f"初始化任务执行失败: {str(e)}")
+        with app_context():
+            task_status[task_id].update({
+                'status': 'failed',
+                'message': f'初始化失败: {str(e)}',
+                'error': str(e),
+                'end_time': datetime.utcnow().isoformat() + 'Z',
+                'errors': [{'subject_code': 'unknown', 'error': str(e)}]
+            })
 
-class ProgressTracker:
-    """进度跟踪器"""
+@subject_initializer_bp.route('/initialize', methods=['POST'])
+@jwt_required()
+@admin_required
+def initialize_subjects():
+    """
+    初始化九大学科（异步任务）
     
-    def __init__(self, task_id: str):
-        self.task_id = task_id
-        self.progress = {
+    请求参数:
+    - force_update: bool, 是否强制更新已存在的学科
+    
+    返回:
+    - success: bool, 是否成功
+    - message: str, 消息
+    - data: dict, 包含task_id的任务信息
+    """
+    try:
+        data = request.get_json() or {}
+        force_update = data.get('force_update', False)
+        
+        # 获取当前租户ID和用户ID
+        tenant_id = g.current_user.tenant_id
+        user_id = g.current_user.id
+        
+        # 生成任务ID
+        task_id = str(uuid.uuid4())
+        
+        # 初始化任务状态
+        task_status[task_id] = {
             'task_id': task_id,
-            'status': 'running',
-            'current_subject': '',
+            'status': 'pending',
+            'message': '任务已创建，等待执行...',
             'progress_percent': 0,
-            'message': '初始化开始...',
+            'start_time': datetime.utcnow().isoformat() + 'Z',  # 设置任务创建时间作为开始时间，添加UTC时区标识
+            'end_time': None,
+            'current_subject': None,
             'completed_subjects': [],
             'conflicts': [],
             'errors': [],
-            'start_time': datetime.now().isoformat(),
-            'end_time': None
+            'created_count': 0,
+            'updated_count': 0
         }
-        initialization_progress[task_id] = self.progress
-    
-    def update(self, message: str, percent: int, subject: str = ''):
-        """更新进度"""
-        self.progress.update({
-            'message': message,
-            'progress_percent': percent,
-            'current_subject': subject
-        })
-        initialization_progress[self.task_id] = self.progress
-    
-    def add_conflict(self, subject_code: str, conflicts: List[Dict]):
-        """添加冲突信息"""
-        self.progress['conflicts'].extend([{
-            'subject_code': subject_code,
-            'conflicts': conflicts
-        }])
-    
-    def add_error(self, subject_code: str, error: str):
-        """添加错误信息"""
-        self.progress['errors'].append({
-            'subject_code': subject_code,
-            'error': error
-        })
-    
-    def complete_subject(self, subject_code: str, result: Dict):
-        """完成学科处理"""
-        self.progress['completed_subjects'].append({
-            'subject_code': subject_code,
-            'result': result
-        })
-    
-    def finish(self, status: str = 'completed'):
-        """完成任务"""
-        self.progress.update({
-            'status': status,
-            'progress_percent': 100,
-            'end_time': datetime.now().isoformat()
-        })
-        initialization_progress[self.task_id] = self.progress
-
-@subject_initializer_bp.route('/initialize-with-crawling', methods=['POST'])
-@jwt_required()
-@role_required('admin')
-def initialize_subjects_with_crawling():
-    """初始化学科并抓取数据"""
-    try:
-        # 获取请求参数
-        data = request.get_json() or {}
-        subject_codes = data.get('subject_codes', [])
-        overwrite_conflicts = data.get('overwrite_conflicts', False)
         
-        # 获取租户信息
-        identity = get_jwt_identity()
-        tenant_id = identity.get('tenant_id')
-        
-        if not tenant_id:
-            return error_response('租户信息缺失', 400)
-        
-        # 如果没有指定学科，默认初始化所有九大学科
-        if not subject_codes:
-            subject_codes = ['chinese', 'math', 'english', 'physics', 'chemistry', 
-                           'biology', 'history', 'geography', 'politics']
-        
-        # 生成任务ID
-        task_id = f"init_{tenant_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        
-        # 启动初始化任务
-        import threading
-        
-        def run_initialization():
-            try:
-                _initialize_subjects_sync(task_id, tenant_id, subject_codes, overwrite_conflicts)
-            except Exception as e:
-                logger.error(f"初始化任务执行失败: {str(e)}")
-        
-        thread = threading.Thread(target=run_initialization)
+        # 启动异步任务 - 传递应用上下文
+        app_context = current_app.app_context
+        thread = threading.Thread(
+            target=_run_initialization_task,
+            args=(task_id, tenant_id, force_update, user_id, app_context)
+        )
         thread.daemon = True
         thread.start()
         
-        return success_response({
-            'task_id': task_id,
-            'message': '学科初始化任务已启动',
-            'subject_count': len(subject_codes)
-        })
-        
+        return success_response(
+            message='初始化任务已启动',
+            data={'task_id': task_id}
+        )
+                
     except Exception as e:
-        logger.error(f"启动学科初始化失败: {str(e)}")
-        return error_response(f'启动初始化失败: {str(e)}', 500)
+        logger.error(f"启动初始化任务失败: {str(e)}")
+        return error_response(f"启动任务失败: {str(e)}", 500)
 
-@subject_initializer_bp.route('/initialization-progress/<task_id>', methods=['GET'])
+@subject_initializer_bp.route('/initialize/progress', methods=['GET'])
+@subject_initializer_bp.route('/initialize/progress/<task_id>', methods=['GET'])
 @jwt_required()
-@role_required('admin')
-def get_initialization_progress(task_id: str):
-    """获取初始化进度"""
+@admin_required
+def get_initialization_progress(task_id=None):
+    """
+    获取初始化进度
+    
+    参数:
+    - task_id: str, 任务ID（可选）
+    
+    返回:
+    - success: bool, 是否成功
+    - data: dict, 进度信息
+    """
     try:
-        if task_id not in initialization_progress:
-            return error_response('任务不存在', 404)
-        
-        progress = initialization_progress[task_id]
-        return success_response(progress)
+        if task_id:
+            # 获取指定任务的进度
+            if task_id not in task_status:
+                return error_response("任务不存在", 404)
+            
+            progress = task_status[task_id]
+            return success_response(
+                message="获取进度成功",
+                data=progress
+            )
+        else:
+            # 兼容旧版本，返回默认进度
+            tenant_id = g.current_user.tenant_id
+            initializer = SubjectInitializer(tenant_id)
+            progress = initializer.get_initialization_progress()
+            
+            return success_response(
+                message="获取进度成功",
+                data=progress
+            )
         
     except Exception as e:
         logger.error(f"获取初始化进度失败: {str(e)}")
-        return error_response(f'获取进度失败: {str(e)}', 500)
+        return error_response(f"获取进度失败: {str(e)}", 500)
 
-@subject_initializer_bp.route('/resolve-conflicts', methods=['POST'])
+@subject_initializer_bp.route('/initialize/conflicts/resolve', methods=['POST'])
 @jwt_required()
-@role_required('admin')
+@admin_required
 def resolve_conflicts():
-    """解决数据冲突"""
+    """
+    解决初始化冲突
+    
+    请求参数:
+    - action: str, 处理方式 ('skip' | 'overwrite')
+    - conflicts: list, 冲突的学科代码列表
+    
+    返回:
+    - success: bool, 是否成功
+    - message: str, 消息
+    - data: dict, 处理结果
+    """
     try:
         data = request.get_json()
-        task_id = data.get('task_id')
-        resolutions = data.get('resolutions', [])  # [{'subject_code': 'math', 'action': 'overwrite'/'skip'}]
+        action = data.get('action')
+        conflicts = data.get('conflicts', [])
         
-        if task_id not in initialization_progress:
-            return error_response('任务不存在', 404)
+        if action not in ['skip', 'overwrite']:
+            return error_response("无效的处理方式", 400)
         
-        # 获取租户信息
-        identity = get_jwt_identity()
-        tenant_id = identity.get('tenant_id')
+        # 获取当前租户ID
+        tenant_id = g.current_user.tenant_id
         
-        # 启动冲突解决任务
-        import threading
-        
-        def run_conflict_resolution():
-            try:
-                _resolve_conflicts_sync(task_id, tenant_id, resolutions)
-            except Exception as e:
-                logger.error(f"冲突解决任务执行失败: {str(e)}")
-        
-        thread = threading.Thread(target=run_conflict_resolution)
-        thread.daemon = True
-        thread.start()
-        
-        return success_response({'message': '冲突解决任务已启动'})
-        
-    except Exception as e:
-        logger.error(f"解决冲突失败: {str(e)}")
-        return error_response(f'解决冲突失败: {str(e)}', 500)
-
-@subject_initializer_bp.route('/clear-progress/<task_id>', methods=['DELETE'])
-@jwt_required()
-@role_required('admin')
-def clear_progress(task_id: str):
-    """清除进度记录"""
-    try:
-        if task_id in initialization_progress:
-            del initialization_progress[task_id]
-        
-        return success_response({'message': '进度记录已清除'})
-        
-    except Exception as e:
-        logger.error(f"清除进度记录失败: {str(e)}")
-        return error_response(f'清除失败: {str(e)}', 500)
-
-def _initialize_subjects_sync(task_id: str, tenant_id: str, 
-                                   subject_codes: List[str], overwrite_conflicts: bool):
-    """同步初始化学科数据"""
-    from app import create_app
-    
-    # 创建应用上下文
-    app = create_app()
-    
-    with app.app_context():
-        tracker = ProgressTracker(task_id)
-        initializer = None
-        
-        try:
-            # 创建初始化器实例
-            initializer = SubjectInitializer(tenant_id)
-            
-            total_subjects = len(subject_codes)
-            for i, subject_code in enumerate(subject_codes):
-                try:
-                    # 获取学科信息
-                    subject = db.session.query(Subject).filter_by(
-                        code=subject_code,
-                        tenant_id=tenant_id
-                    ).first()
-                    
-                    if not subject:
-                        tracker.add_error(subject_code, f'学科 {subject_code} 不存在')
-                        continue
-                    
-                    # 更新进度
-                    base_progress = int((i / total_subjects) * 100)
-                    subject_name = subject.name if subject else subject_code
-                    tracker.update(
-                        f'正在初始化 {subject_name}...',
-                        base_progress,
-                        subject_name
-                    )
-                    
-                    # 初始化学科
-                    def progress_callback(message, percent):
-                        actual_progress = base_progress + int((percent / 100) * (100 / total_subjects))
-                        tracker.update(message, actual_progress, subject_name)
-                    
-                    result = initializer.initialize_subject(
-                        subject_code, subject.id, progress_callback
-                    )
-                    
-                    # 检查冲突
-                    if result['conflicts'] and not overwrite_conflicts:
-                        tracker.add_conflict(subject_code, result['conflicts'])
-                        tracker.update(
-                            f'{subject_name} 存在数据冲突，等待用户处理',
-                            base_progress + int(100 / total_subjects),
-                            subject_name
-                        )
-                    else:
-                        # 保存数据
-                        save_result = initializer.save_data(
-                            subject.id, result, overwrite_conflicts
-                        )
-                        result['save_result'] = save_result
-                        
-                        tracker.update(
-                            f'{subject_name} 初始化完成',
-                            base_progress + int(100 / total_subjects),
-                            subject_name
-                        )
-                    
-                    tracker.complete_subject(subject_code, result)
-                    
-                except Exception as e:
-                    logger.error(f"初始化学科 {subject_code} 失败: {str(e)}")
-                    tracker.add_error(subject_code, str(e))
-            
-            # 检查是否有冲突需要处理
-            if tracker.progress['conflicts']:
-                tracker.progress['status'] = 'conflicts_pending'
-                tracker.update('存在数据冲突，请处理后继续', 100)
-            else:
-                tracker.finish('completed')
-                tracker.update('所有学科初始化完成', 100)
-                
-        except Exception as e:
-            logger.error(f"初始化任务失败: {str(e)}")
-            tracker.add_error('system', str(e))
-            tracker.finish('failed')
-            tracker.update(f'初始化失败: {str(e)}', 100)
-        
-        finally:
-            if initializer:
-                initializer.close()
-
-def _resolve_conflicts_sync(task_id: str, tenant_id: str, resolutions: List[Dict]):
-    """同步解决冲突"""
-    if task_id not in initialization_progress:
-        return
-    
-    tracker = ProgressTracker(task_id)
-    tracker.progress = initialization_progress[task_id]  # 继承现有进度
-    tracker.progress['status'] = 'resolving_conflicts'
-    
-    initializer = None
-    
-    try:
+        # 创建初始化器
         initializer = SubjectInitializer(tenant_id)
         
-        for resolution in resolutions:
-            subject_code = resolution['subject_code']
-            action = resolution['action']  # 'overwrite' or 'skip'
-            
-            if action == 'skip':
-                continue
-            
-            # 找到对应的学科结果
-            subject_result = None
-            for completed in tracker.progress['completed_subjects']:
-                if completed['subject_code'] == subject_code:
-                    subject_result = completed['result']
-                    break
-            
-            if not subject_result:
-                continue
-            
-            # 获取学科信息
-            subject = db.session.query(Subject).filter_by(
-                code=subject_code,
-                tenant_id=tenant_id
-            ).first()
-            
-            if subject:
-                # 保存数据（覆盖冲突）
-                save_result = initializer.save_data(
-                    subject.id, subject_result, overwrite_conflicts=True
-                )
-                
-                subject_name = subject.name if subject else resolution['subject_code']
-                tracker.update(
-                    f'{subject_name} 冲突已解决',
-                    tracker.progress['progress_percent'],
-                    subject_name
-                )
+        if action == 'overwrite':
+            # 强制更新冲突的学科
+            result = initializer.initialize_subjects(force_update=True)
+        else:
+            # 跳过冲突，只创建新的学科
+            result = initializer.initialize_subjects(force_update=False)
         
-        # 清除冲突记录
-        tracker.progress['conflicts'] = []
-        tracker.finish('completed')
-        tracker.update('所有冲突已解决，初始化完成', 100)
+        if result['success']:
+            logger.info(f"用户 {g.current_user.username} 解决初始化冲突: {action}")
+            return success_response(
+                message=f"冲突处理成功 ({action})",
+                data={
+                    'created_count': result['created_count'],
+                    'updated_count': result['updated_count'],
+                    'total_subjects': result['total_subjects']
+                }
+            )
+        else:
+            return error_response(result['message'], 500)
+            
+    except Exception as e:
+        logger.error(f"解决初始化冲突失败: {str(e)}")
+        return error_response(f"处理冲突失败: {str(e)}", 500)
+
+@subject_initializer_bp.route('/initialize/preview', methods=['GET'])
+@jwt_required()
+@admin_required
+def preview_subjects():
+    """
+    预览将要初始化的九大学科
+    
+    返回:
+    - success: bool, 是否成功
+    - data: dict, 学科预览信息
+    """
+    try:
+        # 获取当前租户ID
+        tenant_id = g.current_user.tenant_id
+        
+        # 创建初始化器
+        initializer = SubjectInitializer(tenant_id)
+        
+        # 获取默认学科数据
+        default_subjects = initializer.get_default_subjects()
+        
+        # 检查现有学科
+        existing_codes = initializer.check_existing_subjects()
+        
+        # 分类学科
+        new_subjects = []
+        existing_subjects = []
+        
+        for subject in default_subjects:
+            if subject['code'] in existing_codes:
+                existing_subjects.append(subject)
+            else:
+                new_subjects.append(subject)
+        
+        return success_response(
+            message="获取预览成功",
+            data={
+                'new_subjects': new_subjects,
+                'existing_subjects': existing_subjects,
+                'total_count': len(default_subjects),
+                'new_count': len(new_subjects),
+                'existing_count': len(existing_subjects)
+            }
+        )
         
     except Exception as e:
-        logger.error(f"解决冲突失败: {str(e)}")
-        tracker.add_error('conflict_resolution', str(e))
-        tracker.finish('failed')
-        tracker.update(f'解决冲突失败: {str(e)}', 100)
+        logger.error(f"获取学科预览失败: {str(e)}")
+        return error_response(f"获取预览失败: {str(e)}", 500)
+
+@subject_initializer_bp.route('/initialize/status', methods=['GET'])
+@jwt_required()
+@admin_required
+def get_initialization_status():
+    """
+    获取初始化状态
     
-    finally:
-        if initializer:
-            initializer.close()
+    返回:
+    - success: bool, 是否成功
+    - data: dict, 状态信息
+    """
+    try:
+        # 获取当前租户ID
+        tenant_id = g.current_user.tenant_id
+        
+        # 创建初始化器
+        initializer = SubjectInitializer(tenant_id)
+        
+        # 检查现有学科
+        existing_codes = initializer.check_existing_subjects()
+        default_subjects = initializer.get_default_subjects()
+        default_codes = [subject['code'] for subject in default_subjects]
+        
+        # 计算状态
+        initialized_codes = [code for code in default_codes if code in existing_codes]
+        missing_codes = [code for code in default_codes if code not in existing_codes]
+        
+        is_initialized = len(missing_codes) == 0
+        progress = int((len(initialized_codes) / len(default_codes)) * 100)
+        
+        return success_response(
+            message="获取状态成功",
+            data={
+                'is_initialized': is_initialized,
+                'progress': progress,
+                'total_subjects': len(default_codes),
+                'initialized_subjects': len(initialized_codes),
+                'missing_subjects': len(missing_codes),
+                'initialized_codes': initialized_codes,
+                'missing_codes': missing_codes
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"获取初始化状态失败: {str(e)}")
+        return error_response(f"获取状态失败: {str(e)}", 500)

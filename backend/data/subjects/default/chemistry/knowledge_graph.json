@@ -1,0 +1,407 @@
+{
+  "nodes": [
+    {
+      "id": "subject_chemistry",
+      "name": "chemistry",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "原子结构与性质",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -525.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "分子结构与性质",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -375.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "晶体结构与性质",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -225.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "化学反应与能量",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -75.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "chapter_5",
+      "name": "化学反应速率和化学平衡",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 75.0,
+        "y": -200.0
+      },
+      "original_id": 5
+    },
+    {
+      "id": "chapter_6",
+      "name": "水溶液中的离子平衡",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 225.0,
+        "y": -200.0
+      },
+      "original_id": 6
+    },
+    {
+      "id": "chapter_7",
+      "name": "有机化合物的结构与性质",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 375.0,
+        "y": -200.0
+      },
+      "original_id": 7
+    },
+    {
+      "id": "chapter_8",
+      "name": "有机化学反应与有机合成",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 525.0,
+        "y": -200.0
+      },
+      "original_id": 8
+    },
+    {
+      "id": "kp_1",
+      "name": "原子结构",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "原子结构",
+        "电子构型",
+        "核外电子"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "原子结构与元素的性质",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "元素性质",
+        "周期律",
+        "原子半径"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "原子结构与元素周期表",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 1,
+      "section_id": 3,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "周期表",
+        "族",
+        "周期"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "共价键",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "理解",
+      "keywords": [
+        "共价键",
+        "价键理论",
+        "杂化轨道"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "分子的立体结构",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "分子构型",
+        "价层电子对互斥理论",
+        "VSEPR"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "分子的性质",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 2,
+      "section_id": 6,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "分子性质",
+        "极性",
+        "氢键"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "晶体的常识",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "理解",
+      "keywords": [
+        "晶体",
+        "晶格",
+        "晶胞"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "分子晶体与原子晶体",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "分子晶体",
+        "原子晶体",
+        "金属晶体"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "反应热的计算",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 4,
+      "section_id": 9,
+      "difficulty_level": "运用",
+      "keywords": [
+        "反应热",
+        "焓变",
+        "热化学方程式"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "化学反应速率",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 5,
+      "section_id": 12,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "反应速率",
+        "活化能",
+        "催化剂"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chemistry",
+      "target": "chapter_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_5",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 19,
+    "edge_count": 18,
+    "generated_at": "2025-09-05T00:28:39.095537"
+  }
+}

@@ -18,7 +18,7 @@ from flask import Blueprint
 api_bp = Blueprint('api', __name__)
 
 # 导入所有路由
-from . import auth, users, subjects, learning, diagnosis, mistakes, exam, exam_papers, knowledge_graph, ai_assistant, exam_knowledge
+from . import auth, users, subjects, learning, diagnosis, mistakes, exam, exam_papers, knowledge_graph, ai_assistant, exam_knowledge, subject_initializer
 
 # 注册子蓝图
 from .mistakes import mistakes_bp
@@ -37,3 +37,5 @@ from .exam_knowledge import exam_knowledge_bp
 api_bp.register_blueprint(exam_knowledge_bp)
 from .settings import settings_bp
 api_bp.register_blueprint(settings_bp)
+from .subject_initializer import subject_initializer_bp
+api_bp.register_blueprint(subject_initializer_bp)

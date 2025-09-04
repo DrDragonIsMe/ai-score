@@ -27,11 +27,11 @@ import {
   DownloadOutlined,
   NodeIndexOutlined,
   FileTextOutlined,
-  BarChartOutlined,
-  StarOutlined
+  BarChartOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import settingsApi from '../services/settings';
 import KnowledgeGraphViewer from '../components/KnowledgeGraphViewer.tsx';
 import ExamPaperManager from '../components/ExamPaperManager.tsx';
 import StarMapViewer from '../components/StarMapViewer.tsx';
@@ -79,10 +79,7 @@ const SubjectManagement: React.FC = () => {
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
-  const [initializationProgress, setInitializationProgress] = useState<any>(null);
-  const [initializationTaskId, setInitializationTaskId] = useState<string | null>(null);
-  const [conflictModalVisible, setConflictModalVisible] = useState(false);
-  const [conflicts, setConflicts] = useState<any[]>([]);
+
   const [activeTab, setActiveTab] = useState('list');
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -98,7 +95,7 @@ const SubjectManagement: React.FC = () => {
   const fetchSubjects = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/subjects?include_stats=true');
+      const response = await settingsApi.getSubjects();
       setSubjects(response.data);
     } catch (error) {
       message.error('获取学科列表失败');
@@ -116,92 +113,15 @@ const SubjectManagement: React.FC = () => {
     }
   };
 
-  const initializeDefaultSubjects = async () => {
-    Modal.confirm({
-      title: '初始化九大学科',
-      content: '此操作将从互联网抓取真题、知识点和考试范围数据，可能需要较长时间。确定要继续吗？',
-      onOk: async () => {
-        try {
-          const response = await api.post('/subjects/initialize-with-crawling', {
-            subject_codes: [],
-            overwrite_conflicts: false
-          });
-          const taskId = response.data.task_id;
-          setInitializationTaskId(taskId);
-          message.success('初始化任务已启动，正在抓取数据...');
-          
-          // 开始轮询进度
-          pollInitializationProgress(taskId);
-        } catch (error) {
-          console.error('初始化失败:', error);
-          message.error('启动初始化失败');
-        }
-      }
-    });
-  };
 
-  const pollInitializationProgress = async (taskId: string) => {
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    const poll = async () => {
-      try {
-        const response = await api.get(`/subjects/initialization-progress/${taskId}`);
-        const progress = response.data;
-        setInitializationProgress(progress);
-        retryCount = 0; // 重置重试计数
-        
-        if (progress.status === 'completed') {
-          message.success('学科初始化完成！');
-          fetchSubjects();
-          // 保持进度显示3秒后清除
-          setTimeout(() => {
-            setInitializationProgress(null);
-            setInitializationTaskId(null);
-          }, 3000);
-        } else if (progress.status === 'conflicts_pending') {
-          setConflicts(progress.conflicts);
-          setConflictModalVisible(true);
-        } else if (progress.status === 'failed') {
-          message.error(`初始化失败: ${progress.message}`);
-          // 保持错误状态显示，不自动清除
-        } else if (progress.status === 'running') {
-          // 继续轮询
-          setTimeout(poll, 2000);
-        }
-      } catch (error) {
-        console.error('获取进度失败:', error);
-        retryCount++;
-        
-        if (retryCount <= maxRetries) {
-          // 重试，延长轮询间隔
-          setTimeout(poll, 5000);
-        } else {
-          // 超过最大重试次数，显示错误并停止轮询
-          message.error('获取初始化进度失败，请刷新页面重试');
-          setInitializationProgress({
-            status: 'failed',
-            message: '网络连接超时，无法获取进度信息'
-          });
-        }
-      }
-    };
-    
-    poll();
-  };
-
-  const clearInitializationProgress = () => {
-    setInitializationProgress(null);
-    setInitializationTaskId(null);
-  };
 
   const handleSubmit = async (values: any) => {
     try {
       if (editingSubject) {
-        await api.put(`/subjects/${editingSubject.id}`, values);
+        await settingsApi.updateSubject(editingSubject.id, values);
         message.success('更新成功');
       } else {
-        await api.post('/subjects', values);
+        await settingsApi.createSubject(values);
         message.success('创建成功');
       }
       setModalVisible(false);
@@ -225,7 +145,7 @@ const SubjectManagement: React.FC = () => {
       content: '确定要删除这个学科吗？此操作不可恢复。',
       onOk: async () => {
         try {
-          await api.delete(`/subjects/${subjectId}`);
+          await settingsApi.deleteSubject(subjectId);
           message.success('删除成功');
           fetchSubjects();
         } catch (error) {
@@ -354,13 +274,7 @@ const SubjectManagement: React.FC = () => {
               onClick={() => handleViewStatistics(record)}
             />
           </Tooltip>
-          <Tooltip title="星图视图">
-            <Button
-              type="text"
-              icon={<StarOutlined />}
-              onClick={() => handleViewStarMap(record)}
-            />
-          </Tooltip>
+
           {isAdmin && (
             <>
               <Button
@@ -469,101 +383,7 @@ const SubjectManagement: React.FC = () => {
                         >
                           添加学科
                         </Button>
-                        <Button
-                          icon={<StarOutlined />}
-                          onClick={initializeDefaultSubjects}
-                          loading={!!initializationProgress && initializationProgress.status === 'running'}
-                          disabled={!!initializationProgress && initializationProgress.status === 'running'}
-                          type={initializationProgress ? 'default' : 'primary'}
-                        >
-                          {initializationProgress 
-                            ? (initializationProgress.status === 'running' ? '正在初始化...' : '初始化完成') 
-                            : '初始化九大学科'
-                          }
-                        </Button>
-                        {initializationProgress && (
-                          <div style={{ marginTop: 16, minWidth: 400 }}>
-                            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontWeight: 500 }}>初始化进度</span>
-                              <span style={{ fontSize: 14, color: '#666' }}>
-                                {initializationProgress.progress_percent}%
-                              </span>
-                            </div>
-                            <Progress 
-                              percent={initializationProgress.progress_percent} 
-                              status={
-                                initializationProgress.status === 'failed' ? 'exception' : 
-                                initializationProgress.status === 'completed' ? 'success' : 'active'
-                              }
-                              strokeColor={
-                                initializationProgress.status === 'completed' ? '#52c41a' : 
-                                initializationProgress.status === 'failed' ? '#ff4d4f' : '#1890ff'
-                              }
-                              showInfo={false}
-                            />
-                            <div style={{ 
-                              fontSize: 13, 
-                              color: initializationProgress.status === 'failed' ? '#ff4d4f' : '#666', 
-                              marginTop: 8,
-                              minHeight: 20
-                            }}>
-                              {initializationProgress.message}
-                              {initializationProgress.current_subject && (
-                                <span style={{ fontWeight: 500, marginLeft: 8 }}>
-                                  当前学科: {initializationProgress.current_subject}
-                                </span>
-                              )}
-                            </div>
-                            {initializationProgress.status === 'completed' && (
-                               <div style={{ 
-                                 marginTop: 12, 
-                                 padding: 8, 
-                                 backgroundColor: '#f6ffed', 
-                                 border: '1px solid #b7eb8f',
-                                 borderRadius: 4,
-                                 fontSize: 13,
-                                 color: '#389e0d',
-                                 display: 'flex',
-                                 justifyContent: 'space-between',
-                                 alignItems: 'center'
-                               }}>
-                                 <span>✅ 九大学科初始化完成！数据已成功导入系统。</span>
-                                 <Button 
-                                   size="small" 
-                                   type="text" 
-                                   onClick={clearInitializationProgress}
-                                   style={{ color: '#389e0d' }}
-                                 >
-                                   清除
-                                 </Button>
-                               </div>
-                             )}
-                             {initializationProgress.status === 'failed' && (
-                               <div style={{ 
-                                 marginTop: 12, 
-                                 padding: 8, 
-                                 backgroundColor: '#fff2f0', 
-                                 border: '1px solid #ffccc7',
-                                 borderRadius: 4,
-                                 fontSize: 13,
-                                 color: '#cf1322',
-                                 display: 'flex',
-                                 justifyContent: 'space-between',
-                                 alignItems: 'center'
-                               }}>
-                                 <span>❌ 初始化失败，请检查网络连接或联系管理员。</span>
-                                 <Button 
-                                   size="small" 
-                                   type="text" 
-                                   onClick={clearInitializationProgress}
-                                   style={{ color: '#cf1322' }}
-                                 >
-                                   清除
-                                 </Button>
-                               </div>
-                             )}
-                          </div>
-                        )}
+
                       </Space>
                     </div>
                   )}
@@ -730,41 +550,7 @@ const SubjectManagement: React.FC = () => {
         </Form>
       </Modal>
 
-      <Modal
-        title="数据冲突处理"
-        open={conflictModalVisible}
-        onCancel={() => setConflictModalVisible(false)}
-        width={800}
-        footer={[
-          <Button key="cancel" onClick={() => setConflictModalVisible(false)}>
-            取消
-          </Button>,
-          <Button key="skip" onClick={() => setConflictModalVisible(false)}>
-            跳过冲突
-          </Button>,
-          <Button key="overwrite" type="primary" onClick={() => setConflictModalVisible(false)}>
-            覆盖数据
-          </Button>
-        ]}
-      >
-        <div>
-          <p>检测到以下数据冲突，请选择处理方式：</p>
-          {conflicts.map((conflict, index) => (
-            <Card key={index} title={`学科: ${conflict.subject}`} style={{ marginBottom: 16 }}>
-              <div>
-                {conflict.conflicts.map((item: any, itemIndex: number) => (
-                  <div key={itemIndex} style={{ marginBottom: 8, padding: 8, background: '#f5f5f5', borderRadius: 4 }}>
-                    <div><strong>类型：</strong>{item.type}</div>
-                    <div><strong>标题：</strong>{item.title}</div>
-                    <div><strong>年份：</strong>{item.year}</div>
-                    <div><strong>冲突原因：</strong>{item.reason}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
-      </Modal>
+
     </div>
   );
 };

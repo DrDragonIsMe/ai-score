@@ -1,0 +1,424 @@
+{
+  "nodes": [
+    {
+      "id": "subject_geography",
+      "name": "geography",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "地球的宇宙环境",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -600.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "地球的圈层结构",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -450.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "大气的运动",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -300.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "水的运动",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -150.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "chapter_5",
+      "name": "地表形态的塑造",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 0.0,
+        "y": -200.0
+      },
+      "original_id": 5
+    },
+    {
+      "id": "chapter_6",
+      "name": "自然环境的整体性与差异性",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 150.0,
+        "y": -200.0
+      },
+      "original_id": 6
+    },
+    {
+      "id": "chapter_7",
+      "name": "人口",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 300.0,
+        "y": -200.0
+      },
+      "original_id": 7
+    },
+    {
+      "id": "chapter_8",
+      "name": "城市与环境",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 450.0,
+        "y": -200.0
+      },
+      "original_id": 8
+    },
+    {
+      "id": "chapter_9",
+      "name": "生产活动与地域联系",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 600.0,
+        "y": -200.0
+      },
+      "original_id": 9
+    },
+    {
+      "id": "kp_1",
+      "name": "地球在宇宙中的位置",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "宇宙",
+        "太阳系",
+        "地球位置"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "太阳对地球的影响",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "太阳辐射",
+        "太阳活动",
+        "地球影响"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "地球的运动",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 1,
+      "section_id": 3,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "地球自转",
+        "地球公转",
+        "地理意义"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "地球的内部圈层",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "理解",
+      "keywords": [
+        "地壳",
+        "地幔",
+        "地核"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "地球的外部圈层",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "理解",
+      "keywords": [
+        "大气圈",
+        "水圈",
+        "生物圈"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "岩石圈与地表形态",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 2,
+      "section_id": 6,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "岩石圈",
+        "地表形态",
+        "地质作用"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "大气的组成和垂直分层",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "理解",
+      "keywords": [
+        "大气组成",
+        "大气分层",
+        "对流层"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "大气的热状况与大气运动",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "大气热状况",
+        "大气运动",
+        "热力环流"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "全球性大气环流",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 3,
+      "section_id": 9,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "大气环流",
+        "三圈环流",
+        "季风环流"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "水循环",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 4,
+      "section_id": 10,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "水循环",
+        "水循环过程",
+        "水循环意义"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_geography",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_geography",
+      "target": "chapter_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 20,
+    "edge_count": 19,
+    "generated_at": "2025-09-05T01:47:24.124076"
+  }
+}

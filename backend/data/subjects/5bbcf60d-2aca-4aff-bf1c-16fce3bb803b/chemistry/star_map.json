@@ -1,0 +1,471 @@
+{
+  "success": true,
+  "subject_code": "chemistry",
+  "star_map": {
+    "canvas": {
+      "width": 1200,
+      "height": 800,
+      "background": "#0B1426"
+    },
+    "stars": [
+      {
+        "id": "subject_chemistry",
+        "name": "chemistry",
+        "type": "subject",
+        "position": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "size": 20,
+        "color": "#FFD700",
+        "brightness": 0.8,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": null
+        }
+      },
+      {
+        "id": "chapter_1",
+        "name": "原子结构与性质",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 1
+        }
+      },
+      {
+        "id": "chapter_2",
+        "name": "分子结构与性质",
+        "type": "chapter",
+        "position": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 2
+        }
+      },
+      {
+        "id": "chapter_3",
+        "name": "晶体结构与性质",
+        "type": "chapter",
+        "position": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 3
+        }
+      },
+      {
+        "id": "chapter_4",
+        "name": "化学反应与能量",
+        "type": "chapter",
+        "position": {
+          "x": 720.0,
+          "y": 400.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 4
+        }
+      },
+      {
+        "id": "chapter_5",
+        "name": "化学反应速率和化学平衡",
+        "type": "chapter",
+        "position": {
+          "x": 637.0820393249937,
+          "y": 514.1267819554184
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 5
+        }
+      },
+      {
+        "id": "chapter_6",
+        "name": "水溶液中的离子平衡",
+        "type": "chapter",
+        "position": {
+          "x": 502.9179606750063,
+          "y": 470.5342302750968
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 6
+        }
+      },
+      {
+        "id": "chapter_7",
+        "name": "有机化合物的结构与性质",
+        "type": "chapter",
+        "position": {
+          "x": 502.91796067500627,
+          "y": 329.4657697249032
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 7
+        }
+      },
+      {
+        "id": "chapter_8",
+        "name": "有机化学反应与有机合成",
+        "type": "chapter",
+        "position": {
+          "x": 637.0820393249936,
+          "y": 285.87321804458156
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 8
+        }
+      }
+    ],
+    "constellation_lines": [
+      {
+        "id": "line_subject_chemistry_chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 720.0,
+          "y": 400.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_5",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 637.0820393249937,
+          "y": 514.1267819554184
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_6",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 502.9179606750063,
+          "y": 470.5342302750968
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_7",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 502.91796067500627,
+          "y": 329.4657697249032
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_chemistry_chapter_8",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 637.0820393249936,
+          "y": 285.87321804458156
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      }
+    ],
+    "learning_paths": [
+      {
+        "id": "path_subject_chemistry_chapter_1",
+        "source": "subject_chemistry",
+        "target": "chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_2",
+        "source": "subject_chemistry",
+        "target": "chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_3",
+        "source": "subject_chemistry",
+        "target": "chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_4",
+        "source": "subject_chemistry",
+        "target": "chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 720.0,
+          "y": 400.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_5",
+        "source": "subject_chemistry",
+        "target": "chapter_5",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 637.0820393249937,
+          "y": 514.1267819554184
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_6",
+        "source": "subject_chemistry",
+        "target": "chapter_6",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 502.9179606750063,
+          "y": 470.5342302750968
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_7",
+        "source": "subject_chemistry",
+        "target": "chapter_7",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 502.91796067500627,
+          "y": 329.4657697249032
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_chemistry_chapter_8",
+        "source": "subject_chemistry",
+        "target": "chapter_8",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 637.0820393249936,
+          "y": 285.87321804458156
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      }
+    ],
+    "metadata": {
+      "constellation_name": "化学座",
+      "constellation_pattern": "triangle",
+      "total_stars": 9,
+      "total_constellation_lines": 8,
+      "total_learning_paths": 8,
+      "star_type_distribution": {
+        "subject": 1,
+        "chapter": 8
+      },
+      "learning_path_distribution": {
+        "contains": 8
+      },
+      "brightness_range": {
+        "min": 0.6400000000000001,
+        "max": 0.8
+      },
+      "generated_at": "2025-09-05T01:47:20.341337"
+    }
+  },
+  "generated_at": "2025-09-05T01:47:20.341341"
+}

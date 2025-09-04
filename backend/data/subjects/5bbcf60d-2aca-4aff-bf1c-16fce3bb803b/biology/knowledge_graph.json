@@ -1,0 +1,424 @@
+{
+  "nodes": [
+    {
+      "id": "subject_biology",
+      "name": "biology",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "细胞的分子组成",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -600.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "细胞的基本结构",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -450.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "细胞的物质输入和输出",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -300.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "细胞的能量供应和利用",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -150.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "chapter_5",
+      "name": "细胞的生命历程",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 0.0,
+        "y": -200.0
+      },
+      "original_id": 5
+    },
+    {
+      "id": "chapter_6",
+      "name": "遗传因子的发现",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 150.0,
+        "y": -200.0
+      },
+      "original_id": 6
+    },
+    {
+      "id": "chapter_7",
+      "name": "基因和染色体的关系",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 300.0,
+        "y": -200.0
+      },
+      "original_id": 7
+    },
+    {
+      "id": "chapter_8",
+      "name": "基因的本质",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 450.0,
+        "y": -200.0
+      },
+      "original_id": 8
+    },
+    {
+      "id": "chapter_9",
+      "name": "基因的表达",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 600.0,
+        "y": -200.0
+      },
+      "original_id": 9
+    },
+    {
+      "id": "kp_1",
+      "name": "细胞中的元素和化合物",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "元素",
+        "化合物",
+        "生物大分子"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "生命活动的主要承担者——蛋白质",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "蛋白质",
+        "氨基酸",
+        "肽键"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "遗传信息的携带者——核酸",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 1,
+      "section_id": 3,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "核酸",
+        "DNA",
+        "RNA"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "细胞膜——系统的边界",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "理解",
+      "keywords": [
+        "细胞膜",
+        "磷脂双分子层",
+        "流动镶嵌模型"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "细胞器——系统内的分工合作",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "细胞器",
+        "线粒体",
+        "叶绿体"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "细胞核——系统的控制中心",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 2,
+      "section_id": 6,
+      "difficulty_level": "理解",
+      "keywords": [
+        "细胞核",
+        "核膜",
+        "染色质"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "物质跨膜运输的实例",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "跨膜运输",
+        "渗透作用",
+        "载体蛋白"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "生物膜的流动镶嵌模型",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "理解",
+      "keywords": [
+        "生物膜",
+        "流动性",
+        "选择透过性"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "降低化学反应活化能的酶",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 4,
+      "section_id": 9,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "酶",
+        "活化能",
+        "催化作用"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "细胞的能量通货——ATP",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 4,
+      "section_id": 10,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "ATP",
+        "腺苷三磷酸",
+        "能量转换"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_biology",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_biology",
+      "target": "chapter_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 20,
+    "edge_count": 19,
+    "generated_at": "2025-09-05T01:47:21.602687"
+  }
+}

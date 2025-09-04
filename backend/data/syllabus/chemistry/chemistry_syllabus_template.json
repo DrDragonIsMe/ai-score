@@ -1,0 +1,225 @@
+{
+  "subject_code": "chemistry",
+  "subject_name": "化学",
+  "version": "2023版",
+  "source": "内置模板",
+  "created_at": "2025-09-05T01:47:20.331683",
+  "curriculum_standards": {
+    "core_competencies": [
+      "宏观辨识与微观探析",
+      "变化观念与平衡思想",
+      "证据推理与模型认知",
+      "科学探究与创新意识",
+      "科学态度与社会责任"
+    ],
+    "learning_objectives": [],
+    "content_standards": []
+  },
+  "knowledge_structure": {
+    "modules": [
+      "物质结构与性质",
+      "化学反应原理",
+      "有机化学基础",
+      "化学与生活"
+    ],
+    "chapters": [
+      {
+        "id": 1,
+        "title": "原子结构与性质",
+        "sections": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "title": "分子结构与性质",
+        "sections": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 3,
+        "title": "晶体结构与性质",
+        "sections": [
+          7,
+          8
+        ]
+      },
+      {
+        "id": 4,
+        "title": "化学反应与能量",
+        "sections": [
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "id": 5,
+        "title": "化学反应速率和化学平衡",
+        "sections": [
+          12,
+          13,
+          14
+        ]
+      },
+      {
+        "id": 6,
+        "title": "水溶液中的离子平衡",
+        "sections": [
+          15,
+          16,
+          17
+        ]
+      },
+      {
+        "id": 7,
+        "title": "有机化合物的结构与性质",
+        "sections": [
+          18,
+          19,
+          20
+        ]
+      },
+      {
+        "id": 8,
+        "title": "有机化学反应与有机合成",
+        "sections": [
+          21,
+          22
+        ]
+      }
+    ],
+    "knowledge_points": [
+      {
+        "id": 1,
+        "content": "原子结构",
+        "chapter_id": 1,
+        "section_id": 1,
+        "difficulty_level": "理解",
+        "keywords": [
+          "原子结构",
+          "电子构型",
+          "核外电子"
+        ]
+      },
+      {
+        "id": 2,
+        "content": "原子结构与元素的性质",
+        "chapter_id": 1,
+        "section_id": 2,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "元素性质",
+          "周期律",
+          "原子半径"
+        ]
+      },
+      {
+        "id": 3,
+        "content": "原子结构与元素周期表",
+        "chapter_id": 1,
+        "section_id": 3,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "周期表",
+          "族",
+          "周期"
+        ]
+      },
+      {
+        "id": 4,
+        "content": "共价键",
+        "chapter_id": 2,
+        "section_id": 4,
+        "difficulty_level": "理解",
+        "keywords": [
+          "共价键",
+          "价键理论",
+          "杂化轨道"
+        ]
+      },
+      {
+        "id": 5,
+        "content": "分子的立体结构",
+        "chapter_id": 2,
+        "section_id": 5,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "分子构型",
+          "价层电子对互斥理论",
+          "VSEPR"
+        ]
+      },
+      {
+        "id": 6,
+        "content": "分子的性质",
+        "chapter_id": 2,
+        "section_id": 6,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "分子性质",
+          "极性",
+          "氢键"
+        ]
+      },
+      {
+        "id": 7,
+        "content": "晶体的常识",
+        "chapter_id": 3,
+        "section_id": 7,
+        "difficulty_level": "理解",
+        "keywords": [
+          "晶体",
+          "晶格",
+          "晶胞"
+        ]
+      },
+      {
+        "id": 8,
+        "content": "分子晶体与原子晶体",
+        "chapter_id": 3,
+        "section_id": 8,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "分子晶体",
+          "原子晶体",
+          "金属晶体"
+        ]
+      },
+      {
+        "id": 9,
+        "content": "反应热的计算",
+        "chapter_id": 4,
+        "section_id": 9,
+        "difficulty_level": "运用",
+        "keywords": [
+          "反应热",
+          "焓变",
+          "热化学方程式"
+        ]
+      },
+      {
+        "id": 10,
+        "content": "化学反应速率",
+        "chapter_id": 5,
+        "section_id": 12,
+        "difficulty_level": "掌握",
+        "keywords": [
+          "反应速率",
+          "活化能",
+          "催化剂"
+        ]
+      }
+    ]
+  },
+  "assessment_standards": {
+    "exam_format": "",
+    "score_distribution": {},
+    "difficulty_levels": []
+  }
+}

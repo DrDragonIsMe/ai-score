@@ -1,0 +1,362 @@
+{
+  "nodes": [
+    {
+      "id": "subject_english",
+      "name": "english",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "听力理解",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -225.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "阅读理解",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -75.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "语言知识运用",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 75.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "写作",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 225.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "kp_1",
+      "name": "短对话理解",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -600.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "听力",
+        "对话",
+        "理解"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "长对话和独白理解",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -450.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "理解",
+      "keywords": [
+        "听力",
+        "独白",
+        "信息"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "细节理解题",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -300.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 2,
+      "section_id": 3,
+      "difficulty_level": "理解",
+      "keywords": [
+        "阅读",
+        "细节",
+        "信息"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "推理判断题",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -150.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "分析",
+      "keywords": [
+        "阅读",
+        "推理",
+        "判断"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "主旨大意题",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 0.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "分析",
+      "keywords": [
+        "阅读",
+        "主旨",
+        "概括"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "完形填空",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 150.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 3,
+      "section_id": 6,
+      "difficulty_level": "运用",
+      "keywords": [
+        "完形填空",
+        "语境",
+        "词汇"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "语法填空",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 300.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "运用",
+      "keywords": [
+        "语法",
+        "填空",
+        "语言知识"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "短文改错",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 450.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 4,
+      "section_id": 8,
+      "difficulty_level": "运用",
+      "keywords": [
+        "改错",
+        "语法",
+        "表达"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "书面表达",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 600.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 4,
+      "section_id": 9,
+      "difficulty_level": "综合",
+      "keywords": [
+        "写作",
+        "表达",
+        "应用文"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_english",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_english",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_english",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_english",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_1",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_2",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_3",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_4",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_5",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_6",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_8",
+      "relation": "prerequisite",
+      "weight": 1.0
+    },
+    {
+      "source": "kp_7",
+      "target": "kp_9",
+      "relation": "prerequisite",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 14,
+    "edge_count": 21,
+    "generated_at": "2025-09-05T01:47:17.781423"
+  }
+}

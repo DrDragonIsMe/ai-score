@@ -1,0 +1,658 @@
+{
+  "success": true,
+  "subject_code": "politics",
+  "star_map": {
+    "canvas": {
+      "width": 1200,
+      "height": 800,
+      "background": "#0B1426"
+    },
+    "stars": [
+      {
+        "id": "subject_politics",
+        "name": "politics",
+        "type": "subject",
+        "position": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "size": 20,
+        "color": "#FFD700",
+        "brightness": 0.8,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": null
+        }
+      },
+      {
+        "id": "chapter_1",
+        "name": "生产资料所有制与经济体制",
+        "type": "chapter",
+        "position": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 1
+        }
+      },
+      {
+        "id": "chapter_2",
+        "name": "生产、劳动与经营",
+        "type": "chapter",
+        "position": {
+          "x": 753.2088886237956,
+          "y": 528.5575219373079
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 2
+        }
+      },
+      {
+        "id": "chapter_3",
+        "name": "收入与分配",
+        "type": "chapter",
+        "position": {
+          "x": 634.729635533386,
+          "y": 596.9615506024415
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 3
+        }
+      },
+      {
+        "id": "chapter_4",
+        "name": "发展社会主义市场经济",
+        "type": "chapter",
+        "position": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 4
+        }
+      },
+      {
+        "id": "chapter_5",
+        "name": "人民当家作主",
+        "type": "chapter",
+        "position": {
+          "x": 412.06147584281837,
+          "y": 468.40402866513375
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 5
+        }
+      },
+      {
+        "id": "chapter_6",
+        "name": "人民代表大会制度",
+        "type": "chapter",
+        "position": {
+          "x": 412.0614758428183,
+          "y": 331.59597133486625
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 6
+        }
+      },
+      {
+        "id": "chapter_7",
+        "name": "中国共产党领导的多党合作和政治协商制度",
+        "type": "chapter",
+        "position": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 7
+        }
+      },
+      {
+        "id": "chapter_8",
+        "name": "民族区域自治制度和基层群众自治制度",
+        "type": "chapter",
+        "position": {
+          "x": 634.729635533386,
+          "y": 203.03844939755837
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 8
+        }
+      },
+      {
+        "id": "chapter_9",
+        "name": "全面依法治国",
+        "type": "chapter",
+        "position": {
+          "x": 753.2088886237956,
+          "y": 271.4424780626921
+        },
+        "size": 15,
+        "color": "#FF6B6B",
+        "brightness": 0.6400000000000001,
+        "twinkle": true,
+        "metadata": {
+          "difficulty_level": null,
+          "keywords": [],
+          "original_id": 9
+        }
+      }
+    ],
+    "constellation_lines": [
+      {
+        "id": "line_subject_politics_chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 753.2088886237956,
+          "y": 528.5575219373079
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 634.729635533386,
+          "y": 596.9615506024415
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_5",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 412.06147584281837,
+          "y": 468.40402866513375
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_6",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 412.0614758428183,
+          "y": 331.59597133486625
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_7",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_8",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 634.729635533386,
+          "y": 203.03844939755837
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "line_subject_politics_chapter_9",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 753.2088886237956,
+          "y": 271.4424780626921
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_1_chapter_2",
+        "start": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 753.2088886237956,
+          "y": 528.5575219373079
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_2_chapter_3",
+        "start": {
+          "x": 753.2088886237956,
+          "y": 528.5575219373079
+        },
+        "end": {
+          "x": 634.729635533386,
+          "y": 596.9615506024415
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_3_chapter_4",
+        "start": {
+          "x": 634.729635533386,
+          "y": 596.9615506024415
+        },
+        "end": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_4_chapter_5",
+        "start": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "end": {
+          "x": 412.06147584281837,
+          "y": 468.40402866513375
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_5_chapter_6",
+        "start": {
+          "x": 412.06147584281837,
+          "y": 468.40402866513375
+        },
+        "end": {
+          "x": 412.0614758428183,
+          "y": 331.59597133486625
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_6_chapter_7",
+        "start": {
+          "x": 412.0614758428183,
+          "y": 331.59597133486625
+        },
+        "end": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_7_chapter_8",
+        "start": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "end": {
+          "x": 634.729635533386,
+          "y": 203.03844939755837
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_8_chapter_9",
+        "start": {
+          "x": 634.729635533386,
+          "y": 203.03844939755837
+        },
+        "end": {
+          "x": 753.2088886237956,
+          "y": 271.4424780626921
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      },
+      {
+        "id": "constellation_chapter_9_chapter_1",
+        "start": {
+          "x": 753.2088886237956,
+          "y": 271.4424780626921
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "color": "#4A90E2",
+        "width": 2,
+        "opacity": 0.6,
+        "type": "constellation"
+      }
+    ],
+    "learning_paths": [
+      {
+        "id": "path_subject_politics_chapter_1",
+        "source": "subject_politics",
+        "target": "chapter_1",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 800.0,
+          "y": 400.0
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_2",
+        "source": "subject_politics",
+        "target": "chapter_2",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 753.2088886237956,
+          "y": 528.5575219373079
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_3",
+        "source": "subject_politics",
+        "target": "chapter_3",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 634.729635533386,
+          "y": 596.9615506024415
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_4",
+        "source": "subject_politics",
+        "target": "chapter_4",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 500.0,
+          "y": 573.2050807568878
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_5",
+        "source": "subject_politics",
+        "target": "chapter_5",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 412.06147584281837,
+          "y": 468.40402866513375
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_6",
+        "source": "subject_politics",
+        "target": "chapter_6",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 412.0614758428183,
+          "y": 331.59597133486625
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_7",
+        "source": "subject_politics",
+        "target": "chapter_7",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 499.9999999999999,
+          "y": 226.79491924311233
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_8",
+        "source": "subject_politics",
+        "target": "chapter_8",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 634.729635533386,
+          "y": 203.03844939755837
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      },
+      {
+        "id": "path_subject_politics_chapter_9",
+        "source": "subject_politics",
+        "target": "chapter_9",
+        "start": {
+          "x": 600.0,
+          "y": 400.0
+        },
+        "end": {
+          "x": 753.2088886237956,
+          "y": 271.4424780626921
+        },
+        "relation": "contains",
+        "color": "#50E3C2",
+        "width": 2,
+        "style": "dashed",
+        "arrow": false,
+        "weight": 1.0
+      }
+    ],
+    "metadata": {
+      "constellation_name": "politics座",
+      "constellation_pattern": "circle",
+      "total_stars": 10,
+      "total_constellation_lines": 18,
+      "total_learning_paths": 9,
+      "star_type_distribution": {
+        "subject": 1,
+        "chapter": 9
+      },
+      "learning_path_distribution": {
+        "contains": 9
+      },
+      "brightness_range": {
+        "min": 0.6400000000000001,
+        "max": 0.8
+      },
+      "generated_at": "2025-09-05T00:28:45.842025"
+    }
+  },
+  "generated_at": "2025-09-05T00:28:45.842032"
+}

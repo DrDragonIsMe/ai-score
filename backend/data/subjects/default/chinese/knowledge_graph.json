@@ -1,0 +1,339 @@
+{
+  "nodes": [
+    {
+      "id": "subject_chinese",
+      "name": "chinese",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "现代文阅读",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -225.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "古代诗文阅读",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -75.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "语言文字运用",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 75.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "写作",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 225.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "kp_1",
+      "name": "论述类文本阅读",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "理解",
+      "keywords": [
+        "论述",
+        "文本",
+        "阅读"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "实用类文本阅读",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "理解",
+      "keywords": [
+        "实用",
+        "文本",
+        "阅读"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "文学类文本阅读",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 1,
+      "section_id": 3,
+      "difficulty_level": "分析",
+      "keywords": [
+        "文学",
+        "文本",
+        "阅读"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "文言文阅读",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "文言文",
+        "阅读",
+        "翻译"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "古代诗歌阅读",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 2,
+      "section_id": 5,
+      "difficulty_level": "分析",
+      "keywords": [
+        "古诗",
+        "鉴赏",
+        "意境"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "名篇名句默写",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 2,
+      "section_id": 6,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "默写",
+        "名句",
+        "背诵"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "语言文字运用",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "运用",
+      "keywords": [
+        "语言",
+        "文字",
+        "运用"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "语言表达连贯",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "运用",
+      "keywords": [
+        "表达",
+        "连贯",
+        "逻辑"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "记叙文写作",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 4,
+      "section_id": 9,
+      "difficulty_level": "综合",
+      "keywords": [
+        "记叙文",
+        "写作",
+        "叙述"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "议论文写作",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 4,
+      "section_id": 10,
+      "difficulty_level": "综合",
+      "keywords": [
+        "议论文",
+        "写作",
+        "论证"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_chinese",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chinese",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chinese",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_chinese",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 15,
+    "edge_count": 14,
+    "generated_at": "2025-09-05T00:28:32.409502"
+  }
+}
