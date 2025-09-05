@@ -7,7 +7,7 @@ Description:
     试卷知识点映射服务，提供试卷与知识点关联分析、统计计算等功能。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

@@ -7,7 +7,7 @@ Description:
     提供人教版官方考试大纲下载功能，支持各学科大纲文件获取和解析。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

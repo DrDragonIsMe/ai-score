@@ -7,7 +7,7 @@ Description:
     试卷知识点映射关系模型，用于建立试卷与知识点的关联关系，支持星图可视化。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

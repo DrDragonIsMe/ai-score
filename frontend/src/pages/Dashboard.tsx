@@ -193,7 +193,7 @@ const Dashboard: React.FC = () => {
           color: 'var(--heading-color)',
           lineHeight: 'var(--line-height-heading)'
         }}>
-          <RobotOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+          <RobotOutlined style={{ color: 'var(--primary-color)', marginRight: 8 }} />
           AI智能学习仪表盘
         </Title>
         <Text type="secondary" style={{
@@ -210,7 +210,7 @@ const Dashboard: React.FC = () => {
       <Card 
         title={
           <Space>
-            <RobotOutlined style={{ color: '#1890ff' }} />
+            <RobotOutlined style={{ color: 'var(--primary-color)' }} />
             <span>AI学习助手统计</span>
           </Space>
         }
@@ -222,16 +222,16 @@ const Dashboard: React.FC = () => {
             <Statistic
               title="AI互动次数"
               value={aiStats.totalInteractions}
-              prefix={<MessageOutlined style={{ color: '#1890ff' }} />}
-              valueStyle={{ color: '#1890ff' }}
+              prefix={<MessageOutlined style={{ color: 'var(--primary-color)' }} />}
+              valueStyle={{ color: 'var(--primary-color)' }}
             />
           </Col>
           <Col xs={24} sm={12} lg={4}>
             <Statistic
               title="AI解答问题"
               value={aiStats.questionsAnswered}
-              prefix={<BulbOutlined style={{ color: '#52c41a' }} />}
-              valueStyle={{ color: '#52c41a' }}
+              prefix={<BulbOutlined style={{ color: 'var(--success-color)' }} />}
+              valueStyle={{ color: 'var(--success-color)' }}
             />
           </Col>
           <Col xs={24} sm={12} lg={4}>
@@ -239,16 +239,16 @@ const Dashboard: React.FC = () => {
               title="AI准确率"
               value={aiStats.aiAccuracy}
               suffix="%"
-              prefix={<StarOutlined style={{ color: '#faad14' }} />}
-              valueStyle={{ color: '#faad14' }}
+              prefix={<StarOutlined style={{ color: 'var(--warning-color)' }} />}
+              valueStyle={{ color: 'var(--warning-color)' }}
             />
           </Col>
           <Col xs={24} sm={12} lg={4}>
             <Statistic
               title="个性化推荐"
               value={aiStats.personalizedRecommendations}
-              prefix={<TrophyOutlined style={{ color: '#722ed1' }} />}
-              valueStyle={{ color: '#722ed1' }}
+              prefix={<TrophyOutlined style={{ color: 'var(--purple-color)' }} />}
+              valueStyle={{ color: 'var(--purple-color)' }}
             />
           </Col>
           <Col xs={24} sm={12} lg={4}>
@@ -256,8 +256,8 @@ const Dashboard: React.FC = () => {
               title="AI辅助学习"
               value={aiStats.aiStudyTime}
               suffix="分钟"
-              prefix={<ClockCircleOutlined style={{ color: '#fa541c' }} />}
-              valueStyle={{ color: '#fa541c' }}
+              prefix={<ClockCircleOutlined style={{ color: 'var(--orange-color)' }} />}
+              valueStyle={{ color: 'var(--orange-color)' }}
             />
           </Col>
           <Col xs={24} sm={12} lg={4}>
@@ -265,8 +265,8 @@ const Dashboard: React.FC = () => {
               title="智能分析"
               value={aiStats.intelligentAnalysis}
               suffix="次"
-              prefix={<BookOutlined style={{ color: '#13c2c2' }} />}
-              valueStyle={{ color: '#13c2c2' }}
+              prefix={<BookOutlined style={{ color: 'var(--cyan-color)' }} />}
+              valueStyle={{ color: 'var(--cyan-color)' }}
             />
           </Col>
         </Row>
@@ -280,7 +280,7 @@ const Dashboard: React.FC = () => {
               title="学习科目"
               value={stats.totalSubjects}
               prefix={<BookOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: 'var(--primary-color)' }}
             />
           </Card>
         </Col>
@@ -290,7 +290,7 @@ const Dashboard: React.FC = () => {
               title="完成课程"
               value={stats.completedLessons}
               prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
+              valueStyle={{ color: 'var(--success-color)' }}
             />
           </Card>
         </Col>
@@ -301,7 +301,7 @@ const Dashboard: React.FC = () => {
               value={stats.studyStreak}
               suffix="天"
               prefix={<FireOutlined />}
-              valueStyle={{ color: '#fa541c' }}
+              valueStyle={{ color: 'var(--orange-color)' }}
             />
           </Card>
         </Col>
@@ -312,7 +312,7 @@ const Dashboard: React.FC = () => {
               value={stats.totalStudyTime}
               suffix="分钟"
               prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#722ed1' }}
+              valueStyle={{ color: 'var(--purple-color)' }}
             />
           </Card>
         </Col>
@@ -336,7 +336,7 @@ const Dashboard: React.FC = () => {
                     color: 'var(--text-primary)'
                   }}>{stats.weeklyProgress}%</Text>
                 </div>
-                <Progress percent={stats.weeklyProgress} strokeColor="#1890ff" />
+                <Progress percent={stats.weeklyProgress} strokeColor="var(--primary-color)" />
               </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -351,7 +351,7 @@ const Dashboard: React.FC = () => {
                     color: 'var(--text-primary)'
                   }}>{stats.accuracy}%</Text>
                 </div>
-                <Progress percent={stats.accuracy} strokeColor="#52c41a" />
+                <Progress percent={stats.accuracy} strokeColor="var(--success-color)" />
               </div>
               <Row gutter={16}>
                 <Col span={12}>
@@ -361,7 +361,7 @@ const Dashboard: React.FC = () => {
                       value={320}
                       suffix="分钟"
                       valueStyle={{ fontSize: 16 }}
-                      prefix={<ArrowUpOutlined style={{ color: '#52c41a' }} />}
+                      prefix={<ArrowUpOutlined style={{ color: 'var(--success-color)' }} />}
                     />
                   </Card>
                 </Col>
@@ -372,7 +372,7 @@ const Dashboard: React.FC = () => {
                       value={12}
                       suffix="个"
                       valueStyle={{ fontSize: 16 }}
-                      prefix={<ArrowUpOutlined style={{ color: '#52c41a' }} />}
+                      prefix={<ArrowUpOutlined style={{ color: 'var(--success-color)' }} />}
                     />
                   </Card>
                 </Col>

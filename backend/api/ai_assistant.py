@@ -7,7 +7,7 @@ Description:
     AI助理"高小分"API接口，提供智能对话、拍照识别、学习建议等功能。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

@@ -7,7 +7,7 @@ Description:
     PPT生成服务，提供基于AI的PPT自动生成功能。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

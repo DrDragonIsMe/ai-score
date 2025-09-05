@@ -1,26 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button,
-  Drawer,
-  Modal,
   Space,
   Tooltip,
   ConfigProvider,
 } from 'antd';
 import {
   RobotOutlined,
-  ExpandOutlined,
-  CompressOutlined,
-  MenuOutlined,
   CloseOutlined,
-  FullscreenOutlined,
-  FullscreenExitOutlined,
 } from '@ant-design/icons';
-import AISidebar from '../AISidebar/AISidebar';
-import AIFullscreen from '../AIFullscreen/AIFullscreen';
+import AIAssistant from '../AIAssistant/AIAssistant';
 import './AIDisplayManager.css';
 
-export type AIDisplayMode = 'hidden' | 'sidebar' | 'drawer' | 'fullscreen';
+export type AIDisplayMode = 'hidden' | 'modal';
 
 interface AIDisplayManagerProps {
   children: React.ReactNode;
@@ -32,26 +24,21 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
   defaultMode = 'hidden' 
 }) => {
   const [displayMode, setDisplayMode] = useState<AIDisplayMode>(defaultMode);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [fullscreenVisible, setFullscreenVisible] = useState(false);
-  const [aiSidebarCollapsed, setAiSidebarCollapsed] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [hoverTriggerVisible, setHoverTriggerVisible] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // 处理显示模式切换
   const handleModeChange = (mode: AIDisplayMode) => {
     // 先关闭当前模式
-    setDrawerVisible(false);
-    setFullscreenVisible(false);
+    setModalVisible(false);
     
     // 设置新模式
     setDisplayMode(mode);
     
     // 根据新模式打开相应界面
-    if (mode === 'drawer') {
-      setTimeout(() => setDrawerVisible(true), 100);
-    } else if (mode === 'fullscreen') {
-      setTimeout(() => setFullscreenVisible(true), 100);
+    if (mode === 'modal') {
+      setTimeout(() => setModalVisible(true), 100);
     }
   };
 
@@ -63,7 +50,7 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
       }
       const timeout = setTimeout(() => {
         setHoverTriggerVisible(true);
-        handleModeChange('drawer');
+        handleModeChange('modal');
       }, 300); // 300ms延迟，避免误触发
       setHoverTimeout(timeout);
     }
@@ -95,13 +82,7 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
             handleModeChange('hidden');
             break;
           case '2':
-            handleModeChange('sidebar');
-            break;
-          case '3':
-            handleModeChange('drawer');
-            break;
-          case '4':
-            handleModeChange('fullscreen');
+            handleModeChange('modal');
             break;
         }
       }
@@ -112,15 +93,14 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
   }, []);
 
   // 渲染AI组件
-  const renderAIComponent = (className?: string) => (
-    <div className={className}>
-      <AISidebar 
-        collapsed={aiSidebarCollapsed} 
-        onToggleCollapse={() => setAiSidebarCollapsed(!aiSidebarCollapsed)}
-        displayMode={displayMode}
-        onModeChange={handleModeChange}
-      />
-    </div>
+  const renderAIComponent = () => (
+    <AIAssistant 
+      visible={modalVisible}
+      onClose={() => {
+        setModalVisible(false);
+        setDisplayMode('hidden');
+      }}
+    />
   );
 
   // 渲染模式切换按钮
@@ -134,27 +114,11 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
           size="small"
         />
       </Tooltip>
-      <Tooltip title="侧边栏模式 (Alt+2)">
+      <Tooltip title="AI助手 (Alt+2)">
         <Button 
-          type={displayMode === 'sidebar' ? 'primary' : 'default'}
-          icon={<MenuOutlined />}
-          onClick={() => handleModeChange('sidebar')}
-          size="small"
-        />
-      </Tooltip>
-      <Tooltip title="抽屉模式 (Alt+3)">
-        <Button 
-          type={displayMode === 'drawer' ? 'primary' : 'default'}
-          icon={<ExpandOutlined />}
-          onClick={() => handleModeChange('drawer')}
-          size="small"
-        />
-      </Tooltip>
-      <Tooltip title="全屏模式 (Alt+4)">
-        <Button 
-          type={displayMode === 'fullscreen' ? 'primary' : 'default'}
-          icon={<FullscreenOutlined />}
-          onClick={() => handleModeChange('fullscreen')}
+          type={displayMode === 'modal' ? 'primary' : 'default'}
+          icon={<RobotOutlined />}
+          onClick={() => handleModeChange('modal')}
           size="small"
         />
       </Tooltip>
@@ -173,55 +137,15 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
     >
       <div className="ai-display-manager">
         {/* 主内容区域 */}
-        <div className={`main-content ${displayMode === 'sidebar' ? 'with-sidebar' : 'full-width'}`}>
-          {/* 侧边栏模式 */}
-          {displayMode === 'sidebar' && (
-            <div className="ai-sidebar-container">
-              {renderAIComponent('ai-sidebar-mode')}
-            </div>
-          )}
-          
+        <div className="main-content full-width">
           {/* 主要内容 */}
           <div className="content-area">
             {children}
           </div>
         </div>
 
-        {/* 抽屉模式 */}
-        <Drawer
-          title="AI智能助手"
-          placement="right"
-          width={400}
-          open={drawerVisible}
-          onClose={() => {
-            setDrawerVisible(false);
-            setDisplayMode('hidden');
-          }}
-          className="ai-drawer"
-          extra={
-            <Space>
-              <Tooltip title="切换到全屏模式">
-                <Button 
-                  type="text" 
-                  icon={<FullscreenOutlined />} 
-                  onClick={() => handleModeChange('fullscreen')}
-                />
-              </Tooltip>
-            </Space>
-          }
-        >
-          {renderAIComponent('ai-drawer-mode')}
-        </Drawer>
-
-        {/* 全屏模式 */}
-        {fullscreenVisible && (
-          <AIFullscreen 
-            onClose={() => {
-              setFullscreenVisible(false);
-              setDisplayMode('hidden');
-            }}
-          />
-        )}
+        {/* AI助手模态框 */}
+        {renderAIComponent()}
 
         {/* 隐藏模式时的侧边触发区域和浮动按钮 */}
         {displayMode === 'hidden' && (
@@ -265,40 +189,12 @@ const AIDisplayManager: React.FC<AIDisplayManagerProps> = ({
               <Tooltip title="点击唤醒AI助手" placement="left">
                 <div 
                   className="ai-quick-btn"
-                  onClick={() => handleModeChange('drawer')}
+                  onClick={() => handleModeChange('modal')}
                 >
                   <RobotOutlined className="ai-icon" />
                   <div className="ai-pulse"></div>
                 </div>
               </Tooltip>
-              
-              {/* 模式选择菜单 */}
-              <div className="ai-mode-menu">
-                <Tooltip title="侧边栏模式" placement="left">
-                  <Button 
-                    type="text" 
-                    icon={<MenuOutlined />}
-                    onClick={() => handleModeChange('sidebar')}
-                    className="mode-menu-btn"
-                  />
-                </Tooltip>
-                <Tooltip title="抽屉模式" placement="left">
-                  <Button 
-                    type="text" 
-                    icon={<ExpandOutlined />}
-                    onClick={() => handleModeChange('drawer')}
-                    className="mode-menu-btn"
-                  />
-                </Tooltip>
-                <Tooltip title="全屏模式" placement="left">
-                  <Button 
-                    type="text" 
-                    icon={<FullscreenOutlined />}
-                    onClick={() => handleModeChange('fullscreen')}
-                    className="mode-menu-btn"
-                  />
-                </Tooltip>
-              </div>
             </div>
           </>
         )}

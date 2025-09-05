@@ -1,28 +1,39 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from app import create_app
 from models.ai_model import AIModelConfig
-from utils.database import db
+from services.llm_service import llm_service
 
-def check_ai_models():
-    app = create_app()
-    with app.app_context():
-        try:
-            models = AIModelConfig.query.all()
-            print(f'找到 {len(models)} 个AI模型配置:')
-            
-            if models:
-                for m in models:
-                    print(f'- {m.model_name} ({m.model_type}) - 激活: {m.is_active}, 默认: {m.is_default}')
-                    print(f'  API密钥: {m.api_key[:10] if m.api_key else "未设置"}...')
-                    print(f'  API URL: {m.api_base_url}')
-                    print()
-            else:
-                print('数据库中没有AI模型配置')
-                
-        except Exception as e:
-            print(f'查询失败: {str(e)}')
-
-if __name__ == '__main__':
-    check_ai_models()
+app = create_app()
+with app.app_context():
+    # 检查数据库中的模型
+    models = AIModelConfig.query.filter_by(is_default=True).all()
+    print(f'Default models in DB: {len(models)}')
+    for m in models:
+        print(f'  Model: {m.model_name}, Type: {m.model_type}, API Base: {m.api_base_url}, Default: {m.is_default}')
+        print(f'  Model ID (deployment): {m.model_id}')
+        print(f'  API Key: {m.api_key[:10] if m.api_key else "None"}...')
+        print(f'  Tenant ID: {m.tenant_id}')
+        print(f'  Active: {m.is_active}')
+    
+    # 检查LLM服务的状态
+    print('\nLLM Service Status:')
+    print(f'  Initialized: {llm_service._initialized}')
+    
+    # 强制初始化LLM服务
+    llm_service._ensure_initialized()
+    print(f'  After init - Initialized: {llm_service._initialized}')
+    
+    if llm_service.default_model:
+        print(f'  Default model: {llm_service.default_model.model_name}')
+        print(f'  Model type: {getattr(llm_service.default_model, "model_type", "Unknown")}')
+        print(f'  API URL: {getattr(llm_service.default_model, "api_base_url", "Unknown")}')
+        print(f'  Is fallback: {type(llm_service.default_model).__name__}')
+    else:
+        print('  No default model found')
+    
+    # 测试生成文本
+    print('\nTesting text generation:')
+    try:
+        result = llm_service.generate_text('Hello, this is a test.')
+        print(f'  Result: {result[:100]}...' if len(result) > 100 else f'  Result: {result}')
+    except Exception as e:
+        print(f'  Error: {str(e)}')

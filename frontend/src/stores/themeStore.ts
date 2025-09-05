@@ -16,54 +16,54 @@ export interface ThemeConfig {
   };
 }
 
-// 预定义主题样式 - 优化对比度版本
+// 预定义主题样式 - 淡雅和谐配色版本
 export const themeStyles = {
   default: {
     name: '淡雅扁平',
     colors: {
-      primary: '#5a6b85', // 加深主色调，提升对比度
-      secondary: '#8fa2b8', // 适度加深次要色
-      accent: '#c2cdd8', // 保持淡雅但增强可见性
+      primary: '#6b7c95', // 温和的蓝灰色
+      secondary: '#9bb0c7', // 柔和的次要色
+      accent: '#d4dde8', // 淡雅的强调色
     }
   },
   blue: {
     name: '海洋蓝',
     colors: {
-      primary: '#1677ff', // 稍微加深蓝色
-      secondary: '#0fb5b5', // 增强青色对比度
-      accent: '#2db7b7', // 优化强调色
+      primary: '#4a90e2', // 柔和的蓝色
+      secondary: '#7bb3f0', // 淡雅的天蓝色
+      accent: '#b8d4f1', // 浅蓝色强调
     }
   },
   green: {
     name: '自然绿',
     colors: {
-      primary: '#47b317', // 加深绿色主色调
-      secondary: '#65c932', // 保持活力但增强对比
-      accent: '#7ed957', // 优化强调色可读性
+      primary: '#5cb85c', // 温和的绿色
+      secondary: '#7cc77c', // 柔和的浅绿
+      accent: '#a8d8a8', // 淡绿色强调
     }
   },
   purple: {
     name: '优雅紫',
     colors: {
-      primary: '#6b2bc7', // 加深紫色主色调
-      secondary: '#8347d4', // 增强次要色对比度
-      accent: '#a66ee8', // 保持优雅但更清晰
+      primary: '#8e7cc3', // 温和的紫色
+      secondary: '#a695d1', // 柔和的浅紫
+      accent: '#c4b5e0', // 淡紫色强调
     }
   },
   orange: {
     name: '活力橙',
     colors: {
-      primary: '#e67e14', // 加深橙色主色调
-      secondary: '#f29c3a', // 增强次要色对比度
-      accent: '#ffab7a', // 优化强调色可读性
+      primary: '#f0ad4e', // 温和的橙色
+      secondary: '#f4c171', // 柔和的浅橙
+      accent: '#f8d7a3', // 淡橙色强调
     }
   },
   tencent: {
     name: '腾讯会议',
     colors: {
-      primary: '#1a4472', // 稍微加深蓝色
-      secondary: '#00c49a', // 增强青绿色对比度
-      accent: '#4285d4', // 优化强调色
+      primary: '#4a7ba7', // 温和的企业蓝
+      secondary: '#6fa8d3', // 柔和的浅蓝
+      accent: '#9bc5e4', // 淡蓝色强调
     }
   }
 };
@@ -102,6 +102,68 @@ const checkSystemDarkMode = (): boolean => {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 };
 
+// 将十六进制颜色转换为RGB
+const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+};
+
+// 获取仪表盘颜色配置
+const getDashboardColors = (themeName: string, mode: 'light' | 'dark') => {
+  const baseColors = {
+    light: {
+      success: '#52c41a',
+      warning: '#faad14', 
+      orange: '#fa541c',
+      purple: '#722ed1',
+      cyan: '#13c2c2'
+    },
+    dark: {
+      success: '#73d13d',
+      warning: '#ffc53d',
+      orange: '#ff7a45', 
+      purple: '#b37feb',
+      cyan: '#36cfc9'
+    }
+  };
+
+  // 根据主题调整颜色
+  const colors = baseColors[mode];
+  
+  switch (themeName) {
+    case '海洋蓝':
+      return {
+        ...colors,
+        success: mode === 'dark' ? '#5cdbd3' : '#13c2c2',
+        cyan: mode === 'dark' ? '#87e8de' : '#36cfc9'
+      };
+    case '自然绿':
+      return {
+        ...colors,
+        success: mode === 'dark' ? '#95de64' : '#73d13d',
+        orange: mode === 'dark' ? '#ffa940' : '#fa8c16'
+      };
+    case '活力橙':
+      return {
+        ...colors,
+        orange: mode === 'dark' ? '#ffb366' : '#ff7a45',
+        warning: mode === 'dark' ? '#ffd666' : '#ffc53d'
+      };
+    case '优雅紫':
+      return {
+        ...colors,
+        purple: mode === 'dark' ? '#d3adf7' : '#b37feb',
+        success: mode === 'dark' ? '#b7eb8f' : '#95de64'
+      };
+    default:
+      return colors;
+  }
+};
+
 // 应用CSS变量到文档根元素
 const applyCSSVariables = (config: ThemeConfig, actualMode: 'light' | 'dark') => {
   if (typeof document === 'undefined') return;
@@ -111,9 +173,36 @@ const applyCSSVariables = (config: ThemeConfig, actualMode: 'light' | 'dark') =>
   const colors = config.customColors || style.colors;
   
   // 应用主色调
-  root.style.setProperty('--primary-color', colors.primary || style.colors.primary);
-  root.style.setProperty('--secondary-color', colors.secondary || style.colors.secondary);
-  root.style.setProperty('--accent-color', colors.accent || style.colors.accent);
+  const primaryColor = colors.primary || style.colors.primary;
+  const secondaryColor = colors.secondary || style.colors.secondary;
+  const accentColor = colors.accent || style.colors.accent;
+  
+  root.style.setProperty('--primary-color', primaryColor);
+  root.style.setProperty('--secondary-color', secondaryColor);
+  root.style.setProperty('--accent-color', accentColor);
+  
+  // 设置主色调的RGB值（用于透明度计算）
+  const primaryRgb = hexToRgb(primaryColor);
+  const secondaryRgb = hexToRgb(secondaryColor);
+  const accentRgb = hexToRgb(accentColor);
+  
+  if (primaryRgb) {
+    root.style.setProperty('--primary-color-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+  }
+  if (secondaryRgb) {
+    root.style.setProperty('--secondary-color-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+  }
+  if (accentRgb) {
+    root.style.setProperty('--accent-color-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+  }
+  
+  // 设置仪表盘专用颜色变量 - 根据主题和模式调整
+    const dashboardColors = getDashboardColors(style.name, actualMode);
+    root.style.setProperty('--success-color', dashboardColors.success);
+    root.style.setProperty('--warning-color', dashboardColors.warning);
+    root.style.setProperty('--orange-color', dashboardColors.orange);
+    root.style.setProperty('--purple-color', dashboardColors.purple);
+    root.style.setProperty('--cyan-color', dashboardColors.cyan);
   
   // 根据模式应用背景和文字颜色 - 优化对比度版本
   if (actualMode === 'dark') {
@@ -148,12 +237,36 @@ const applyCSSVariables = (config: ThemeConfig, actualMode: 'light' | 'dark') =>
     root.style.setProperty('--block-error-border', 'rgba(244, 67, 54, 0.3)');
     root.style.setProperty('--block-error-text', '#e57373');
     
-    // 统一按钮样式 - 暗色主题
-    root.style.setProperty('--button-primary-bg', colors.primary || style.colors.primary);
-    root.style.setProperty('--button-primary-hover', `color-mix(in srgb, ${colors.primary || style.colors.primary} 85%, white)`);
-    root.style.setProperty('--button-secondary-bg', 'rgba(255, 255, 255, 0.08)');
-    root.style.setProperty('--button-secondary-hover', 'rgba(255, 255, 255, 0.12)');
-    root.style.setProperty('--button-secondary-border', 'rgba(255, 255, 255, 0.2)');
+    // 统一按钮样式 - 暗色主题，淡雅和谐配色
+    const primaryColor = colors.primary || style.colors.primary;
+    const secondaryColor = colors.secondary || style.colors.secondary;
+    const accentColor = colors.accent || style.colors.accent;
+    
+    root.style.setProperty('--button-primary-bg', primaryColor);
+    root.style.setProperty('--button-primary-hover', `color-mix(in srgb, ${primaryColor} 85%, white)`);
+    root.style.setProperty('--button-primary-active', `color-mix(in srgb, ${primaryColor} 90%, white)`);
+    
+    root.style.setProperty('--button-secondary-bg', 'rgba(255, 255, 255, 0.06)');
+    root.style.setProperty('--button-secondary-hover', 'rgba(255, 255, 255, 0.10)');
+    root.style.setProperty('--button-secondary-border', 'rgba(255, 255, 255, 0.15)');
+    root.style.setProperty('--button-secondary-color', secondaryColor);
+    
+    root.style.setProperty('--button-text-bg', 'transparent');
+    root.style.setProperty('--button-text-hover', `color-mix(in srgb, ${primaryColor} 10%, transparent)`);
+    root.style.setProperty('--button-text-color', primaryColor);
+    
+    root.style.setProperty('--button-ghost-border', `color-mix(in srgb, ${primaryColor} 40%, transparent)`);
+    root.style.setProperty('--button-ghost-hover', `color-mix(in srgb, ${primaryColor} 8%, transparent)`);
+    root.style.setProperty('--button-ghost-color', primaryColor);
+    
+    root.style.setProperty('--button-link-color', primaryColor);
+    root.style.setProperty('--button-link-hover', `color-mix(in srgb, ${primaryColor} 85%, white)`);
+    
+    root.style.setProperty('--button-danger-bg', '#ff4d4f');
+    root.style.setProperty('--button-danger-hover', '#ff7875');
+    
+    root.style.setProperty('--button-success-bg', accentColor);
+    root.style.setProperty('--button-success-hover', `color-mix(in srgb, ${accentColor} 85%, white)`);
     
     // 设置Ant Design暗色主题
     root.setAttribute('data-theme', 'dark');
@@ -197,12 +310,36 @@ const applyCSSVariables = (config: ThemeConfig, actualMode: 'light' | 'dark') =>
     root.style.setProperty('--block-error-border', 'rgba(244, 67, 54, 0.2)');
     root.style.setProperty('--block-error-text', '#c62828');
     
-    // 统一按钮样式 - 亮色主题
-    root.style.setProperty('--button-primary-bg', colors.primary || style.colors.primary);
-    root.style.setProperty('--button-primary-hover', `color-mix(in srgb, ${colors.primary || style.colors.primary} 85%, black)`);
-    root.style.setProperty('--button-secondary-bg', 'rgba(0, 0, 0, 0.04)');
-    root.style.setProperty('--button-secondary-hover', 'rgba(0, 0, 0, 0.08)');
-    root.style.setProperty('--button-secondary-border', 'rgba(0, 0, 0, 0.12)');
+    // 统一按钮样式 - 亮色主题，淡雅和谐配色
+    const primaryColor = colors.primary || style.colors.primary;
+    const secondaryColor = colors.secondary || style.colors.secondary;
+    const accentColor = colors.accent || style.colors.accent;
+    
+    root.style.setProperty('--button-primary-bg', primaryColor);
+    root.style.setProperty('--button-primary-hover', `color-mix(in srgb, ${primaryColor} 85%, black)`);
+    root.style.setProperty('--button-primary-active', `color-mix(in srgb, ${primaryColor} 90%, black)`);
+    
+    root.style.setProperty('--button-secondary-bg', 'rgba(0, 0, 0, 0.03)');
+    root.style.setProperty('--button-secondary-hover', 'rgba(0, 0, 0, 0.06)');
+    root.style.setProperty('--button-secondary-border', 'rgba(0, 0, 0, 0.08)');
+    root.style.setProperty('--button-secondary-color', secondaryColor);
+    
+    root.style.setProperty('--button-text-bg', 'transparent');
+    root.style.setProperty('--button-text-hover', `color-mix(in srgb, ${primaryColor} 8%, transparent)`);
+    root.style.setProperty('--button-text-color', primaryColor);
+    
+    root.style.setProperty('--button-ghost-border', `color-mix(in srgb, ${primaryColor} 30%, transparent)`);
+    root.style.setProperty('--button-ghost-hover', `color-mix(in srgb, ${primaryColor} 5%, transparent)`);
+    root.style.setProperty('--button-ghost-color', primaryColor);
+    
+    root.style.setProperty('--button-link-color', primaryColor);
+    root.style.setProperty('--button-link-hover', `color-mix(in srgb, ${primaryColor} 85%, black)`);
+    
+    root.style.setProperty('--button-danger-bg', '#ff4d4f');
+    root.style.setProperty('--button-danger-hover', '#ff7875');
+    
+    root.style.setProperty('--button-success-bg', accentColor);
+    root.style.setProperty('--button-success-hover', `color-mix(in srgb, ${accentColor} 85%, black)`);
     
     // 设置Ant Design亮色主题
     root.setAttribute('data-theme', 'light');

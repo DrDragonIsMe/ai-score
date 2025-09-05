@@ -7,7 +7,7 @@ Description:
     知识图谱星图展示API接口，提供知识点可视化、关联分析等功能。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """
@@ -80,6 +80,64 @@ def get_subject_knowledge_graph(subject_id):
         
     except Exception as e:
         return error_response(f'Failed to get knowledge graph: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/nodes', methods=['POST'])
+@jwt_required()
+def create_knowledge_node():
+    """创建知识点节点"""
+    try:
+        # 从JWT token中获取用户信息
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
+        user_id = current_user_identity.get('user_id')
+        
+        data = request.get_json()
+        subject_id = data.get('subject_id')
+        title = data.get('title')
+        content = data.get('content')
+        tags = data.get('tags', '')
+        difficulty_level = data.get('difficulty_level', 1)
+        
+        # 验证必填字段
+        if not all([subject_id, title, content]):
+            return error_response('Missing required fields: subject_id, title, content', 400)
+        
+        # 验证学科是否存在
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 创建知识点
+        knowledge_point = KnowledgePoint(
+            name=title,
+            description=content,
+            subject_id=subject_id,
+            difficulty_level=difficulty_level,
+            tenant_id=tenant_id,
+            created_by=user_id
+        )
+        
+        # 处理标签
+        if tags:
+            tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
+            knowledge_point.tags = ','.join(tag_list)
+        
+        db.session.add(knowledge_point)
+        db.session.commit()
+        
+        return success_response({
+            'id': knowledge_point.id,
+            'name': knowledge_point.name,
+            'description': knowledge_point.description,
+            'subject_id': knowledge_point.subject_id,
+            'difficulty_level': knowledge_point.difficulty_level,
+            'tags': knowledge_point.tags,
+            'created_at': knowledge_point.created_at.isoformat() if knowledge_point.created_at else None
+        }, 'Knowledge node created successfully')
+        
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f'Error creating knowledge node: {str(e)}', 500)
 
 @knowledge_graph_bp.route('/knowledge-graph/<subject_id>', methods=['POST'])
 @jwt_required()

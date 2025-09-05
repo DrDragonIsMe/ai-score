@@ -7,7 +7,7 @@ Description:
     AI智能解析服务，用于解析试卷文件，识别题目并关联知识点。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

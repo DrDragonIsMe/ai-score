@@ -37,7 +37,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore, getThemeColors } from '../stores/themeStore';
 import { useTranslation } from '../stores/i18nStore';
-import AIDisplayManager from '../components/AIDisplayManager';
+
 import zhCN from 'antd/locale/zh_CN';
 import enUS from 'antd/locale/en_US';
 import './MainLayout.css';
@@ -74,6 +74,12 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       key: '/dashboard',
       icon: <DashboardOutlined />,
       label: t('menu.dashboard'),
+    },
+    {
+      key: '/ai-assistant',
+      icon: <RobotOutlined />,
+      label: t('menu.scorePlus'),
+      className: 'score-plus-menu-item',
     },
     {
       key: '/subjects',
@@ -207,8 +213,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
         },
       }}
     >
-      <AIDisplayManager defaultMode="hidden">
-        <Layout style={{ minHeight: '100vh' }}>
+      <Layout style={{ minHeight: '100vh' }}>
         <Sider 
           trigger={null} 
           collapsible 
@@ -381,7 +386,6 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           </Typography.Text>
         </div>
         </Modal>
-      </AIDisplayManager>
     </ConfigProvider>
   );
 };

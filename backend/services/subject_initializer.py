@@ -7,7 +7,7 @@ Description:
     提供九大学科的初始化功能，包括学科基本信息、章节结构等。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

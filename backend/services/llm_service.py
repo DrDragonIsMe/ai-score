@@ -149,7 +149,8 @@ class LLMService:
             response = self._make_request(model, request_data)
             
             if response and "choices" in response:
-                return response["choices"][0]["message"]["content"]
+                content = response["choices"][0]["message"]["content"]
+                return content
             
             return "生成失败"
             

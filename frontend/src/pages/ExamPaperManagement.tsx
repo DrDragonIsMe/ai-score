@@ -77,6 +77,11 @@ const ExamPaperManagement: React.FC = () => {
   const [filterTag, setFilterTag] = useState<string>('');
   const [uploadForm] = Form.useForm();
   const [downloadForm] = Form.useForm();
+  const [editForm] = Form.useForm();
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedPaper, setSelectedPaper] = useState<ExamPaper | null>(null);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -94,7 +99,11 @@ const ExamPaperManagement: React.FC = () => {
         examPaperApi.getExamPapers(token),
         examPaperApi.getSubjects(token)
       ]);
-      setPapers(Array.isArray(papersResponse.data) ? papersResponse.data : []);
+      // 处理试卷数据 - 后端返回的数据结构是 { data: { papers: [...] } }
+      const papersData = papersResponse.data?.papers || papersResponse.data || [];
+      setPapers(Array.isArray(papersData) ? papersData : []);
+      
+      // 处理科目数据 - 后端返回的数据结构是 { data: [...] }
       setSubjects(Array.isArray(subjectsResponse.data) ? subjectsResponse.data : []);
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -171,6 +180,76 @@ const ExamPaperManagement: React.FC = () => {
     } catch (error) {
       console.error('Delete failed:', error);
       message.error('删除失败');
+    }
+  };
+
+  // 查看试卷详情
+  const handleView = async (paper: ExamPaper) => {
+    if (!token) {
+      message.error('请先登录');
+      return;
+    }
+
+    try {
+      const response = await examPaperApi.getExamPaper(token, paper.id);
+      setSelectedPaper(response.data);
+      setViewModalVisible(true);
+    } catch (error) {
+      console.error('Get paper details failed:', error);
+      message.error('获取试卷详情失败');
+    }
+  };
+
+  // 编辑试卷
+  const handleEdit = async (paper: ExamPaper) => {
+    if (!token) {
+      message.error('请先登录');
+      return;
+    }
+
+    try {
+      const response = await examPaperApi.getExamPaper(token, paper.id);
+      setSelectedPaper(response.data);
+      editForm.setFieldsValue({
+        title: response.data.title,
+        subject_id: response.data.subject_id,
+        exam_type: response.data.exam_type,
+        year: response.data.year,
+        region: response.data.region,
+        difficulty_level: response.data.difficulty_level,
+        tags: response.data.tags?.join(',') || ''
+      });
+      setEditModalVisible(true);
+    } catch (error) {
+      console.error('Get paper details failed:', error);
+      message.error('获取试卷详情失败');
+    }
+  };
+
+  // 更新试卷信息
+  const handleUpdate = async (values: any) => {
+    if (!token || !selectedPaper) {
+      message.error('请先登录');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const updateData = {
+        ...values,
+        tags: values.tags ? values.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) : []
+      };
+      await examPaperApi.updateExamPaper(token, selectedPaper.id, updateData);
+      message.success('更新成功');
+      setEditModalVisible(false);
+      editForm.resetFields();
+      setSelectedPaper(null);
+      loadData();
+    } catch (error) {
+      console.error('Update failed:', error);
+      message.error('更新失败');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -290,6 +369,7 @@ const ExamPaperManagement: React.FC = () => {
             type="link"
             icon={<EyeOutlined />}
             size="small"
+            onClick={() => handleView(record)}
           >
             查看
           </Button>
@@ -297,6 +377,7 @@ const ExamPaperManagement: React.FC = () => {
             type="link"
             icon={<EditOutlined />}
             size="small"
+            onClick={() => handleEdit(record)}
           >
             编辑
           </Button>
@@ -602,6 +683,175 @@ const ExamPaperManagement: React.FC = () => {
                 {downloading ? '抓取中...' : '开始抓取'}
               </Button>
               <Button onClick={() => setDownloadModalVisible(false)}>
+                取消
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 查看试卷详情模态框 */}
+      <Modal
+        title="试卷详情"
+        open={viewModalVisible}
+        onCancel={() => {
+          setViewModalVisible(false);
+          setSelectedPaper(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => {
+            setViewModalVisible(false);
+            setSelectedPaper(null);
+          }}>
+            关闭
+          </Button>
+        ]}
+        width={800}
+      >
+        {selectedPaper && (
+          <div>
+            <Row gutter={16}>
+              <Col span={12}>
+                <p><strong>试卷标题：</strong>{selectedPaper.title}</p>
+                <p><strong>考试类型：</strong>{selectedPaper.exam_type}</p>
+                <p><strong>年份：</strong>{selectedPaper.year}</p>
+                <p><strong>地区：</strong>{selectedPaper.region}</p>
+              </Col>
+              <Col span={12}>
+                <p><strong>难度等级：</strong>{selectedPaper.difficulty_level}</p>
+                <p><strong>题目数量：</strong>{selectedPaper.question_count}</p>
+                <p><strong>总分：</strong>{selectedPaper.total_score}</p>
+                <p><strong>文件大小：</strong>{formatFileSize(selectedPaper.file_size)}</p>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={24}>
+                <p><strong>解析状态：</strong>
+                  <Tag color={getStatusColor(selectedPaper.parse_status)}>
+                    {getStatusText(selectedPaper.parse_status)}
+                  </Tag>
+                </p>
+                <p><strong>标签：</strong>
+                  {selectedPaper.tags && selectedPaper.tags.length > 0 ? (
+                    <Space>
+                      {selectedPaper.tags.map((tag, index) => (
+                        <Tag key={index} color="blue">{tag}</Tag>
+                      ))}
+                    </Space>
+                  ) : <span style={{ color: '#999' }}>无标签</span>}
+                </p>
+                <p><strong>创建时间：</strong>{new Date(selectedPaper.created_at).toLocaleString()}</p>
+                <p><strong>更新时间：</strong>{new Date(selectedPaper.updated_at).toLocaleString()}</p>
+              </Col>
+            </Row>
+          </div>
+        )}
+      </Modal>
+
+      {/* 编辑试卷模态框 */}
+      <Modal
+        title="编辑试卷"
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setSelectedPaper(null);
+          editForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdate}
+        >
+          <Form.Item
+            name="title"
+            label="试卷标题"
+            rules={[{ required: true, message: '请输入试卷标题' }]}
+          >
+            <Input placeholder="请输入试卷标题" />
+          </Form.Item>
+          
+          <Form.Item
+            name="subject_id"
+            label="科目"
+            rules={[{ required: true, message: '请选择科目' }]}
+          >
+            <Select placeholder="请选择科目">
+              {subjects.map(subject => (
+                <Option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="exam_type"
+            label="考试类型"
+            rules={[{ required: true, message: '请输入考试类型' }]}
+          >
+            <Input placeholder="如：期中考试、期末考试、模拟考试等" />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="year"
+                label="年份"
+                rules={[{ required: true, message: '请输入年份' }]}
+              >
+                <InputNumber
+                  placeholder="如：2024"
+                  min={2000}
+                  max={2030}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="region"
+                label="地区"
+                rules={[{ required: true, message: '请输入地区' }]}
+              >
+                <Input placeholder="如：北京、上海、全国等" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="difficulty_level"
+            label="难度等级"
+            rules={[{ required: true, message: '请选择难度等级' }]}
+          >
+            <Select placeholder="请选择难度等级">
+              <Option value={1}>简单</Option>
+              <Option value={2}>一般</Option>
+              <Option value={3}>困难</Option>
+              <Option value={4}>很困难</Option>
+              <Option value={5}>极困难</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="tags"
+            label="标签"
+          >
+            <Input placeholder="多个标签用逗号分隔，如：重点,必考,综合" />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" loading={updating}>
+                {updating ? '更新中...' : '更新'}
+              </Button>
+              <Button onClick={() => {
+                setEditModalVisible(false);
+                setSelectedPaper(null);
+                editForm.resetFields();
+              }}>
                 取消
               </Button>
             </Space>

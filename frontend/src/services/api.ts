@@ -20,6 +20,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // 添加租户信息
+    config.headers.Host = 'default.localhost';
     return config;
   },
   (error) => {
@@ -112,6 +114,20 @@ export const examPaperApi = {
   // 获取试卷解析状态
   getParseStatus: (token: string, paperId: string) => {
     return api.get(`/exam-papers/${paperId}/parse-status`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+
+  // 获取试卷详情
+  getExamPaper: (token: string, paperId: string) => {
+    return api.get(`/exam-papers/${paperId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+
+  // 更新试卷信息
+  updateExamPaper: (token: string, paperId: string, data: any) => {
+    return api.put(`/exam-papers/${paperId}`, data, {
       headers: { Authorization: `Bearer ${token}` }
     });
   }

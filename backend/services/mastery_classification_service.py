@@ -7,7 +7,7 @@ Description:
     实现知识点的红黄绿颜色分类系统，根据学习数据自动分类知识点掌握程度。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

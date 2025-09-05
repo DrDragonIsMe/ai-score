@@ -7,7 +7,7 @@ Description:
     真题下载服务，提供自动搜索和下载各学科真题的功能。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

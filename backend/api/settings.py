@@ -7,7 +7,7 @@ Description:
     系统设置API接口，提供AI模型配置、系统参数设置等功能。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """
@@ -21,6 +21,7 @@ from models.ai_model import AIModelConfig
 from models.tenant import Tenant
 from utils.database import db
 from utils.logger import get_logger
+from services.llm_service import llm_service
 import uuid
 
 logger = get_logger(__name__)
@@ -102,6 +103,36 @@ def create_ai_model():
             if not data.get(field):
                 return error_response(message=f'缺少必填字段: {field}')
         
+        # 验证模型类型
+        valid_model_types = ['openai', 'azure', 'azure_openai', 'doubao', 'claude']
+        if data['model_type'] not in valid_model_types:
+            return error_response(message=f'不支持的模型类型: {data["model_type"]}，支持的类型: {", ".join(valid_model_types)}')
+        
+        # 验证关键配置参数
+        if data['model_type'] in ['openai', 'azure', 'azure_openai']:
+            if not data.get('api_key'):
+                return error_response(message='API密钥是必填字段')
+            if not data.get('api_base_url'):
+                return error_response(message='API基础URL是必填字段')
+        
+        # 验证数值参数
+        numeric_fields = {
+            'max_tokens': (1, 32000),
+            'temperature': (0.0, 2.0),
+            'top_p': (0.0, 1.0),
+            'frequency_penalty': (-2.0, 2.0),
+            'presence_penalty': (-2.0, 2.0)
+        }
+        
+        for field, (min_val, max_val) in numeric_fields.items():
+            if field in data and data[field] is not None:
+                try:
+                    value = float(data[field])
+                    if not (min_val <= value <= max_val):
+                        return error_response(message=f'{field}参数值应在{min_val}-{max_val}之间')
+                except (ValueError, TypeError):
+                    return error_response(message=f'{field}参数必须是数字')
+        
         # 检查模型名称是否已存在
         existing_model = AIModelConfig.query.filter_by(
             tenant_id=tenant_id,
@@ -145,6 +176,13 @@ def create_ai_model():
         
         db.session.add(model_config)
         db.session.commit()
+        
+        # 刷新LLM服务配置
+        try:
+            llm_service.refresh_default_model()
+            logger.info(f"LLM服务配置已刷新，新创建模型: {model_config.model_name}")
+        except Exception as refresh_error:
+            logger.warning(f"刷新LLM服务配置失败: {str(refresh_error)}")
         
         return success_response(
             data=model_config.to_dict(include_sensitive=False),
@@ -200,6 +238,13 @@ def update_ai_model(model_id):
         model_config.updated_at = datetime.utcnow()
         db.session.commit()
         
+        # 刷新LLM服务配置
+        try:
+            llm_service.refresh_default_model()
+            logger.info(f"LLM服务配置已刷新，模型ID: {model_id}")
+        except Exception as refresh_error:
+            logger.warning(f"刷新LLM服务配置失败: {str(refresh_error)}")
+        
         return success_response(
             data=model_config.to_dict(include_sensitive=False),
             message='AI模型配置更新成功'
@@ -233,8 +278,16 @@ def delete_ai_model(model_id):
         if model_config.is_default:
             return error_response(message='不能删除默认模型，请先设置其他模型为默认')
         
+        model_name = model_config.model_name
         db.session.delete(model_config)
         db.session.commit()
+        
+        # 刷新LLM服务配置
+        try:
+            llm_service.refresh_default_model()
+            logger.info(f"LLM服务配置已刷新，已删除模型: {model_name}")
+        except Exception as refresh_error:
+            logger.warning(f"刷新LLM服务配置失败: {str(refresh_error)}")
         
         return success_response(message='AI模型配置删除成功')
         
@@ -250,6 +303,9 @@ def test_ai_model(model_id):
     """
     测试AI模型连接
     """
+    import requests
+    import time
+    
     try:
         tenant_id = get_jwt_identity()['tenant_id']
         
@@ -261,27 +317,109 @@ def test_ai_model(model_id):
         if not model_config:
             return error_response(message='模型配置不存在')
         
-        # 这里可以添加实际的模型测试逻辑
-        # 暂时返回成功响应
-        test_result = {
-            'status': 'success',
-            'response_time': 1.2,
-            'test_message': '模型连接正常',
-            'model_info': {
-                'name': model_config.model_name,
-                'type': model_config.model_type,
-                'version': model_config.api_version
-            }
+        # 检查必要参数
+        validation_errors = []
+        if not model_config.api_key:
+            validation_errors.append('API密钥未设置')
+        if not model_config.api_base_url:
+            validation_errors.append('API基础URL未设置')
+        if not model_config.model_id:
+            validation_errors.append('模型ID未设置')
+        
+        if validation_errors:
+            return error_response(
+                message=f'模型配置不完整: {", ".join(validation_errors)}'
+            )
+        
+        # 实际测试模型连接
+        start_time = time.time()
+        
+        test_data = {
+            "model": model_config.model_id,
+            "messages": [
+                {"role": "user", "content": "Hello, this is a connection test. Please respond with 'Test successful'."}
+            ],
+            "max_tokens": 50,
+            "temperature": 0.3
         }
         
-        return success_response(
-            data=test_result,
-            message='模型测试完成'
-        )
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        # 根据模型类型设置不同的请求参数
+        if model_config.model_type == 'azure' or 'azure.com' in (model_config.api_base_url or ''):
+            # Azure OpenAI
+            api_url = f"{model_config.api_base_url}/openai/deployments/{model_config.model_id}/chat/completions?api-version=2024-02-15-preview"
+            headers["api-key"] = model_config.api_key
+        elif model_config.model_type == 'openai':
+            # OpenAI
+            api_url = f"{model_config.api_base_url}/chat/completions"
+            headers["Authorization"] = f"Bearer {model_config.api_key}"
+        else:
+            return error_response(message=f'不支持的模型类型: {model_config.model_type}')
+        
+        try:
+            response = requests.post(
+                api_url,
+                headers=headers,
+                json=test_data,
+                timeout=15
+            )
+            
+            response_time = round(time.time() - start_time, 2)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if 'choices' in result and len(result['choices']) > 0:
+                    test_response = result['choices'][0]['message']['content']
+                    
+                    test_result = {
+                        'status': 'success',
+                        'response_time': response_time,
+                        'test_message': '模型连接正常',
+                        'test_response': test_response,
+                        'model_info': {
+                            'name': model_config.model_name,
+                            'type': model_config.model_type,
+                            'model_id': model_config.model_id,
+                            'version': model_config.api_version
+                        },
+                        'usage': result.get('usage', {})
+                    }
+                    
+                    return success_response(
+                        data=test_result,
+                        message='模型测试成功'
+                    )
+                else:
+                    return error_response(
+                        message=f'模型响应格式异常 (响应时间: {response_time}s)'
+                    )
+            else:
+                error_detail = response.text[:200] if response.text else 'No error details'
+                return error_response(
+                    message=f'API请求失败 (HTTP {response.status_code}): {error_detail}'
+                )
+                
+        except requests.exceptions.Timeout:
+            response_time = round(time.time() - start_time, 2)
+            return error_response(
+                message=f'连接超时 (响应时间: {response_time}s)'
+            )
+        except requests.exceptions.ConnectionError:
+            return error_response(
+                message=f'连接错误，请检查API URL是否正确: {api_url}'
+            )
+        except Exception as req_error:
+            response_time = round(time.time() - start_time, 2)
+            return error_response(
+                message=f'请求异常: {str(req_error)} (响应时间: {response_time}s)'
+            )
         
     except Exception as e:
         logger.error(f"测试AI模型失败: {str(e)}")
-        return error_response(message='测试AI模型失败')
+        return error_response(message=f'测试AI模型失败: {str(e)}')
 
 @settings_bp.route('/ai-models/<model_id>/set-default', methods=['POST'])
 @jwt_required()
@@ -313,6 +451,13 @@ def set_default_model(model_id):
         model_config.updated_at = datetime.utcnow()
         
         db.session.commit()
+        
+        # 刷新LLM服务配置
+        try:
+            llm_service.refresh_default_model()
+            logger.info(f"LLM服务配置已刷新，新默认模型ID: {model_id}")
+        except Exception as refresh_error:
+            logger.warning(f"刷新LLM服务配置失败: {str(refresh_error)}")
         
         return success_response(
             data=model_config.to_dict(include_sensitive=False),
@@ -373,6 +518,13 @@ def toggle_model_active(model_id):
                 new_default.updated_at = datetime.utcnow()
         
         db.session.commit()
+        
+        # 刷新LLM服务配置
+        try:
+            llm_service.refresh_default_model()
+            logger.info(f"LLM服务配置已刷新，模型ID: {model_id}，状态: {'启用' if model_config.is_active else '禁用'}")
+        except Exception as refresh_error:
+            logger.warning(f"刷新LLM服务配置失败: {str(refresh_error)}")
         
         status_text = '启用' if model_config.is_active else '禁用'
         return success_response(

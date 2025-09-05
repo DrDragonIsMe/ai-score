@@ -3,6 +3,7 @@ import zhCN from 'antd/locale/zh_CN';
 import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
+import './styles/buttons.css';
 
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
@@ -19,6 +20,7 @@ import Settings from './pages/Settings';
 import SubjectManagement from './pages/SubjectManagement';
 import LearningAnalytics from './pages/LearningAnalytics';
 import DocumentManagement from './pages/DocumentManagement';
+import AIAssistant from './pages/AIAssistant';
 import { useAuthStore } from './stores/authStore';
 import { useThemeStore, themeStyles } from './stores/themeStore';
 
@@ -98,6 +100,7 @@ const App: React.FC = () => {
                                 <MainLayout>
                                     <Routes>
                                         <Route path="/dashboard" element={<Dashboard />} />
+                                        <Route path="/ai-assistant" element={<AIAssistant />} />
                                         <Route path="/diagnosis" element={<Diagnosis />} />
                                         <Route path="/subjects" element={<SubjectManagement />} />
                                         <Route path="/exam-papers" element={<ExamPaperManagement />} />

@@ -49,6 +49,42 @@
   animation: fadeInContent 0.6s ease-out;
 }
 
+/* 分数++ 菜单项特殊样式 */
+.score-plus-menu-item {
+  font-size: 15px !important; /* 比默认字号大1号 */
+  font-weight: 600 !important;
+  background: linear-gradient(135deg, var(--primary-color), #ff6b6b) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  position: relative;
+}
+
+.score-plus-menu-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-color), #ff6b6b);
+  opacity: 0.1;
+  border-radius: var(--border-radius);
+  z-index: -1;
+}
+
+/* 暗色主题下的分数++样式 */
+[data-theme="dark"] .score-plus-menu-item {
+  background: linear-gradient(135deg, #40a9ff, #ff7875) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+[data-theme="dark"] .score-plus-menu-item::before {
+  background: linear-gradient(135deg, #40a9ff, #ff7875);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   @keyframes fadeInContent {

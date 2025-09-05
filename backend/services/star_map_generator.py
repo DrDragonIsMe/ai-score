@@ -7,7 +7,7 @@ Description:
     创建星图可视化展示，将知识点以星座形式呈现。
 
 Author: Chang Xinglong
-Date: 2025-01-21
+Date: 2025-08-31
 Version: 1.0.0
 License: Apache License 2.0
 """

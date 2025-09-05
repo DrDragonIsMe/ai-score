@@ -58,6 +58,7 @@ export interface TranslationTexts {
     exam: string;
     analytics: string;
     aiAssistant: string;
+    scorePlus: string;
   };
   
   // 设置页面
@@ -202,6 +203,7 @@ const zhCNTexts: TranslationTexts = {
     exam: '考试测评',
     analytics: '数据分析',
     aiAssistant: 'AI助手',
+    scorePlus: '分数++',
   },
   
   settings: {
@@ -340,6 +342,7 @@ const enUSTexts: TranslationTexts = {
     exam: 'Exam',
     analytics: 'Analytics',
     aiAssistant: 'AI Assistant',
+    scorePlus: 'Score++',
   },
   
   settings: {

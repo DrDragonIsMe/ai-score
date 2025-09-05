@@ -1,0 +1,285 @@
+/* 全局按钮样式 - 淡雅和谐主题联动 */
+
+/* Ant Design 按钮样式覆盖 */
+.ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 主要按钮 */
+.ant-btn-primary {
+  background: var(--button-primary-bg) !important;
+  border-color: var(--button-primary-bg) !important;
+  color: white !important;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background: var(--button-primary-hover) !important;
+  border-color: var(--button-primary-hover) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.ant-btn-primary:active {
+  background: var(--button-primary-active) !important;
+  border-color: var(--button-primary-active) !important;
+  transform: translateY(0);
+}
+
+/* 次要按钮 */
+.ant-btn-default {
+  background: var(--button-secondary-bg) !important;
+  border-color: var(--button-secondary-border) !important;
+  color: var(--button-secondary-color) !important;
+}
+
+.ant-btn-default:hover,
+.ant-btn-default:focus {
+  background: var(--button-secondary-hover) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(var(--primary-color-rgb), 0.15);
+}
+
+/* 文本按钮 */
+.ant-btn-text {
+  background: var(--button-text-bg) !important;
+  border-color: transparent !important;
+  color: var(--button-text-color) !important;
+}
+
+.ant-btn-text:hover,
+.ant-btn-text:focus {
+  background: var(--button-text-hover) !important;
+  border-color: transparent !important;
+  color: var(--primary-color) !important;
+}
+
+/* 幽灵按钮 */
+.ant-btn-ghost {
+  background: transparent !important;
+  border-color: var(--button-ghost-border) !important;
+  color: var(--button-ghost-color) !important;
+}
+
+.ant-btn-ghost:hover,
+.ant-btn-ghost:focus {
+  background: var(--button-ghost-hover) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+
+/* 链接按钮 */
+.ant-btn-link {
+  color: var(--button-link-color) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.ant-btn-link:hover,
+.ant-btn-link:focus {
+  color: var(--button-link-hover) !important;
+  background: transparent !important;
+}
+
+/* 危险按钮 */
+.ant-btn-dangerous {
+  background: var(--button-danger-bg) !important;
+  border-color: var(--button-danger-bg) !important;
+  color: white !important;
+}
+
+.ant-btn-dangerous:hover,
+.ant-btn-dangerous:focus {
+  background: var(--button-danger-hover) !important;
+  border-color: var(--button-danger-hover) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 77, 79, 0.25);
+}
+
+/* 成功按钮（自定义类） */
+.ant-btn-success {
+  background: var(--button-success-bg) !important;
+  border-color: var(--button-success-bg) !important;
+  color: white !important;
+}
+
+.ant-btn-success:hover,
+.ant-btn-success:focus {
+  background: var(--button-success-hover) !important;
+  border-color: var(--button-success-hover) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.25);
+}
+
+/* 按钮尺寸优化 */
+.ant-btn-sm {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.ant-btn-lg {
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* 禁用状态 */
+.ant-btn:disabled,
+.ant-btn[disabled] {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 加载状态 */
+.ant-btn-loading {
+  pointer-events: none;
+}
+
+/* 按钮组 */
+.ant-btn-group .ant-btn {
+  border-radius: 0;
+}
+
+.ant-btn-group .ant-btn:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.ant-btn-group .ant-btn:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* Radio Button 样式 */
+.ant-radio-button-wrapper {
+  background: var(--button-secondary-bg) !important;
+  border-color: var(--button-secondary-border) !important;
+  color: var(--button-secondary-color) !important;
+  transition: all 0.2s ease;
+}
+
+.ant-radio-button-wrapper:hover {
+  background: var(--button-secondary-hover) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+
+.ant-radio-button-wrapper-checked {
+  background: var(--button-primary-bg) !important;
+  border-color: var(--button-primary-bg) !important;
+  color: white !important;
+}
+
+.ant-radio-button-wrapper-checked:hover {
+  background: var(--button-primary-hover) !important;
+  border-color: var(--button-primary-hover) !important;
+  color: white !important;
+}
+
+/* 自定义按钮类 */
+.btn-theme-primary {
+  background: var(--primary-color);
+  color: white;
+  border: 1px solid var(--primary-color);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-theme-primary:hover {
+  background: var(--button-primary-hover);
+  border-color: var(--button-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.btn-theme-secondary {
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-color);
+  border: 1px solid var(--button-secondary-border);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-theme-secondary:hover {
+  background: var(--button-secondary-hover);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(var(--primary-color-rgb), 0.15);
+}
+
+.btn-theme-text {
+  background: transparent;
+  color: var(--button-text-color);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-theme-text:hover {
+  background: var(--button-text-hover);
+  color: var(--primary-color);
+}
+
+/* 响应式按钮 */
+@media (max-width: 768px) {
+  .ant-btn {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+  
+  .ant-btn-lg {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+  
+  .ant-btn-sm {
+    padding: 3px 8px;
+    font-size: 12px;
+  }
+}
+
+/* 深色模式特殊处理 */
+[data-theme="dark"] .ant-btn {
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .ant-btn-primary:hover {
+  box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.3);
+}
+
+[data-theme="dark"] .ant-btn-default:hover {
+  box-shadow: 0 2px 4px rgba(var(--primary-color-rgb), 0.2);
+}

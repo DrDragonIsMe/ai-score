@@ -1,0 +1,424 @@
+{
+  "nodes": [
+    {
+      "id": "subject_politics",
+      "name": "politics",
+      "type": "subject",
+      "level": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "chapter_1",
+      "name": "生产资料所有制与经济体制",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -600.0,
+        "y": -200.0
+      },
+      "original_id": 1
+    },
+    {
+      "id": "chapter_2",
+      "name": "生产、劳动与经营",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -450.0,
+        "y": -200.0
+      },
+      "original_id": 2
+    },
+    {
+      "id": "chapter_3",
+      "name": "收入与分配",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -300.0,
+        "y": -200.0
+      },
+      "original_id": 3
+    },
+    {
+      "id": "chapter_4",
+      "name": "发展社会主义市场经济",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": -150.0,
+        "y": -200.0
+      },
+      "original_id": 4
+    },
+    {
+      "id": "chapter_5",
+      "name": "人民当家作主",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 0.0,
+        "y": -200.0
+      },
+      "original_id": 5
+    },
+    {
+      "id": "chapter_6",
+      "name": "人民代表大会制度",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 150.0,
+        "y": -200.0
+      },
+      "original_id": 6
+    },
+    {
+      "id": "chapter_7",
+      "name": "中国共产党领导的多党合作和政治协商制度",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 300.0,
+        "y": -200.0
+      },
+      "original_id": 7
+    },
+    {
+      "id": "chapter_8",
+      "name": "民族区域自治制度和基层群众自治制度",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 450.0,
+        "y": -200.0
+      },
+      "original_id": 8
+    },
+    {
+      "id": "chapter_9",
+      "name": "全面依法治国",
+      "type": "chapter",
+      "level": 1,
+      "position": {
+        "x": 600.0,
+        "y": -200.0
+      },
+      "original_id": 9
+    },
+    {
+      "id": "kp_1",
+      "name": "公有制为主体、多种所有制经济共同发展",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -675.0,
+        "y": -600.0
+      },
+      "original_id": 1,
+      "chapter_id": 1,
+      "section_id": 1,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "公有制",
+        "多种所有制",
+        "基本经济制度"
+      ]
+    },
+    {
+      "id": "kp_2",
+      "name": "社会主义市场经济体制",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -525.0,
+        "y": -600.0
+      },
+      "original_id": 2,
+      "chapter_id": 1,
+      "section_id": 2,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "市场经济",
+        "经济体制",
+        "资源配置"
+      ]
+    },
+    {
+      "id": "kp_3",
+      "name": "新发展理念和中国特色社会主义新时代的经济建设",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -375.0,
+        "y": -600.0
+      },
+      "original_id": 3,
+      "chapter_id": 1,
+      "section_id": 3,
+      "difficulty_level": "理解",
+      "keywords": [
+        "新发展理念",
+        "经济建设",
+        "高质量发展"
+      ]
+    },
+    {
+      "id": "kp_4",
+      "name": "发展生产 满足消费",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -225.0,
+        "y": -600.0
+      },
+      "original_id": 4,
+      "chapter_id": 2,
+      "section_id": 4,
+      "difficulty_level": "理解",
+      "keywords": [
+        "生产",
+        "消费",
+        "生产力"
+      ]
+    },
+    {
+      "id": "kp_5",
+      "name": "我国的个人收入分配",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": -75.0,
+        "y": -600.0
+      },
+      "original_id": 5,
+      "chapter_id": 3,
+      "section_id": 7,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "收入分配",
+        "分配制度",
+        "共同富裕"
+      ]
+    },
+    {
+      "id": "kp_6",
+      "name": "国家财政",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 75.0,
+        "y": -600.0
+      },
+      "original_id": 6,
+      "chapter_id": 3,
+      "section_id": 8,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "财政",
+        "财政政策",
+        "宏观调控"
+      ]
+    },
+    {
+      "id": "kp_7",
+      "name": "征税和纳税",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 225.0,
+        "y": -600.0
+      },
+      "original_id": 7,
+      "chapter_id": 3,
+      "section_id": 9,
+      "difficulty_level": "理解",
+      "keywords": [
+        "税收",
+        "纳税",
+        "税收作用"
+      ]
+    },
+    {
+      "id": "kp_8",
+      "name": "社会主义市场经济",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 375.0,
+        "y": -600.0
+      },
+      "original_id": 8,
+      "chapter_id": 4,
+      "section_id": 10,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "市场经济",
+        "宏观调控",
+        "经济发展"
+      ]
+    },
+    {
+      "id": "kp_9",
+      "name": "我国的人民民主",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 525.0,
+        "y": -600.0
+      },
+      "original_id": 9,
+      "chapter_id": 5,
+      "section_id": 13,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "人民民主",
+        "民主制度",
+        "人民当家作主"
+      ]
+    },
+    {
+      "id": "kp_10",
+      "name": "坚持党的领导",
+      "type": "knowledge_point",
+      "level": 3,
+      "position": {
+        "x": 675.0,
+        "y": -600.0
+      },
+      "original_id": 10,
+      "chapter_id": 5,
+      "section_id": 14,
+      "difficulty_level": "掌握",
+      "keywords": [
+        "党的领导",
+        "中国共产党",
+        "政治领导"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "subject_politics",
+      "target": "chapter_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "subject_politics",
+      "target": "chapter_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_1",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_2",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_1",
+      "target": "kp_3",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_2",
+      "target": "kp_4",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_5",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_6",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_3",
+      "target": "kp_7",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_4",
+      "target": "kp_8",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_5",
+      "target": "kp_9",
+      "relation": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "chapter_5",
+      "target": "kp_10",
+      "relation": "contains",
+      "weight": 1.0
+    }
+  ],
+  "metadata": {
+    "node_count": 20,
+    "edge_count": 19,
+    "generated_at": "2025-09-05T17:19:43.336367"
+  }
+}

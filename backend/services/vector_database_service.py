@@ -46,8 +46,10 @@ class VectorDatabaseService:
         self.vector_id_mapping = {}  # FAISS索引ID到文档信息的映射
         self.query_cache = {}  # 查询缓存
         self.cache_size = 100
+        self._model_loaded = False  # 模型加载状态标记
         self._init_database()
-        self._load_embedding_model()
+        # 延迟加载嵌入模型（在第一次使用时加载）
+        # self._load_embedding_model()  # 注释掉立即加载
         # 延迟构建FAISS索引（在第一次搜索时构建）
         self._faiss_index_built = False
 
@@ -106,15 +108,20 @@ class VectorDatabaseService:
 
     def _load_embedding_model(self):
         """
-        加载文本嵌入模型
+        加载文本嵌入模型（懒加载）
         """
+        if self._model_loaded:
+            return
+            
         if SentenceTransformer is None:
             logger.error("sentence-transformers未安装，无法使用向量化功能")
             self.embedding_model = None
             return
 
         try:
+            logger.info(f"开始加载嵌入模型 {self.model_name}...")
             self.embedding_model = SentenceTransformer(self.model_name)
+            self._model_loaded = True
             logger.info(f"嵌入模型 {self.model_name} 加载成功")
         except Exception as e:
             logger.error(f"嵌入模型加载失败: {str(e)}")
@@ -141,6 +148,9 @@ class VectorDatabaseService:
             是否添加成功
         """
         try:
+            # 懒加载嵌入模型
+            self._load_embedding_model()
+            
             if self.embedding_model is None:
                 logger.error("嵌入模型未加载，无法添加文档向量")
                 return False
@@ -191,6 +201,9 @@ class VectorDatabaseService:
             相似文档列表
         """
         try:
+            # 懒加载嵌入模型
+            self._load_embedding_model()
+            
             if self.embedding_model is None:
                 logger.error("嵌入模型未加载，无法进行语义搜索")
                 return []
@@ -413,6 +426,9 @@ class VectorDatabaseService:
         使用FAISS索引进行快速搜索
         """
         try:
+            # 懒加载嵌入模型
+            self._load_embedding_model()
+            
             if faiss is None or self.embedding_model is None or self.faiss_index is None:
                 return []
 
@@ -465,6 +481,9 @@ class VectorDatabaseService:
         使用传统余弦相似度搜索（回退方法）
         """
         try:
+            # 懒加载嵌入模型
+            self._load_embedding_model()
+            
             if cosine_similarity is None or self.embedding_model is None:
                 logger.error("相似度计算库或嵌入模型未加载，无法进行搜索")
                 return []

@@ -25,6 +25,7 @@ def get_tenant_info():
                 # 创建默认租户
                 default_tenant = Tenant(
                     name='默认租户',
+                    subdomain='default',
                     domain='localhost',
                     is_active=True
                 )
