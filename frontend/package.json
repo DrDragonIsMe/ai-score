@@ -1,9 +1,10 @@
 {
-  "name": "frontend",
+  "name": "ai-score-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "license": "Apache-2.0",
+  "description": "AI智能学习系统前端 - AI交互侧边版",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

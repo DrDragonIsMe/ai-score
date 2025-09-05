@@ -293,12 +293,16 @@ def analyze_document():
         return error_response(result.get('message', '文档分析失败'), 500)
 
 @ai_assistant_bp.route('/search-documents', methods=['POST'])
+@jwt_required()
 def search_documents():
     """
-    搜索PDF文档
+    搜索PDF文档，支持红黄绿掌握度过滤
     
     请求参数:
     - query: 搜索查询
+    - subject_filter: 学科过滤（可选）
+    - search_tags: 是否搜索标签（可选，默认true）
+    - mastery_filter: 掌握度过滤（可选：red/yellow/green）
     """
     data = request.get_json()
     
@@ -306,20 +310,71 @@ def search_documents():
         return error_response("缺少必要参数：query", 400)
     
     query = data['query']
+    subject_filter = data.get('subject_filter')
+    search_tags = data.get('search_tags', True)
+    mastery_filter = data.get('mastery_filter')
     
     if not query.strip():
         return error_response("搜索内容不能为空", 400)
     
-    # 调用文档搜索服务（暂时使用固定用户ID）
-    result = ai_assistant_service.search_documents_by_content(
-        user_id="1",
-        query=query
-    )
+    try:
+        # 从JWT token中获取用户ID
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        # 调用文档搜索服务
+        result = ai_assistant_service.search_documents_by_content(
+            user_id=user_id,
+            query=query,
+            subject_filter=subject_filter,
+            search_tags=search_tags,
+            mastery_filter=mastery_filter
+        )
+        
+        if result['success']:
+            return success_response(result, "文档搜索成功")
+        else:
+            return error_response(result.get('message', '文档搜索失败'), 500)
+            
+    except Exception as e:
+        logger.error(f"文档搜索API异常: {str(e)}")
+        return error_response("文档搜索服务异常，请稍后重试", 503)
+
+@ai_assistant_bp.route('/generate-knowledge-graph', methods=['POST'])
+@jwt_required()
+def generate_knowledge_graph():
+    """
+    生成知识图谱
     
-    if result['success']:
-        return success_response(result, "文档搜索成功")
-    else:
-        return error_response(result.get('message', '文档搜索失败'), 500)
+    请求参数:
+    - subject_id: 学科ID
+    """
+    data = request.get_json()
+    
+    if not data or 'subject_id' not in data:
+        return error_response("缺少必要参数：subject_id", 400)
+    
+    subject_id = data['subject_id']
+    
+    try:
+        # 从JWT token中获取用户ID
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        # 调用知识图谱生成服务
+        result = ai_assistant_service.generate_knowledge_graph_for_user(
+            user_id=user_id,
+            subject_id=subject_id
+        )
+        
+        if result['success']:
+            return success_response(result, "知识图谱生成成功")
+        else:
+            return error_response(result.get('message', '知识图谱生成失败'), 500)
+            
+    except Exception as e:
+        logger.error(f"知识图谱生成API异常: {str(e)}")
+        return error_response("知识图谱生成服务异常，请稍后重试", 503)
 
 @ai_assistant_bp.route('/generate-ppt', methods=['POST'])
 def generate_ppt():

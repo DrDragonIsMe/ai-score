@@ -16,6 +16,8 @@ from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils.decorators import admin_required
 from models import Subject, Chapter, KnowledgePoint, SubKnowledgePoint, KnowledgeGraph, ExamPaper, Question
+from services.knowledge_graph_service import knowledge_graph_service
+from services.mastery_classification_service import mastery_classification_service
 from utils.database import db
 from utils.response import success_response, error_response
 from utils.decorators import admin_required
@@ -670,3 +672,97 @@ def generate_mastery_level_graph(subject_id, year):
             'color_scheme': 'mastery_level'
         }
     }
+
+@knowledge_graph_bp.route('/mastery-star-map/<subject_id>', methods=['GET'])
+@jwt_required()
+def get_mastery_star_map(subject_id):
+    """获取基于掌握程度的星图"""
+    try:
+        current_user_identity = get_jwt_identity()
+        user_id = current_user_identity.get('user_id')
+        tenant_id = current_user_identity.get('tenant_id')
+        
+        # 验证学科
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 生成基于掌握程度的知识图谱
+        knowledge_graph = knowledge_graph_service.generate_knowledge_graph(
+            subject_id=subject_id,
+            user_id=user_id
+        )
+        
+        return success_response({
+            'subject_id': subject_id,
+            'subject_name': knowledge_graph['subject_name'],
+            'star_map': knowledge_graph['star_map'],
+            'statistics': knowledge_graph['statistics'],
+            'generated_at': knowledge_graph['generated_at']
+        })
+        
+    except Exception as e:
+        return error_response(f'Error generating mastery star map: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/mastery-classification/<subject_id>', methods=['GET'])
+@jwt_required()
+def get_mastery_classification(subject_id):
+    """获取知识点掌握程度分类"""
+    try:
+        current_user_identity = get_jwt_identity()
+        user_id = current_user_identity.get('user_id')
+        tenant_id = current_user_identity.get('tenant_id')
+        
+        # 验证学科
+        subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+        if not subject:
+            return error_response('Subject not found', 404)
+        
+        # 获取该学科的所有知识点分类
+        classification_result = mastery_classification_service.classify_user_knowledge_points(
+            user_id=user_id,
+            subject_id=subject_id
+        )
+        
+        return success_response({
+            'subject_id': subject_id,
+            'subject_name': subject.name,
+            'classification': classification_result,
+            'color_standards': {
+                'red': {'threshold': '< 60%', 'description': '薄弱知识点，需要重点学习'},
+                'yellow': {'threshold': '60% - 80%', 'description': '待巩固知识点，需要练习巩固'},
+                'green': {'threshold': '> 80%', 'description': '已掌握知识点，可以拓展学习'}
+            }
+        })
+        
+    except Exception as e:
+        return error_response(f'Error getting mastery classification: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/update-mastery-color', methods=['POST'])
+@jwt_required()
+def update_mastery_color():
+    """更新知识点掌握程度颜色"""
+    try:
+        current_user_identity = get_jwt_identity()
+        user_id = current_user_identity.get('user_id')
+        
+        data = request.get_json()
+        if not data or 'knowledge_point_id' not in data:
+            return error_response('Missing knowledge_point_id', 400)
+        
+        knowledge_point_id = data['knowledge_point_id']
+        
+        # 重新计算并更新颜色分类
+        new_color = mastery_classification_service.classify_knowledge_point(
+            user_id=user_id,
+            knowledge_point_id=knowledge_point_id
+        )
+        
+        return success_response({
+            'knowledge_point_id': knowledge_point_id,
+            'new_color': new_color,
+            'message': f'知识点颜色已更新为{new_color}'
+        })
+        
+    except Exception as e:
+        return error_response(f'Error updating mastery color: {str(e)}', 500)

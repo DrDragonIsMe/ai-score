@@ -19,6 +19,7 @@ from models.knowledge import KnowledgePoint, Subject
 from models.user import User
 from utils.database import db
 from services.llm_service import LLMService
+from services.mastery_classification_service import mastery_classification_service
 from utils.logger import get_logger
 import json
 import math
@@ -33,7 +34,7 @@ class LearningPathService:
     
     @staticmethod
     def generate_learning_path(user_id: str, subject_id: str, 
-                             diagnosis_report_id: str = None,
+                             diagnosis_report_id: Optional[str] = None,
                              target_level: str = 'intermediate',
                              time_budget: int = 30) -> Dict[str, Any]:
         """
@@ -119,8 +120,8 @@ class LearningPathService:
     
     @staticmethod
     def _analyze_current_level(user_id: str, subject_id: str, 
-                             diagnosis_report: DiagnosisReport = None,
-                             learning_profile: LearningProfile = None) -> Dict[str, Any]:
+                             diagnosis_report: Optional[DiagnosisReport] = None,
+                             learning_profile: Optional[LearningProfile] = None) -> Dict[str, Any]:
         """
         分析用户当前水平
         
@@ -185,15 +186,16 @@ class LearningPathService:
         # 这里可以基于用户的历史答题记录、学习时长等进行估算
         # 暂时返回默认值
         return {
-            'overall_level': 'beginner',
+            'user_id': user_id,
+            'current_level': 'beginner',
             'mastered_knowledge_points': [],
             'weak_knowledge_points': [],
             'learning_preferences': {
-                'difficulty_preference': 'medium',
+                'preferred_difficulty': 'medium',
                 'learning_style': 'visual',
-                'preferred_session_duration': 30
+                'time_preference': 'evening'
             },
-            'estimated_ability': 0.0
+            'estimated_ability': 0.5
         }
     
     @staticmethod
@@ -333,6 +335,15 @@ class LearningPathService:
                 current_stage_kps = []
                 current_stage_time = 0
             
+            # 获取知识点掌握程度颜色分类
+            user_id = current_analysis.get('user_id')
+            mastery_color = 'yellow'  # 默认颜色
+            if user_id:
+                mastery_level = mastery_classification_service.classify_knowledge_point(
+                    user_id, kp_item['knowledge_point_id']
+                )
+                mastery_color = mastery_level
+            
             # 添加到当前阶段
             current_stage_kps.append({
                 'knowledge_point_id': kp_item['knowledge_point_id'],
@@ -341,6 +352,7 @@ class LearningPathService:
                 'estimated_time': estimated_time,
                 'priority': kp_item['priority'],
                 'is_weak': kp_item['is_weak'],
+                'mastery_color': mastery_color,  # 红黄绿颜色分类
                 'learning_resources': LearningPathService._recommend_resources(
                     kp_info, current_analysis['learning_preferences']
                 ),
@@ -388,7 +400,7 @@ class LearningPathService:
     def _calculate_priority(kp_id: str, kp_info: Dict[str, Any], 
                           weak_kps: set, current_analysis: Dict[str, Any]) -> float:
         """
-        计算知识点学习优先级
+        计算知识点学习优先级，基于红黄绿颜色分类系统
         
         Args:
             kp_id: 知识点ID
@@ -401,26 +413,45 @@ class LearningPathService:
         """
         priority = 0.0
         
-        # 基础优先级（重要性）
-        priority += kp_info['importance'] * 0.3
+        # 获取知识点掌握程度分类
+        user_id = current_analysis.get('user_id')
+        if user_id:
+            mastery_level = mastery_classification_service.classify_knowledge_point(
+                user_id, kp_id
+            )
+            
+            # 红黄绿优先级：红色（薄弱）> 黄色（待巩固）> 绿色（已掌握）
+            if mastery_level == 'red':
+                priority += 20.0  # 最高优先级
+            elif mastery_level == 'yellow':
+                priority += 10.0  # 中等优先级
+            elif mastery_level == 'green':
+                priority += 2.0   # 最低优先级
+        else:
+            # 回退到原有逻辑
+            if kp_id in weak_kps:
+                priority += 15.0
         
-        # 薄弱点加权
-        if kp_id in weak_kps:
-            priority += 0.4
+        # 难度调整：适中难度优先
+        difficulty = kp_info.get('difficulty', 'medium')
+        if difficulty == 'easy':
+            priority += 2.0
+        elif difficulty == 'medium':
+            priority += 5.0
+        elif difficulty == 'hard':
+            priority += 3.0
         
-        # 难度适配性
-        user_ability = current_analysis['estimated_ability']
-        difficulty_gap = abs(kp_info['difficulty'] - user_ability)
-        if difficulty_gap <= 1.0:  # 难度适中
-            priority += 0.2
-        elif difficulty_gap > 2.0:  # 难度过高或过低
-            priority -= 0.1
+        # 重要性调整
+        importance = kp_info.get('importance', 0.5)
+        priority += importance * 5.0
         
-        # 前置知识点完成度
+        # 前置条件完成度
+        prerequisites = kp_info.get('prerequisites', [])
+        mastered_kps = current_analysis.get('mastered_knowledge_points', [])
         prereq_completion = LearningPathService._calculate_prereq_completion(
-            kp_info['prerequisites'], current_analysis['mastered_knowledge_points']
+            prerequisites, mastered_kps
         )
-        priority += prereq_completion * 0.1
+        priority += prereq_completion * 3.0
         
         return priority
     
@@ -622,7 +653,7 @@ class LearningPathService:
     
     @staticmethod
     def _optimize_path_sequence(learning_path: List[Dict[str, Any]], 
-                              learning_profile: LearningProfile = None) -> List[Dict[str, Any]]:
+                              learning_profile: Optional[LearningProfile] = None) -> List[Dict[str, Any]]:
         """
         优化学习路径顺序
         

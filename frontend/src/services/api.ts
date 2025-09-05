@@ -65,7 +65,23 @@ export const examPaperApi = {
     const data = new FormData();
     data.append('file', file);
     Object.keys(formData).forEach(key => {
-      data.append(key, formData[key]);
+      if (key === 'file') {
+        // 跳过file字段，已经单独处理
+        return;
+      }
+      if (key === 'tags') {
+        // 处理标签字段
+        if (typeof formData[key] === 'string') {
+          data.append(key, formData[key]);
+        } else if (Array.isArray(formData[key])) {
+          data.append(key, formData[key].join(','));
+        }
+      } else if (key === 'auto_generate_kg') {
+        // 处理布尔值字段
+        data.append(key, formData[key] ? 'true' : 'false');
+      } else {
+        data.append(key, formData[key]);
+      }
     });
     
     return api.post('/exam-papers/upload', data, {

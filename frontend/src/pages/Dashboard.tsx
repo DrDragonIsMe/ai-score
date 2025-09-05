@@ -187,11 +187,21 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Title level={2}>
+        <Title level={2} style={{ 
+          fontFamily: 'var(--font-family-primary)', 
+          fontWeight: 'var(--font-weight-bold)', 
+          color: 'var(--heading-color)',
+          lineHeight: 'var(--line-height-heading)'
+        }}>
           <RobotOutlined style={{ color: '#1890ff', marginRight: 8 }} />
           AI智能学习仪表盘
         </Title>
-        <Text type="secondary">
+        <Text type="secondary" style={{
+          fontFamily: 'var(--font-family-primary)',
+          fontSize: 'var(--font-size-base)',
+          color: 'var(--text-secondary)',
+          lineHeight: 'var(--line-height-normal)'
+        }}>
           欢迎回来，{user?.full_name || user?.username}！AI助手已为您准备了个性化学习方案。
         </Text>
       </div>
@@ -315,15 +325,31 @@ const Dashboard: React.FC = () => {
             <Space direction="vertical" style={{ width: '100%' }} size="large">
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <Text>整体进度</Text>
-                  <Text strong>{stats.weeklyProgress}%</Text>
+                  <Text style={{
+                    fontFamily: 'var(--font-family-primary)',
+                    fontSize: 'var(--font-size-base)',
+                    color: 'var(--text-primary)'
+                  }}>整体进度</Text>
+                  <Text strong style={{
+                    fontFamily: 'var(--font-family-primary)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    color: 'var(--text-primary)'
+                  }}>{stats.weeklyProgress}%</Text>
                 </div>
                 <Progress percent={stats.weeklyProgress} strokeColor="#1890ff" />
               </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <Text>答题准确率</Text>
-                  <Text strong>{stats.accuracy}%</Text>
+                  <Text style={{
+                    fontFamily: 'var(--font-family-primary)',
+                    fontSize: 'var(--font-size-base)',
+                    color: 'var(--text-primary)'
+                  }}>答题准确率</Text>
+                  <Text strong style={{
+                    fontFamily: 'var(--font-family-primary)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    color: 'var(--text-primary)'
+                  }}>{stats.accuracy}%</Text>
                 </div>
                 <Progress percent={stats.accuracy} strokeColor="#52c41a" />
               </div>
@@ -373,13 +399,31 @@ const Dashboard: React.FC = () => {
                     }
                     description={
                       <Space>
-                        <Text type="secondary">{item.timestamp}</Text>
-                        <Text type="secondary">•</Text>
-                        <Text type="secondary">{item.duration}分钟</Text>
+                        <Text type="secondary" style={{
+                          fontFamily: 'var(--font-family-primary)',
+                          fontSize: 'var(--font-size-small)',
+                          color: 'var(--text-secondary)'
+                        }}>{item.timestamp}</Text>
+                        <Text type="secondary" style={{
+                          fontFamily: 'var(--font-family-primary)',
+                          color: 'var(--text-secondary)'
+                        }}>•</Text>
+                        <Text type="secondary" style={{
+                          fontFamily: 'var(--font-family-primary)',
+                          fontSize: 'var(--font-size-small)',
+                          color: 'var(--text-secondary)'
+                        }}>{item.duration}分钟</Text>
                         {item.score && (
                           <>
-                            <Text type="secondary">•</Text>
-                            <Text type="secondary">得分: {item.score}%</Text>
+                            <Text type="secondary" style={{
+                              fontFamily: 'var(--font-family-primary)',
+                              color: 'var(--text-secondary)'
+                            }}>•</Text>
+                            <Text type="secondary" style={{
+                              fontFamily: 'var(--font-family-primary)',
+                              fontSize: 'var(--font-size-small)',
+                              color: 'var(--text-secondary)'
+                            }}>得分: {item.score}%</Text>
                           </>
                         )}
                       </Space>
@@ -429,7 +473,11 @@ const Dashboard: React.FC = () => {
                       </Space>
                     }
                     description={
-                      <Text type="secondary">截止时间: {item.dueDate}</Text>
+                      <Text type="secondary" style={{
+                        fontFamily: 'var(--font-family-primary)',
+                        fontSize: 'var(--font-size-small)',
+                        color: 'var(--text-secondary)'
+                      }}>截止时间: {item.dueDate}</Text>
                     }
                   />
                 </List.Item>

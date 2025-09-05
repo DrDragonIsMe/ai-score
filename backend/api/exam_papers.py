@@ -15,7 +15,7 @@ License: Apache License 2.0
 import os
 import uuid
 from datetime import datetime
-from flask import Blueprint, request, jsonify, g, current_app
+from flask import Blueprint, request, jsonify, g, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from models import ExamPaper, Question, Subject, KnowledgePoint, KnowledgeGraph
@@ -25,6 +25,8 @@ from utils.decorators import admin_required
 from sqlalchemy import desc, func, and_
 from services.ai_parser import AIParser
 from services.paper_downloader import PaperDownloader
+from services.knowledge_graph_service import KnowledgeGraphService
+from services.vector_database_service import VectorDatabaseService
 
 exam_papers_bp = Blueprint('exam_papers', __name__)
 
@@ -104,6 +106,8 @@ def upload_exam_paper():
         exam_type = request.form.get('exam_type', '').strip()
         region = request.form.get('region', '').strip()
         description = request.form.get('description', '').strip()
+        tags = request.form.get('tags', '').strip()  # 新增标签字段
+        auto_generate_kg = request.form.get('auto_generate_kg', 'false').lower() == 'true'  # 自动生成知识图谱选项
         
         if not all([title, subject_id]):
             return error_response('Title and subject_id are required', 400)
@@ -128,6 +132,11 @@ def upload_exam_paper():
         file_path = os.path.join(upload_dir, new_filename)
         file.save(file_path)
         
+        # 处理标签
+        tags_list = []
+        if tags:
+            tags_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
+        
         # 创建试卷记录
         exam_paper = ExamPaper(
             tenant_id=tenant_id,
@@ -137,6 +146,7 @@ def upload_exam_paper():
             year=year,
             exam_type=exam_type,
             region=region,
+            tags=tags_list,
             file_path=file_path,
             file_type=file_ext,
             file_size=os.path.getsize(file_path)
@@ -153,6 +163,43 @@ def upload_exam_paper():
             # 更新解析状态
             exam_paper.parse_status = 'completed'
             db.session.commit()
+            
+            # 如果启用自动生成知识图谱
+            if auto_generate_kg:
+                try:
+                    # 从试卷内容提取知识点并更新知识图谱
+                    from services.knowledge_graph_service import knowledge_graph_service
+                    from services.vector_database_service import vector_db_service
+                    
+                    # 生成知识图谱（基于学科）
+                    knowledge_graph_service.generate_knowledge_graph(
+                        subject_id=exam_paper.subject_id
+                    )
+                    
+                    # 向量化处理试卷内容
+                    if exam_paper.parse_result and 'content' in exam_paper.parse_result:
+                        content = exam_paper.parse_result['content']
+                        content_chunks = vector_db_service._split_text_into_chunks(content, chunk_size=500, overlap=50)
+                        
+                        metadata = {
+                            'exam_paper_id': str(exam_paper.id),
+                            'title': exam_paper.title,
+                            'year': exam_paper.year,
+                            'exam_type': exam_paper.exam_type,
+                            'region': exam_paper.region,
+                            'tags': exam_paper.tags or [],
+                            'created_at': datetime.utcnow().isoformat()
+                        }
+                        
+                        vector_db_service.add_document_vectors(
+                            document_id=str(exam_paper.id),
+                            document_type='exam_paper',
+                            content_chunks=content_chunks,
+                            metadata=metadata
+                        )
+                    
+                except Exception as kg_error:
+                    current_app.logger.error(f'Failed to generate knowledge graph for paper {exam_paper.id}: {str(kg_error)}')
             
         except Exception as parse_error:
             # 解析失败，更新状态

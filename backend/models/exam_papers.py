@@ -36,6 +36,7 @@ class ExamPaper(db.Model):
     total_score = db.Column(db.Integer, default=150, comment='总分')
     duration = db.Column(db.Integer, comment='考试时长(分钟)')
     difficulty_level = db.Column(db.Integer, default=3, comment='难度等级1-5')
+    tags = db.Column(db.JSON, default=[], comment='标签列表')
     
     # 文件信息
     file_path = db.Column(db.String(500), comment='文件路径')
@@ -75,6 +76,7 @@ class ExamPaper(db.Model):
             'total_score': self.total_score,
             'duration': self.duration,
             'difficulty_level': self.difficulty_level,
+            'tags': self.tags or [],
             'file_type': self.file_type,
             'file_size': self.file_size,
             'parse_status': self.parse_status,

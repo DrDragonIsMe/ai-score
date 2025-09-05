@@ -3,42 +3,42 @@
   line-height: 1.6;
   font-weight: 400;
 
-  /* 主色调 - 淡雅蓝色系 */
-  --primary-color: #4a90e2;
-  --primary-hover: #6ba3e8;
-  --primary-active: #357abd;
-  --primary-light: #e8f4fd;
-  --primary-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-  /* 辅助色彩 - 淡雅色系 */
-  --secondary-color: #52c41a;
-  --accent-color: #95de64;
-  --success-color: #52c41a;
-  --success-light: #f6ffed;
-  --warning-color: #faad14;
-  --warning-light: #fffbe6;
-  --error-color: #ff4d4f;
-  --error-light: #fff2f0;
-  --info-color: #1890ff;
-  --info-light: #e6f7ff;
+  /* 主色调 - 淡雅蓝色系，优化对比度 */
+  --primary-color: #4285d4; /* 稍微加深主色调 */
+  --primary-hover: #5a95db;
+  --primary-active: #3574b8;
+  --primary-light: #e6f2fd;
+  --primary-gradient: linear-gradient(135deg, #4285d4 0%, #3574b8 100%);
+  /* 辅助色彩 - 淡雅色系，增强对比度 */
+  --secondary-color: #47b317; /* 加深绿色 */
+  --accent-color: #7ed957; /* 优化强调色 */
+  --success-color: #47b317;
+  --success-light: #f4ffed;
+  --warning-color: #e67e14; /* 加深警告色 */
+  --warning-light: #fff8e6;
+  --error-color: #e84749; /* 稍微调整错误色 */
+  --error-light: #fff1f0;
+  --info-color: #1677ff; /* 加深信息色 */
+  --info-light: #e4f5ff;
   
-  /* 背景色 - 清新淡雅 */
+  /* 背景色 - 清新淡雅，优化层次感 */
   --background-primary: #ffffff;
-  --background-secondary: #fbfcfd;
-  --background-tertiary: #f7f9fc;
-  --background-soft: #f0f4f8;
-  --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --background-card: rgba(255, 255, 255, 0.95);
-  --ai-background-light: rgba(255, 255, 255, 0.95);
+  --background-secondary: #f8fafb; /* 稍微调整次要背景 */
+  --background-tertiary: #f2f5f8; /* 增强三级背景对比度 */
+  --background-soft: #edf1f5; /* 优化柔和背景 */
+  --background-gradient: linear-gradient(135deg, #5a7bc8 0%, #6b4c93 100%); /* 稍微加深渐变 */
+  --background-card: rgba(255, 255, 255, 0.98); /* 提升卡片背景对比度 */
+  --ai-background-light: rgba(255, 255, 255, 0.98);
   --ai-text-primary: #ffffff;
-  --ai-text-secondary: rgba(255, 255, 255, 0.85);
-  --ai-text-light: rgba(255, 255, 255, 0.65);
+  --ai-text-secondary: rgba(255, 255, 255, 0.9); /* 增强AI文字对比度 */
+  --ai-text-light: rgba(255, 255, 255, 0.75); /* 提升淡色文字可读性 */
   
-  /* 文字颜色 - 高对比度 */
-  --text-primary: #2c3e50;
-  --text-secondary: #5a6c7d;
-  --text-tertiary: #8492a6;
-  --text-disabled: #bdc3c7;
-  --text-light: #ecf0f1;
+  /* 文字颜色 - 高对比度，保持淡雅 */
+  --text-primary: #1f2937; /* 加深主文字颜色 */
+  --text-secondary: #4b5563; /* 增强次要文字对比度 */
+  --text-tertiary: #6b7280; /* 提升三级文字可读性 */
+  --text-disabled: #9ca3af; /* 优化禁用文字对比度 */
+  --text-light: #f9fafb; /* 调整淡色文字 */
   --border-color: rgba(0, 0, 0, 0.06);
   --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.04);

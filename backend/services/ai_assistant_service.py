@@ -33,6 +33,8 @@ from services.diagnosis_service import DiagnosisService
 from services.document_service import get_document_service
 from services.vector_database_service import vector_db_service
 from services.ppt_generation_service import ppt_generation_service
+from services.knowledge_graph_service import knowledge_graph_service
+from services.mastery_classification_service import mastery_classification_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -65,7 +67,10 @@ class AIAssistantService:
                 "学习进度跟踪",
                 "知识点推荐",
                 "PDF文档分析",
-                "文档内容问答"
+                "文档内容问答",
+                "红黄绿掌握度分析",
+                "知识图谱生成",
+                "按标签智能检索"
             ]
         }
     
@@ -359,13 +364,17 @@ class AIAssistantService:
                 "error": str(e)
             }
     
-    def search_documents_by_content(self, user_id: str, query: str) -> Dict[str, Any]:
+    def search_documents_by_content(self, user_id: str, query: str, subject_filter: Optional[str] = None, 
+                                   search_tags: bool = True, mastery_filter: Optional[str] = None) -> Dict[str, Any]:
         """
-        根据内容搜索用户的PDF文档
+        根据内容搜索用户的PDF文档，支持红黄绿掌握度过滤
         
         Args:
             user_id: 用户ID
             query: 搜索查询
+            subject_filter: 学科过滤
+            search_tags: 是否搜索标签
+            mastery_filter: 掌握度过滤 ('red', 'yellow', 'green')
         
         Returns:
             搜索结果
@@ -377,7 +386,9 @@ class AIAssistantService:
             search_results = document_service.search_documents(
                 query=query,
                 user_id=user_id,
-                tenant_id="default"
+                tenant_id="default",
+                search_tags=search_tags,
+                subject_filter=subject_filter
             )
             
             if not search_results:
@@ -392,18 +403,36 @@ class AIAssistantService:
                     ]
                 }
             
-            # 为每个结果生成简要说明
+            # 为每个结果生成简要说明和掌握度分析
             enhanced_results = []
             for doc in search_results[:5]:  # 限制返回前5个结果
                 doc_summary = self._generate_document_summary(doc)
-                enhanced_results.append({
+                
+                # 分析文档相关知识点的掌握度
+                mastery_analysis = None
+                if subject_filter:
+                    mastery_analysis = self._analyze_document_mastery(user_id, doc, subject_filter)
+                
+                doc_result = {
                     "document_id": doc.get('id'),
                     "title": doc.get('title', ''),
                     "category": doc.get('category', ''),
+                    "tags": doc.get('tags', []),
                     "relevance_score": doc.get('relevance_score', 0),
+                    "match_type": doc.get('match_type', 'content'),
                     "summary": doc_summary,
                     "upload_time": doc.get('upload_time', '')
-                })
+                }
+                
+                if mastery_analysis:
+                    doc_result["mastery_analysis"] = mastery_analysis
+                
+                # 根据掌握度过滤
+                if mastery_filter and mastery_analysis:
+                    if mastery_analysis.get('overall_level') == mastery_filter:
+                        enhanced_results.append(doc_result)
+                else:
+                    enhanced_results.append(doc_result)
             
             return {
                 "success": True,
@@ -516,7 +545,124 @@ class AIAssistantService:
         except Exception as e:
             logger.error(f"文档检索失败: {str(e)}")
             return []
-    
+
+    def _analyze_document_mastery(self, user_id: str, doc: Dict[str, Any], subject_id: str) -> Dict[str, Any]:
+        """
+        分析文档相关知识点的掌握度
+        
+        Args:
+            user_id: 用户ID
+            doc: 文档信息
+            subject_id: 学科ID
+            
+        Returns:
+            掌握度分析结果
+        """
+        try:
+            # 从文档标签中提取知识点
+            tags = doc.get('tags', [])
+            knowledge_points = []
+            
+            # 获取学科相关的知识点
+            from models.knowledge import KnowledgePoint
+            for tag in tags:
+                kp = KnowledgePoint.query.filter_by(name=tag).first()
+                if kp:
+                    knowledge_points.append(kp.id)
+            
+            if not knowledge_points:
+                return {
+                    'overall_level': 'unknown',
+                    'knowledge_points': [],
+                    'red_count': 0,
+                    'yellow_count': 0,
+                    'green_count': 0
+                }
+            
+            # 分析每个知识点的掌握度
+            red_count = yellow_count = green_count = 0
+            kp_analysis = []
+            
+            for kp_id in knowledge_points:
+                mastery_level = mastery_classification_service.classify_knowledge_point(user_id, kp_id)
+                kp_analysis.append({
+                    'knowledge_point_id': kp_id,
+                    'mastery_level': mastery_level
+                })
+                
+                if mastery_level == 'red':
+                    red_count += 1
+                elif mastery_level == 'yellow':
+                    yellow_count += 1
+                elif mastery_level == 'green':
+                    green_count += 1
+            
+            # 确定整体掌握度
+            total_kps = len(knowledge_points)
+            if red_count > total_kps * 0.5:
+                overall_level = 'red'
+            elif yellow_count > total_kps * 0.3:
+                overall_level = 'yellow'
+            else:
+                overall_level = 'green'
+            
+            return {
+                'overall_level': overall_level,
+                'knowledge_points': kp_analysis,
+                'red_count': red_count,
+                'yellow_count': yellow_count,
+                'green_count': green_count,
+                'total_count': total_kps
+            }
+            
+        except Exception as e:
+            logger.error(f"文档掌握度分析失败: {str(e)}")
+            return {
+                'overall_level': 'unknown',
+                'knowledge_points': [],
+                'red_count': 0,
+                'yellow_count': 0,
+                'green_count': 0,
+                'error': str(e)
+            }
+
+    def generate_knowledge_graph_for_user(self, user_id: str, subject_id: str) -> Dict[str, Any]:
+        """
+        为用户生成知识图谱
+        
+        Args:
+            user_id: 用户ID
+            subject_id: 学科ID
+            
+        Returns:
+            知识图谱生成结果
+        """
+        try:
+            # 生成知识图谱
+            knowledge_graph = knowledge_graph_service.generate_knowledge_graph(
+                subject_id=subject_id,
+                user_id=user_id
+            )
+            
+            # 获取掌握度统计
+            mastery_stats = mastery_classification_service.classify_user_knowledge_points(user_id, subject_id)
+            
+            return {
+                'success': True,
+                'knowledge_graph': knowledge_graph,
+                'mastery_statistics': mastery_stats,
+                'message': '知识图谱生成成功',
+                'timestamp': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"知识图谱生成失败: {str(e)}")
+            return {
+                'success': False,
+                'message': '知识图谱生成失败，请重试',
+                'error': str(e)
+            }
+
     def _retrieve_comprehensive_data(self, user_id: str, query: str) -> Dict[str, Any]:
         """
         检索综合数据，包括文档、试卷、错题记录和学习情况

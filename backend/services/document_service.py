@@ -667,7 +667,8 @@ class DocumentService:
             logger.error(f"获取文档内容失败: {str(e)}")
             return None
     
-    def search_documents(self, query: str, user_id: str, tenant_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def search_documents(self, query: str, user_id: str, tenant_id: str, limit: int = 10, 
+                        search_tags: bool = True, subject_filter: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         搜索文档
         
@@ -676,17 +677,25 @@ class DocumentService:
             user_id: 用户ID
             tenant_id: 租户ID
             limit: 返回结果数量限制
+            search_tags: 是否搜索标签
+            subject_filter: 学科过滤器
             
         Returns:
             搜索结果列表
         """
         try:
-            # 在文档标题、描述和内容中搜索
+            # 基础查询条件
             documents_query = Document.query.filter(
                 Document.user_id == user_id,
                 Document.tenant_id == tenant_id,
-                Document.status == 'completed'
+                Document.parse_status == 'completed'
             )
+            
+            # 学科过滤
+            if subject_filter:
+                documents_query = documents_query.join(DocumentCategory).filter(
+                    DocumentCategory.name.contains(subject_filter)
+                )
             
             # 搜索标题和描述
             title_matches = documents_query.filter(
@@ -696,42 +705,119 @@ class DocumentService:
                 )
             ).limit(limit).all()
             
+            # 搜索标签
+            tag_matches = []
+            if search_tags and len(title_matches) < limit:
+                # 使用JSON查询搜索标签
+                tag_docs = documents_query.filter(
+                    Document.tags.contains([query])
+                ).limit(limit - len(title_matches)).all()
+                
+                for doc in tag_docs:
+                    if doc not in title_matches:
+                        tag_matches.append(doc)
+            
             # 搜索内容
             content_matches = []
-            if len(title_matches) < limit:
+            if len(title_matches) + len(tag_matches) < limit:
                 pages = DocumentPage.query.join(Document).filter(
                     Document.user_id == user_id,
                     Document.tenant_id == tenant_id,
-                    Document.status == 'completed',
-                    DocumentPage.text_content.contains(query)
-                ).limit(limit - len(title_matches)).all()
+                    Document.parse_status == 'completed',
+                    DocumentPage.page_content.contains(query)
+                ).limit(limit - len(title_matches) - len(tag_matches)).all()
                 
+                existing_docs = title_matches + tag_matches
                 for page in pages:
-                    if page.document not in title_matches:
+                    if page.document not in existing_docs:
                         content_matches.append(page.document)
             
-            # 合并结果
-            all_matches = title_matches + content_matches
+            # 合并结果并按相关性排序
+            all_matches = title_matches + tag_matches + content_matches
             
             results = []
             for doc in all_matches[:limit]:
                 # 获取匹配的内容片段
                 content_snippet = self._get_content_snippet(doc.id, query)
                 
+                # 计算相关性分数
+                relevance_score = self._calculate_relevance_score(doc, query)
+                
                 results.append({
                     'id': doc.id,
                     'title': doc.title,
                     'filename': doc.filename,
                     'category': doc.category.name if doc.category else None,
+                    'tags': doc.tags or [],
                     'upload_time': doc.upload_time.isoformat() if doc.upload_time else None,
                     'content': content_snippet,
-                    'summary': doc.description or content_snippet[:200] + '...' if content_snippet else None
+                    'summary': doc.description or content_snippet[:200] + '...' if content_snippet else None,
+                    'relevance_score': relevance_score,
+                    'match_type': self._get_match_type(doc, query, title_matches, tag_matches)
                 })
+            
+            # 按相关性分数排序
+            results.sort(key=lambda x: x['relevance_score'], reverse=True)
             
             return results
         except Exception as e:
             logger.error(f"搜索文档失败: {str(e)}")
             return []
+    
+    def _calculate_relevance_score(self, document: Document, query: str) -> float:
+        """
+        计算文档与查询的相关性分数
+        
+        Args:
+            document: 文档对象
+            query: 查询关键词
+            
+        Returns:
+            相关性分数 (0-1)
+        """
+        score = 0.0
+        query_lower = query.lower()
+        
+        # 标题匹配权重最高
+        if document.title and query_lower in document.title.lower():
+            score += 0.4
+        
+        # 标签匹配权重较高
+        if document.tags:
+            for tag in document.tags:
+                if query_lower in tag.lower():
+                    score += 0.3
+                    break
+        
+        # 描述匹配
+        if document.description and query_lower in document.description.lower():
+            score += 0.2
+        
+        # 文件名匹配
+        if document.filename and query_lower in document.filename.lower():
+            score += 0.1
+        
+        return min(score, 1.0)
+    
+    def _get_match_type(self, document: Document, query: str, title_matches: list, tag_matches: list) -> str:
+        """
+        获取匹配类型
+        
+        Args:
+            document: 文档对象
+            query: 查询关键词
+            title_matches: 标题匹配列表
+            tag_matches: 标签匹配列表
+            
+        Returns:
+            匹配类型
+        """
+        if document in title_matches:
+            return 'title'
+        elif document in tag_matches:
+            return 'tag'
+        else:
+            return 'content'
     
     def _get_content_snippet(self, document_id: str, query: str, snippet_length: int = 200) -> Optional[str]:
         """

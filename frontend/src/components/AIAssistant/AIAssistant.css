@@ -59,16 +59,16 @@
   }
 
   &::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #f8f9fa; /* 更淡的滚动条轨道背景 */
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: #adb5bd; /* 更深的滚动条颜色，提升对比度 */
     border-radius: 3px;
 
     &:hover {
-      background: #a8a8a8;
+      background: #868e96; /* 悬停时更深的颜色 */
     }
   }
 }
@@ -98,9 +98,10 @@
       margin-left: 12px;
 
       .message-body {
-        background: #f6f6f6;
-        color: #333;
+        background: #e8f4fd; /* 更深的浅蓝色背景，提升对比度 */
+        color: #1a1a1a; /* 更深的文字颜色，增强可读性 */
         border-radius: 18px 18px 18px 4px;
+        border: 1px solid #d1e7dd; /* 添加淡色边框增强层次感 */
       }
     }
   }
@@ -163,9 +164,10 @@
     display: flex;
     align-items: center;
     padding: 12px 16px;
-    background: #f6f6f6;
+    background: #e8f4fd; /* 与助手消息保持一致的背景色 */
     border-radius: 18px 18px 18px 4px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d1e7dd; /* 添加边框 */
   }
 }
 
@@ -528,14 +530,14 @@
   .ai-assistant-container {
     .messages-container {
       &::-webkit-scrollbar-track {
-        background: #2f2f2f;
+        background: #21262d; /* 更深的滚动条轨道背景 */
       }
       
       &::-webkit-scrollbar-thumb {
-        background: #555;
+        background: #656d76; /* 更亮的滚动条颜色，提升对比度 */
         
         &:hover {
-          background: #777;
+          background: #8b949e; /* 悬停时更亮的颜色 */
         }
       }
     }
@@ -543,16 +545,18 @@
     .message {
       &.assistant-message {
         .message-body {
-          background: #2f2f2f;
-          color: #fff;
+          background: #1e2329; /* 更深的深色背景，提升对比度 */
+          color: #f0f6fc; /* 更亮的文字颜色，增强可读性 */
+          border: 1px solid #30363d; /* 添加边框增强层次感 */
         }
       }
     }
     
     .loading-message {
       .loading-content {
-        background: #2f2f2f;
-        color: #fff;
+        background: #1e2329; /* 与助手消息保持一致的背景色 */
+        color: #f0f6fc; /* 更亮的文字颜色 */
+        border: 1px solid #30363d; /* 添加边框 */
       }
     }
     

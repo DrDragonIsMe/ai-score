@@ -129,26 +129,26 @@
 }
 
 .ant-list-item:hover {
-  background-color: #f5f5f5;
-  border-radius: 6px;
+  background-color: var(--background-tertiary); /* 使用主题背景变量 */
+  border-radius: var(--border-radius);
 }
 
 /* 表单样式增强 */
 .ant-input, .ant-input-password {
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 .ant-input:focus, .ant-input-password:focus {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 0 0 2px rgba(66, 133, 212, 0.25); /* 使用更深的焦点颜色 */
 }
 
 /* 选择器样式 */
 .ant-select {
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 .ant-select-focused .ant-select-selector {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(66, 133, 212, 0.25) !important; /* 增强焦点对比度 */
 }
 
 /* 加载状态 */
@@ -159,23 +159,23 @@
   min-height: 200px;
 }
 
-/* 空状态 */
+/* 空状态 - 优化对比度 */
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: var(--text-tertiary); /* 使用主题文字变量 */
 }
 
-/* 错误状态 */
+/* 错误状态 - 优化对比度 */
 .error-state {
   text-align: center;
   padding: 40px 20px;
-  color: #ff4d4f;
+  color: var(--error-color); /* 使用主题错误色变量 */
 }
 
 /* 工具提示样式 */
 .ant-tooltip-inner {
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 /* 模态框样式 */

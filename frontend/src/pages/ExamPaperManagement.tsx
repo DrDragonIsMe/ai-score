@@ -18,7 +18,9 @@ import {
   Popconfirm,
   InputNumber,
   Spin,
-  Alert
+  Alert,
+  Switch,
+  Tooltip
 } from 'antd';
 import {
   UploadOutlined,
@@ -49,6 +51,7 @@ interface ExamPaper {
   file_size: number;
   file_type: string;
   download_count: number;
+  tags?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +74,7 @@ const ExamPaperManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSubject, setFilterSubject] = useState<string>('');
   const [filterYear, setFilterYear] = useState<number>();
+  const [filterTag, setFilterTag] = useState<string>('');
   const [uploadForm] = Form.useForm();
   const [downloadForm] = Form.useForm();
 
@@ -202,7 +206,10 @@ const ExamPaperManagement: React.FC = () => {
     const matchesSearch = paper.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = !filterSubject || paper.subject_id === filterSubject;
     const matchesYear = !filterYear || paper.year === filterYear;
-    return matchesSearch && matchesSubject && matchesYear;
+    const matchesTag = !filterTag || (paper.tags && paper.tags.some(tag => 
+      tag.toLowerCase().includes(filterTag.toLowerCase())
+    ));
+    return matchesSearch && matchesSubject && matchesYear && matchesTag;
   }) : [];
 
   const columns = [
@@ -240,6 +247,18 @@ const ExamPaperManagement: React.FC = () => {
       title: '地区',
       dataIndex: 'region',
       key: 'region'
+    },
+    {
+      title: '标签',
+      dataIndex: 'tags',
+      key: 'tags',
+      render: (tags: string[]) => (
+        <Space wrap>
+          {tags && tags.length > 0 ? tags.map((tag, index) => (
+            <Tag key={index} color="blue">{tag}</Tag>
+          )) : <span style={{ color: '#999' }}>无标签</span>}
+        </Space>
+      )
     },
     {
       title: '解析状态',
@@ -385,6 +404,12 @@ const ExamPaperManagement: React.FC = () => {
               onChange={(value) => setFilterYear(value || undefined)}
               style={{ width: 100 }}
             />
+            <Input
+              placeholder="搜索标签"
+              value={filterTag}
+              onChange={(e) => setFilterTag(e.target.value)}
+              style={{ width: 120 }}
+            />
           </Space>
         </Col>
       </Row>
@@ -474,6 +499,29 @@ const ExamPaperManagement: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item
+            name="tags"
+            label="标签"
+          >
+            <Input placeholder="请输入标签，多个标签用逗号分隔" />
+          </Form.Item>
+
+          <Form.Item
+            name="auto_generate_kg"
+            label={
+              <Space>
+                <span>自动生成知识图谱</span>
+                <Tooltip title="开启后将自动为试卷生成知识图谱并进行向量化存储，便于智能检索和分析">
+                  <span style={{ color: '#1890ff', cursor: 'help' }}>(?)</span>
+                </Tooltip>
+              </Space>
+            }
+            valuePropName="checked"
+            initialValue={true}
+          >
+            <Switch />
+          </Form.Item>
 
           <Form.Item
             name="file"

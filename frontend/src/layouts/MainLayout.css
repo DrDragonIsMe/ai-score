@@ -1,0 +1,64 @@
+/* 页面切换动画效果 */
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 侧边栏菜单项悬停效果 - 优化对比度 */
+.ant-menu-light .ant-menu-item:hover {
+  background-color: rgba(90, 107, 133, 0.1) !important; /* 使用更深的颜色提升对比度 */
+  border-radius: var(--border-radius);
+  transition: all 0.3s ease;
+}
+
+.ant-menu-light .ant-menu-item-selected {
+  background-color: rgba(90, 107, 133, 0.15) !important; /* 增强选中状态对比度 */
+  border-radius: var(--border-radius);
+  color: var(--primary-color) !important; /* 使用主题色变量 */
+}
+
+.ant-menu-light .ant-menu-item-selected::after {
+  display: none;
+}
+
+/* 用户头像悬停效果 - 优化阴影 */
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-medium) !important; /* 使用主题阴影变量 */
+}
+
+/* 页面内容区域的平滑过渡 */
+.page-content {
+  animation: fadeInContent 0.6s ease-out;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  @keyframes fadeInContent {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

@@ -1,0 +1,174 @@
+.theme-language-settings {
+  padding: 24px;
+  background: var(--background-primary);
+  min-height: 100vh;
+}
+
+.settings-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+}
+
+.settings-card .ant-card-head {
+  border-bottom: 1px solid var(--border-color);
+  background: var(--background-secondary);
+}
+
+.settings-card .ant-card-head-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-card .ant-card-body {
+  background: var(--background-primary);
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.setting-section {
+  width: 100%;
+}
+
+.setting-section .ant-typography-title {
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.current-mode-indicator {
+  margin-top: 8px;
+}
+
+.theme-style-card {
+  padding: 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  background: var(--background-secondary);
+}
+
+.theme-style-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.theme-style-card.active {
+  border-color: var(--primary-color);
+  background: var(--primary-color-light, rgba(24, 144, 255, 0.1));
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.theme-preview {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.color-picker-item .ant-typography {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .theme-language-settings {
+    padding: 16px;
+  }
+  
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .theme-style-card {
+    padding: 12px;
+  }
+  
+  .color-picker-item {
+    padding: 8px;
+  }
+}
+
+/* 暗色主题适配 */
+[data-theme="dark"] .settings-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color-dark, #434343);
+}
+
+[data-theme="dark"] .theme-style-card {
+  background: var(--background-primary);
+  border-color: var(--border-color-dark, #434343);
+}
+
+[data-theme="dark"] .color-picker-item {
+  background: var(--background-primary);
+  border-color: var(--border-color-dark, #434343);
+}
+
+/* 动画效果 */
+.theme-style-card,
+.color-picker-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-card {
+  transition: box-shadow 0.3s ease;
+}
+
+.settings-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 自定义 Radio Button 样式 */
+.ant-radio-button-wrapper {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.ant-radio-button-wrapper:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.ant-radio-button-wrapper-checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.ant-radio-button-wrapper-checked:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}

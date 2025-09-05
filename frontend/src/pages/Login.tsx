@@ -64,10 +64,21 @@ const Login: React.FC = () => {
             >
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                     <div style={{ textAlign: 'center' }}>
-                        <Title level={2} style={{ marginBottom: 8 }}>
+                        <Title level={2} style={{ 
+                            marginBottom: 8,
+                            fontFamily: 'var(--font-family-primary)',
+                            fontWeight: 'var(--font-weight-bold)',
+                            color: 'var(--heading-color)',
+                            lineHeight: 'var(--line-height-heading)'
+                        }}>
                             AI智能学习系统
                         </Title>
-                        <Text type="secondary">登录您的账户</Text>
+                        <Text type="secondary" style={{
+                            fontFamily: 'var(--font-family-primary)',
+                            fontSize: 'var(--font-size-base)',
+                            color: 'var(--text-secondary)',
+                            lineHeight: 'var(--line-height-normal)'
+                        }}>登录您的账户</Text>
                     </div>
 
                     {error && (
@@ -127,7 +138,12 @@ const Login: React.FC = () => {
                     <Divider>或</Divider>
 
                     <div style={{ textAlign: 'center' }}>
-                        <Text type="secondary">
+                        <Text type="secondary" style={{
+                            fontFamily: 'var(--font-family-primary)',
+                            fontSize: 'var(--font-size-base)',
+                            color: 'var(--text-secondary)',
+                            lineHeight: 'var(--line-height-normal)'
+                        }}>
                             还没有账户？{' '}
                             <Link to="/register">
                                 立即注册

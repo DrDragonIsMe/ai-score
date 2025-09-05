@@ -48,12 +48,15 @@ import {
   Stop as StopIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  Palette as PaletteIcon,
+  Language as LanguageIcon
 } from '@mui/icons-material';
 import { type SubjectInitProgress } from '../api/settings';
 import { useAuthStore } from '../stores/authStore';
 import { useSubjectInitStore } from '../stores/subjectInitStore';
 import settingsApi from '../services/settings';
+import ThemeLanguageSettings from '../components/ThemeLanguageSettings/ThemeLanguageSettings';
 
 interface AIModel {
   id: string;
@@ -453,7 +456,7 @@ const Settings: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
         系统设置
       </Typography>
 
@@ -461,13 +464,14 @@ const Settings: React.FC = () => {
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="AI模型管理" />
           <Tab label="系统信息" />
+          <Tab label="主题与语言" icon={<PaletteIcon />} />
           {isAdmin && <Tab label="学科初始化" />}
         </Tabs>
       </Box>
 
       <TabPanel value={tabValue} index={0}>
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">AI模型配置</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>AI模型配置</Typography>
           <Box>
             <Button
               variant="outlined"
@@ -498,17 +502,17 @@ const Settings: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Typography variant="h6" component="div">
-                        {model.name}
-                        {model.is_default && (
-                          <Chip
-                            label="默认"
-                            color="primary"
-                            size="small"
-                            sx={{ ml: 1 }}
-                          />
-                        )}
-                      </Typography>
+                      <Typography variant="h6" component="div" sx={{ fontFamily: 'var(--font-family-primary)', fontWeight: 'var(--font-weight-medium)' }}>
+                      {model.name}
+                      {model.is_default && (
+                        <Chip
+                          label="默认"
+                          color="primary"
+                          size="small"
+                          sx={{ ml: 1 }}
+                        />
+                      )}
+                    </Typography>
                       <Box>
                         <Tooltip title={model.is_default ? '已是默认模型' : '设为默认模型'}>
                           <IconButton
@@ -522,7 +526,7 @@ const Settings: React.FC = () => {
                       </Box>
                     </Box>
 
-                    <Typography color="text.secondary" gutterBottom>
+                    <Typography color="text.secondary" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)' }}>
                       {model.model_type} - {model.model_id}
                     </Typography>
 
@@ -543,13 +547,13 @@ const Settings: React.FC = () => {
                       )}
                     </Box>
 
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                       最大令牌: {model.max_tokens}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                       温度: {model.temperature}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                       成本: ${model.cost_per_1k_input_tokens}/${model.cost_per_1k_output_tokens} per 1K tokens
                     </Typography>
 
@@ -595,7 +599,7 @@ const Settings: React.FC = () => {
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
           系统信息
         </Typography>
         {systemInfo && (
@@ -603,19 +607,19 @@ const Settings: React.FC = () => {
             <Box>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                     基本信息
                   </Typography>
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     版本: {systemInfo.version}
                   </Typography>
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     环境: {systemInfo.environment}
                   </Typography>
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     数据库状态: {systemInfo.database_status}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     AI服务状态: {systemInfo.ai_service_status}
                   </Typography>
                 </CardContent>
@@ -624,16 +628,16 @@ const Settings: React.FC = () => {
             <Box>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                     AI模型统计
                   </Typography>
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     总模型数: {systemInfo.total_models}
                   </Typography>
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     活跃模型数: {systemInfo.active_models}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                     默认模型: {systemInfo.default_model}
                   </Typography>
                 </CardContent>
@@ -643,19 +647,33 @@ const Settings: React.FC = () => {
         )}
       </TabPanel>
 
+      {/* 主题与语言设置标签页 */}
+      <TabPanel value={tabValue} index={2}>
+        <ThemeLanguageSettings />
+      </TabPanel>
+
       {/* 学科初始化标签页 */}
-        {isAdmin && tabValue === 2 && (
+        {isAdmin && tabValue === 3 && (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom>
               <SchoolIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
               学科初始化
             </Typography>
           
-          <Card sx={{ mb: 3 }}>
+          <Card sx={{ 
+            mb: 3, 
+            bgcolor: 'rgba(255, 255, 255, 0.9)', 
+            border: '1px solid rgba(226, 232, 240, 0.5)', 
+            borderRadius: 3,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+            '&:hover': {
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+            }
+          }}>
             <CardContent>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                初始化九大学科的基础数据，包括学科结构、知识点和题目等。此操作将从外部数据源抓取最新的学科信息。
-              </Typography>
+              <Typography variant="body1" color="text.secondary" gutterBottom sx={{ fontFamily: 'var(--font-family-primary)', lineHeight: 'var(--line-height-normal)' }}>
+              初始化九大学科的基础数据，包括学科结构、知识点和题目等。此操作将从外部数据源抓取最新的学科信息。
+            </Typography>
               
               <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Button
@@ -664,6 +682,14 @@ const Settings: React.FC = () => {
                   startIcon={isInitializing ? <StopIcon /> : <PlayIcon />}
                   onClick={isInitializing ? () => stopSubjectInitialization(showSnackbar) : () => startSubjectInitialization(forceUpdate, showSnackbar)}
                   disabled={loading}
+                  sx={{
+                    bgcolor: 'var(--button-primary-bg)',
+                    fontFamily: 'var(--font-family-primary)',
+                    fontWeight: 'var(--font-weight-medium)',
+                    '&:hover': {
+                      bgcolor: 'var(--button-primary-hover)'
+                    }
+                  }}
                 >
                   {isInitializing ? '停止初始化' : '开始初始化'}
                 </Button>
@@ -684,6 +710,15 @@ const Settings: React.FC = () => {
                     variant="outlined"
                     onClick={() => clearInitializationProgress(showSnackbar)}
                     disabled={isInitializing}
+                    sx={{
+                      fontFamily: 'var(--font-family-primary)',
+                      fontWeight: 'var(--font-weight-medium)',
+                      bgcolor: 'var(--button-secondary-bg)',
+                      borderColor: 'var(--button-secondary-border)',
+                      '&:hover': {
+                        bgcolor: 'var(--button-secondary-hover)'
+                      }
+                    }}
                   >
                     清除进度记录
                   </Button>
@@ -694,9 +729,17 @@ const Settings: React.FC = () => {
 
           {/* 初始化进度显示 */}
           {initProgress && (
-            <Card>
+            <Card sx={{
+              bgcolor: 'rgba(255, 255, 255, 0.9)', 
+              border: '1px solid rgba(226, 232, 240, 0.5)', 
+              borderRadius: 3,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+              }
+            }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                   {isInitializing ? <CircularProgress size={20} /> : 
                    initProgress.status === 'completed' ? <CheckCircleIcon color="success" /> :
                    initProgress.status === 'failed' ? <ErrorIcon color="error" /> :
@@ -705,9 +748,16 @@ const Settings: React.FC = () => {
                 </Typography>
                 
                 {/* 状态概览 */}
-                <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Box sx={{ 
+                    mb: 3, 
+                    p: 3, 
+                    bgcolor: 'var(--background-card)', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: 'var(--border-radius)',
+                    boxShadow: 'var(--shadow-soft)'
+                  }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                       状态: {initProgress.status === 'running' ? '🔄 进行中' : 
                              initProgress.status === 'completed' ? '✅ 已完成' : 
                              initProgress.status === 'failed' ? '❌ 失败' : 
@@ -726,27 +776,45 @@ const Settings: React.FC = () => {
                   />
                   
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2, mb: 2 }}>
-                    <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'success.light', borderRadius: 1 }}>
-                      <Typography variant="h6" color="success.contrastText">
+                    <Box sx={{ 
+                      textAlign: 'center', 
+                      p: 2, 
+                      bgcolor: 'var(--block-success-bg)', 
+                      border: '1px solid var(--block-success-border)', 
+                      borderRadius: 'var(--border-radius)' 
+                    }}>
+                      <Typography variant="h6" color="success.main" sx={{ fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family-primary)' }}>
                         {initProgress.created_count || 0}
                       </Typography>
-                      <Typography variant="body2" color="success.contrastText">
+                      <Typography variant="body2" color="success.dark" sx={{ opacity: 0.8, fontFamily: 'var(--font-family-primary)' }}>
                         已创建
                       </Typography>
                     </Box>
-                    <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'info.light', borderRadius: 1 }}>
-                      <Typography variant="h6" color="info.contrastText">
+                    <Box sx={{ 
+                      textAlign: 'center', 
+                      p: 2, 
+                      bgcolor: 'var(--block-info-bg)', 
+                      border: '1px solid var(--block-info-border)', 
+                      borderRadius: 'var(--border-radius)' 
+                    }}>
+                      <Typography variant="h6" color="info.main" sx={{ fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family-primary)' }}>
                         {initProgress.updated_count || 0}
                       </Typography>
-                      <Typography variant="body2" color="info.contrastText">
+                      <Typography variant="body2" color="info.dark" sx={{ opacity: 0.8, fontFamily: 'var(--font-family-primary)' }}>
                         已更新
                       </Typography>
                     </Box>
-                    <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
-                      <Typography variant="h6" color="warning.contrastText">
+                    <Box sx={{ 
+                      textAlign: 'center', 
+                      p: 2, 
+                      bgcolor: 'var(--block-warning-bg)', 
+                      border: '1px solid var(--block-warning-border)', 
+                      borderRadius: 'var(--border-radius)' 
+                    }}>
+                      <Typography variant="h6" color="warning.main" sx={{ fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family-primary)' }}>
                         {initProgress.conflicts ? initProgress.conflicts.length : 0}
                       </Typography>
-                      <Typography variant="body2" color="warning.contrastText">
+                      <Typography variant="body2" color="warning.dark" sx={{ opacity: 0.8, fontFamily: 'var(--font-family-primary)' }}>
                         冲突数
                       </Typography>
                     </Box>
@@ -754,11 +822,13 @@ const Settings: React.FC = () => {
                   
                   {initProgress.message && (
                     <Typography variant="body2" color="text.secondary" sx={{ 
-                      p: 1, 
-                      bgcolor: 'action.hover', 
-                      borderRadius: 1,
-                      fontFamily: 'monospace',
-                      fontSize: '0.875rem'
+                      p: 2, 
+                      bgcolor: 'var(--background-soft)', 
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--border-radius)',
+                      fontFamily: 'var(--font-family-mono)',
+                      fontSize: '0.875rem',
+                      boxShadow: 'var(--shadow-soft)'
                     }}>
                       💬 {initProgress.message}
                     </Typography>
@@ -766,17 +836,17 @@ const Settings: React.FC = () => {
                   
                   {initProgress.current_subject && (
                     <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant="body2" color="primary" sx={{ fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family-primary)' }}>
                         🎯 当前学科: {initProgress.current_subject}
                       </Typography>
                       {initProgress.current_stage && (
-                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontFamily: 'var(--font-family-primary)' }}>
                           📋 处理阶段: {initProgress.current_stage}
                         </Typography>
                       )}
                       {initProgress.stage_progress !== undefined && (
                         <Box sx={{ ml: 2, mt: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                             阶段进度: {initProgress.stage_progress}%
                           </Typography>
                           <LinearProgress 
@@ -787,7 +857,7 @@ const Settings: React.FC = () => {
                         </Box>
                       )}
                       {initProgress.download_source && (
-                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontFamily: 'var(--font-family-primary)' }}>
                           📥 数据来源: {initProgress.download_source}
                         </Typography>
                       )}
@@ -798,11 +868,21 @@ const Settings: React.FC = () => {
                 {/* 已完成的学科 */}
                 {initProgress.completed_subjects && initProgress.completed_subjects.length > 0 && (
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                       <CheckCircleIcon color="success" />
                       已完成学科 ({initProgress.completed_subjects.length})
                     </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, maxHeight: 200, overflow: 'auto', p: 1, bgcolor: 'success.light', borderRadius: 1 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: 1, 
+                      maxHeight: 200, 
+                      overflow: 'auto', 
+                      p: 2, 
+                      bgcolor: 'var(--block-success-bg)', 
+                      border: '1px solid var(--block-success-border)', 
+                      borderRadius: 'var(--border-radius)' 
+                    }}>
                       {initProgress.completed_subjects.map((subject, index) => (
                         <Chip
                           key={index}
@@ -810,7 +890,15 @@ const Settings: React.FC = () => {
                           color="success"
                           size="small"
                           variant="outlined"
-                          sx={{ bgcolor: 'success.main', color: 'success.contrastText' }}
+                          sx={{ 
+                            bgcolor: 'var(--block-success-bg)', 
+                            color: 'var(--block-success-text)', 
+                            border: '1px solid var(--block-success-border)',
+                            fontFamily: 'var(--font-family-primary)',
+                            '&:hover': {
+                              opacity: 0.8
+                            }
+                          }}
                         />
                       ))}
                     </Box>
@@ -820,18 +908,32 @@ const Settings: React.FC = () => {
                 {/* 冲突信息 */}
                 {initProgress.conflicts && initProgress.conflicts.length > 0 && (
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                       <WarningIcon color="warning" />
                       发现冲突 ({initProgress.conflicts.length})
                     </Typography>
-                    <Box sx={{ maxHeight: 200, overflow: 'auto', p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                    <Box sx={{ 
+                      maxHeight: 200, 
+                      overflow: 'auto', 
+                      p: 2, 
+                      bgcolor: 'var(--block-warning-bg)', 
+                      border: '1px solid var(--block-warning-border)', 
+                      borderRadius: 'var(--border-radius)' 
+                    }}>
                       {initProgress.conflicts.map((conflict, index) => (
-                        <Box key={index} sx={{ mb: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-                          <Typography variant="body2" fontWeight="bold">
+                        <Box key={index} sx={{ 
+                          mb: 1, 
+                          p: 2, 
+                          bgcolor: 'var(--background-card)', 
+                          border: '1px solid var(--block-warning-border)', 
+                          borderRadius: 'var(--border-radius)',
+                          boxShadow: 'var(--shadow-soft)'
+                        }}>
+                          <Typography variant="body2" sx={{ fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family-primary)' }}>
                             {conflict.subject_code}
                           </Typography>
                           {conflict.conflicts && conflict.conflicts.length > 0 && (
-                            <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontFamily: 'var(--font-family-primary)' }}>
                               冲突项: {conflict.conflicts.join(', ')}
                             </Typography>
                           )}
@@ -844,17 +946,31 @@ const Settings: React.FC = () => {
                 {/* 错误信息 */}
                 {initProgress.errors && initProgress.errors.length > 0 && (
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'var(--heading-font-weight)', color: 'var(--heading-color)', fontFamily: 'var(--font-family-primary)' }}>
                       <ErrorIcon color="error" />
                       处理错误 ({initProgress.errors.length})
                     </Typography>
-                    <Box sx={{ maxHeight: 200, overflow: 'auto', p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
+                    <Box sx={{ 
+                      maxHeight: 200, 
+                      overflow: 'auto', 
+                      p: 2, 
+                      bgcolor: 'var(--block-error-bg)', 
+                      border: '1px solid var(--block-error-border)', 
+                      borderRadius: 'var(--border-radius)' 
+                    }}>
                       {initProgress.errors.map((error, index) => (
-                        <Box key={index} sx={{ mb: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-                          <Typography variant="body2" fontWeight="bold" color="error">
+                        <Box key={index} sx={{ 
+                          mb: 1, 
+                          p: 2, 
+                          bgcolor: 'var(--background-card)', 
+                          border: '1px solid var(--block-error-border)', 
+                          borderRadius: 'var(--border-radius)',
+                          boxShadow: 'var(--shadow-soft)'
+                        }}>
+                          <Typography variant="body2" color="error" sx={{ fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family-primary)' }}>
                             {error.subject_code}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontFamily: 'monospace' }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontFamily: 'var(--font-family-mono)' }}>
                             {error.error || '未知错误'}
                           </Typography>
                         </Box>
@@ -869,28 +985,28 @@ const Settings: React.FC = () => {
                 <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
                     <Box>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                         🕐 开始时间: {initProgress.start_time ? new Date(initProgress.start_time).toLocaleString() : '等待开始...'}
                       </Typography>
                       {initProgress.end_time && (
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                           🏁 结束时间: {new Date(initProgress.end_time).toLocaleString()}
                         </Typography>
                       )}
                     </Box>
                     <Box>
                       {initProgress.task_id && (
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                           🆔 任务ID: {initProgress.task_id.substring(0, 8)}...
                         </Typography>
                       )}
                       {initProgress.start_time && (
                         <Box>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                             ⏱️ 运行时长: {formatDuration(initProgress.start_time, initProgress.end_time)}
                           </Typography>
                           {initProgress.status === 'running' && initProgress.progress_percent > 0 && (
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-family-primary)' }}>
                               ⏰ 预计完成时间: {getEstimatedCompletionTime(initProgress.start_time, initProgress.progress_percent)}
                             </Typography>
                           )}

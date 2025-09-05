@@ -1,4 +1,4 @@
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
@@ -20,6 +20,7 @@ import SubjectManagement from './pages/SubjectManagement';
 import LearningAnalytics from './pages/LearningAnalytics';
 import DocumentManagement from './pages/DocumentManagement';
 import { useAuthStore } from './stores/authStore';
+import { useThemeStore, themeStyles } from './stores/themeStore';
 
 // 受保护的路由组件
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -34,8 +35,41 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const App: React.FC = () => {
+    const { config, actualMode } = useThemeStore();
+    const currentThemeStyle = themeStyles[config.style];
+    const colors = config.customColors || currentThemeStyle.colors;
+
+    // 构建Ant Design主题配置
+    const antdTheme = {
+        algorithm: actualMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        token: {
+            colorPrimary: colors.primary,
+            colorInfo: colors.primary,
+            colorSuccess: colors.secondary,
+            colorWarning: '#faad14',
+            colorError: '#ff4d4f',
+            borderRadius: 8,
+            wireframe: false,
+        },
+        components: {
+            Layout: {
+                bodyBg: actualMode === 'dark' ? '#141414' : '#f8f9fa',
+                siderBg: actualMode === 'dark' ? '#1f1f1f' : 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%)',
+                headerBg: actualMode === 'dark' ? '#1f1f1f' : '#ffffff',
+            },
+            Menu: {
+                itemBg: 'transparent',
+                itemSelectedBg: actualMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(108, 123, 149, 0.12)',
+                itemHoverBg: actualMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(108, 123, 149, 0.08)',
+            },
+            Card: {
+                colorBgContainer: actualMode === 'dark' ? '#1f1f1f' : 'rgba(255, 255, 255, 0.9)',
+            },
+        },
+    };
+
     return (
-        <ConfigProvider locale={zhCN}>
+        <ConfigProvider locale={zhCN} theme={antdTheme}>
             <Router>
                 <Routes>
                     {/* 公共路由 */}

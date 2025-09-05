@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layout,
   Menu,
@@ -12,6 +12,7 @@ import {
   Form,
   Input,
   message,
+  ConfigProvider,
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -34,7 +35,12 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useThemeStore, getThemeColors } from '../stores/themeStore';
+import { useTranslation } from '../stores/i18nStore';
 import AIDisplayManager from '../components/AIDisplayManager';
+import zhCN from 'antd/locale/zh_CN';
+import enUS from 'antd/locale/en_US';
+import './MainLayout.css';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -44,68 +50,80 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [switchAccountModalVisible, setSwitchAccountModalVisible] = useState(false);
   const [switchAccountForm] = Form.useForm();
   const { user, logout, login } = useAuthStore();
+  const { config, actualMode, applyTheme } = useThemeStore();
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
+
+  // 应用主题
+  useEffect(() => {
+    applyTheme();
+  }, [config, actualMode, applyTheme]);
+
+  // 获取Ant Design语言包
+  const getAntdLocale = () => {
+    return language === "en-US" ? enUS : zhCN;
+  };
 
   // 菜单项配置
   const menuItems = [
     {
       key: '/dashboard',
       icon: <DashboardOutlined />,
-      label: '仪表盘',
+      label: t('menu.dashboard'),
     },
     {
       key: '/subjects',
       icon: <BookOutlined />,
-      label: '学科管理',
+      label: t('menu.subjects'),
     },
     {
       key: '/exam-papers',
       icon: <FilePdfOutlined />,
-      label: '试卷管理',
+      label: t('menu.examPapers'),
     },
     {
       key: '/documents',
       icon: <FolderOutlined />,
-      label: '文档管理',
+      label: t('menu.documents'),
     },
     {
       key: '/diagnosis',
       icon: <BulbOutlined />,
-      label: '学习诊断',
+      label: t('menu.diagnosis'),
     },
     {
       key: '/learning-path',
       icon: <FileTextOutlined />,
-      label: '学习路径',
+      label: t('menu.learningPath'),
     },
     {
       key: '/memory-cards',
       icon: <ClockCircleOutlined />,
-      label: '记忆强化',
+      label: t('menu.memoryCards'),
     },
     {
       key: '/mistake-book',
       icon: <ExclamationCircleOutlined />,
-      label: '错题本',
+      label: t('menu.mistakeBook'),
     },
     {
       key: '/exam',
       icon: <TrophyOutlined />,
-      label: '考试测评',
+      label: t('menu.exam'),
     },
     {
       key: '/analytics',
       icon: <BarChartOutlined />,
-      label: '学习分析',
+      label: t('menu.analytics'),
     },
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: '系统设置',
+      label: t('common.settings'),
     },
   ];
 
@@ -144,13 +162,13 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: '个人资料',
+      label: t('common.profile'),
       onClick: () => navigate('/profile'),
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: '设置',
+      label: t('common.settings'),
       onClick: () => navigate('/settings'),
     },
     {
@@ -159,7 +177,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     {
       key: 'switch-account',
       icon: <SwapOutlined />,
-      label: '切换账号',
+      label: '切换账号', // 保持中文，因为这是特定功能
       onClick: handleSwitchAccount,
     },
     {
@@ -168,7 +186,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: t('common.logout'),
       onClick: () => {
         logout();
         navigate('/login');
@@ -181,8 +199,16 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <AIDisplayManager defaultMode="hidden">
-      <Layout style={{ minHeight: '100vh' }}>
+    <ConfigProvider
+      locale={getAntdLocale()}
+      theme={{
+        token: {
+          colorPrimary: getThemeColors(config.style, config.customColors).primary,
+        },
+      }}
+    >
+      <AIDisplayManager defaultMode="hidden">
+        <Layout style={{ minHeight: '100vh' }}>
         <Sider 
           trigger={null} 
           collapsible 
@@ -190,10 +216,10 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           width={260}
           collapsedWidth={80}
           style={{
-            background: 'var(--background-gradient)',
+            background: 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: 'var(--shadow-elegant)',
-            borderRight: '1px solid var(--border-color)',
+            boxShadow: '2px 0 8px rgba(0, 0, 0, 0.06)',
+            borderRight: '1px solid #e1e5e9',
             position: 'relative',
             zIndex: 10,
           }}
@@ -202,23 +228,28 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
             style={{
               height: 32,
               margin: 16,
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: 6,
+              background: 'linear-gradient(135deg, #6c7b95 0%, #a8b5c8 100%)',
+              borderRadius: 8,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
               fontWeight: 'bold',
+              boxShadow: '0 2px 8px rgba(108, 123, 149, 0.2)',
             }}
           >
             {collapsed ? 'AI' : 'AI学习系统'}
           </div>
           <Menu
-            theme="dark"
+            theme="light"
             mode="inline"
             selectedKeys={[location.pathname]}
             items={menuItems}
             onClick={handleMenuClick}
+            style={{
+              background: 'transparent',
+              border: 'none',
+            }}
           />
         </Sider>
         <Layout>
@@ -276,20 +307,28 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
               margin: '16px',
               padding: '32px',
               minHeight: 'calc(100vh - 120px)',
-              background: colorBgContainer,
-              borderRadius: 'var(--border-radius-large)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: 'var(--shadow-medium)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              borderRadius: '12px',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
               position: 'relative',
               overflow: 'hidden',
+              animation: 'fadeInContent 0.6s ease-out',
             }}
           >
-            {children}
+            <div style={{
+              opacity: 1,
+              transform: 'translateY(0)',
+              transition: 'opacity 0.4s ease-out, transform 0.4s ease-out',
+              animation: 'slideInUp 0.5s ease-out',
+            }}>
+              {children}
+            </div>
           </Content>
         </Layout>
-      </Layout>
+        </Layout>
 
-      {/* 切换账号模态框 */}
+        {/* 切换账号模态框 */}
       <Modal
         title="切换账号"
         open={switchAccountModalVisible}
@@ -341,8 +380,9 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
             学生账号：student / student123
           </Typography.Text>
         </div>
-      </Modal>
-    </AIDisplayManager>
+        </Modal>
+      </AIDisplayManager>
+    </ConfigProvider>
   );
 };
 
