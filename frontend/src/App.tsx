@@ -21,6 +21,7 @@ import SubjectManagement from './pages/SubjectManagement';
 import LearningAnalytics from './pages/LearningAnalytics';
 import DocumentManagement from './pages/DocumentManagement';
 import AIAssistant from './pages/AIAssistant';
+import KnowledgeGraph from './pages/KnowledgeGraph';
 import { useAuthStore } from './stores/authStore';
 import { useThemeStore, themeStyles } from './stores/themeStore';
 
@@ -101,6 +102,7 @@ const App: React.FC = () => {
                                     <Routes>
                                         <Route path="/dashboard" element={<Dashboard />} />
                                         <Route path="/ai-assistant" element={<AIAssistant />} />
+                                        <Route path="/knowledge-graph" element={<KnowledgeGraph />} />
                                         <Route path="/diagnosis" element={<Diagnosis />} />
                                         <Route path="/subjects" element={<SubjectManagement />} />
                                         <Route path="/exam-papers" element={<ExamPaperManagement />} />

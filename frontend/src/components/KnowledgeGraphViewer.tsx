@@ -37,12 +37,13 @@ interface KnowledgePoint {
 interface GraphNode extends d3.SimulationNodeDatum {
     id: string;
     name: string;
-    type: 'chapter' | 'knowledge_point' | 'sub_knowledge_point' | 'subject';
+    type: 'chapter' | 'knowledge_point' | 'sub_knowledge_point' | 'subject' | 'ai_content';
     level: number;
     difficulty: number;
     importance: number;
     mastery_level: number;
     question_count: number;
+    content?: string;
 }
 
 interface GraphLink {
@@ -112,8 +113,12 @@ const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({ subjectId }
         setLoading(true);
         try {
             const response = await api.get(`/knowledge-graph/${subjectId}?type=${graphType}`);
+            console.log('Knowledge graph response:', response.data.data);
+            console.log('Nodes count:', response.data.data?.nodes?.length || 0);
+            console.log('Edges count:', response.data.data?.edges?.length || 0);
             setGraph(response.data.data);
         } catch (error) {
+            console.error('Failed to fetch knowledge graph:', error);
             message.error('获取知识图谱失败');
         } finally {
             setLoading(false);
@@ -178,7 +183,8 @@ const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({ subjectId }
                 subject: '#722ed1',
                 chapter: '#1890ff',
                 knowledge_point: '#52c41a',
-                sub_knowledge_point: '#faad14'
+                sub_knowledge_point: '#faad14',
+                ai_content: '#13c2c2'
             };
             return colors[node.type as keyof typeof colors] || '#d9d9d9';
         }
@@ -192,8 +198,12 @@ const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({ subjectId }
     };
 
     const renderGraph = () => {
-        if (!graph || !svgRef.current) return;
+        if (!graph || !svgRef.current) {
+            console.log('Cannot render graph:', { graph: !!graph, svgRef: !!svgRef.current });
+            return;
+        }
 
+        console.log('Rendering graph with nodes:', graph.nodes.length, 'edges:', graph.edges.length);
         const svg = d3.select(svgRef.current);
         svg.selectAll('*').remove();
 
@@ -374,7 +384,8 @@ const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({ subjectId }
                 { color: '#722ed1', label: '学科' },
                 { color: '#1890ff', label: '章节' },
                 { color: '#52c41a', label: '知识点' },
-                { color: '#faad14', label: '子知识点' }
+                { color: '#faad14', label: '子知识点' },
+                { color: '#13c2c2', label: 'AI助理内容' }
             );
         }
 
@@ -454,11 +465,12 @@ const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({ subjectId }
                         <Select
                             value={graphType}
                             onChange={setGraphType}
-                            style={{ width: 120 }}
+                            style={{ width: 140 }}
                         >
                             <Option value="exam_scope">考试范围</Option>
                             <Option value="full_knowledge">完整知识</Option>
                             <Option value="mastery_level">掌握情况</Option>
+                            <Option value="ai_assistant_content">AI助理内容</Option>
                         </Select>
                         <Button
                             icon={<ReloadOutlined />}

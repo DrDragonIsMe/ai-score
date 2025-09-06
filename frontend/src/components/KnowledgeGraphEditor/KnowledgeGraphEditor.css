@@ -1,37 +1,42 @@
-/* 知识图谱编辑器样式 */
+/* 知识图谱编辑器样式 - 淡雅简洁风格 */
 .knowledge-graph-editor {
   .ant-modal {
     top: 20px;
   }
 
   .ant-modal-content {
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .ant-modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-bottom: none;
-    padding: 16px 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 20px 24px;
 
     .ant-modal-title {
-      color: white;
-      font-weight: 600;
+      color: #334155;
+      font-weight: 500;
       font-size: 16px;
     }
   }
 
   .ant-modal-close {
     .ant-modal-close-x {
-      color: white;
+      color: #64748b;
       font-size: 16px;
       width: 46px;
       height: 46px;
       line-height: 46px;
+      transition: all 0.2s ease;
     }
 
     &:hover .ant-modal-close-x {
-      color: rgba(255, 255, 255, 0.8);
+      color: #475569;
+      background-color: rgba(148, 163, 184, 0.1);
+      border-radius: 8px;
     }
   }
 
@@ -39,15 +44,19 @@
     padding: 24px;
     max-height: 70vh;
     overflow-y: auto;
+    background: #fefefe;
   }
 
   .ant-modal-footer {
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid #e2e8f0;
     padding: 16px 24px;
     text-align: right;
+    background: #f8fafc;
 
     .ant-btn {
       margin-left: 8px;
+      border-radius: 8px;
+      font-weight: 500;
     }
   }
 }

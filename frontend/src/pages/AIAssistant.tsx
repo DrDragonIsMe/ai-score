@@ -59,20 +59,15 @@ import {
   BookOutlined,
   QuestionCircleOutlined,
 } from '@ant-design/icons';
-import { useAIAssistantStore, type Message } from '../stores/aiAssistantStore';
+import { useAIAssistantStore, type Message, type ConversationItem } from '../stores/aiAssistantStore';
 import { useAuthStore } from '../stores/authStore';
+import KnowledgeGraphEditor from '../components/KnowledgeGraphEditor/KnowledgeGraphEditor';
 import './AIAssistant.css';
 
 const { TextArea } = Input;
 const { Text, Title } = Typography;
 
-interface ConversationItem {
-  id: string;
-  title: string;
-  lastMessage: string;
-  timestamp: Date;
-  starred?: boolean;
-}
+// ConversationItem 接口已在 store 中定义
 
 const AIAssistant: React.FC = () => {
   const {
@@ -80,11 +75,20 @@ const AIAssistant: React.FC = () => {
     inputValue,
     loading,
     aiStats,
+    conversations,
+    currentConversationId,
+    conversationsLoading,
     addMessage,
     setInputValue,
     setLoading,
     incrementTodayInteractions,
     resetConversation,
+    loadConversations,
+    createConversation,
+    updateConversation,
+    deleteConversation,
+    toggleConversationStar,
+    setCurrentConversationId,
   } = useAIAssistantStore();
   
   const { user } = useAuthStore();
@@ -95,22 +99,12 @@ const AIAssistant: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [conversations, setConversations] = useState<ConversationItem[]>([
-    {
-      id: '1',
-      title: '数学学习计划',
-      lastMessage: '请帮我制定一个数学学习计划',
-      timestamp: new Date(),
-      starred: true
-    },
-    {
-      id: '2', 
-      title: '物理公式推导',
-      lastMessage: '能帮我推导一下牛顿第二定律吗？',
-      timestamp: new Date(Date.now() - 86400000)
-    }
-  ]);
-  const [currentConversation, setCurrentConversation] = useState('1');
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renamingConversationId, setRenamingConversationId] = useState<string | null>(null);
+  const [newConversationTitle, setNewConversationTitle] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [knowledgeGraphEditorVisible, setKnowledgeGraphEditorVisible] = useState(false);
+  // 会话相关状态现在由 store 管理
   
   // 设置状态
   const [aiSettings, setAiSettings] = useState({
@@ -134,9 +128,33 @@ const AIAssistant: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // 页面加载时自动加载会话列表
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+    }
+  }, [user, loadConversations]);
+
+  // 当没有当前会话时，自动创建一个新会话
+   useEffect(() => {
+     if (user && conversations.length === 0 && !conversationsLoading && !currentConversationId) {
+       handleCreateNewConversation();
+     }
+   }, [user, conversations.length, conversationsLoading, currentConversationId]);
+
   // 发送消息
   const handleSendMessage = async () => {
     if (!inputValue.trim() || loading) return;
+
+    // 确保有当前会话
+     let conversationId = currentConversationId;
+     if (!conversationId) {
+       conversationId = await handleCreateNewConversation();
+       if (!conversationId) {
+         message.error('创建会话失败，请重试');
+         return;
+       }
+     }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -151,6 +169,9 @@ const AIAssistant: React.FC = () => {
     incrementTodayInteractions();
 
     try {
+      // 先保存用户消息到会话
+      await saveMessageToConversation(conversationId, userMessage);
+
       const response = await fetch('http://localhost:5001/api/ai-assistant/chat', {
         method: 'POST',
         headers: {
@@ -164,7 +185,8 @@ const AIAssistant: React.FC = () => {
             content: msg.content,
             timestamp: msg.timestamp.toISOString()
           })),
-          settings: aiSettings
+          settings: aiSettings,
+          conversationId: conversationId
         })
       });
 
@@ -178,6 +200,15 @@ const AIAssistant: React.FC = () => {
           timestamp: new Date(),
         };
         addMessage(aiResponse);
+        
+        // 保存AI回复到会话
+        await saveMessageToConversation(conversationId, aiResponse);
+        
+        // 更新会话的最后消息
+        await updateConversation(conversationId, {
+          lastMessage: userMessage.content,
+          timestamp: new Date()
+        });
       } else {
         throw new Error(result.message || '请求失败');
       }
@@ -193,6 +224,80 @@ const AIAssistant: React.FC = () => {
       message.error('发送失败，请重试');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 保存消息到会话
+  const saveMessageToConversation = async (conversationId: string, msg: Message) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await fetch(`/api/ai-assistant/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: msg.type,
+          content: msg.content,
+          message_type: 'text',
+          metadata: {
+            timestamp: msg.timestamp.toISOString(),
+            messageId: msg.id
+          }
+        })
+      });
+    } catch (error) {
+      console.error('保存消息失败:', error);
+    }
+  };
+
+  // 新建对话
+  const handleCreateNewConversation = async () => {
+    const conversationId = await createConversation('新对话');
+    if (conversationId) {
+      resetConversation();
+      return conversationId;
+    }
+    return null;
+  };
+
+  // 处理会话操作
+  const handleConversationAction = async (action: string, conversationId: string) => {
+    switch (action) {
+      case 'star':
+        await toggleConversationStar(conversationId);
+        break;
+      case 'rename':
+        // 显示重命名对话框
+        setRenamingConversationId(conversationId);
+        const currentConv = conversations.find(c => c.id === conversationId);
+        setNewConversationTitle(currentConv?.title || '');
+        setRenameModalVisible(true);
+        break;
+      case 'export':
+        await handleExportConversation(conversationId);
+        break;
+      case 'delete':
+        Modal.confirm({
+          title: '确认删除',
+          content: '确定要删除这个对话吗？删除后无法恢复。',
+          onOk: async () => {
+            const success = await deleteConversation(conversationId);
+            if (success) {
+              message.success('删除成功');
+              // 如果删除的是当前会话，重置对话
+              if (conversationId === currentConversationId) {
+                resetConversation();
+              }
+            } else {
+              message.error('删除失败');
+            }
+          }
+        });
+        break;
     }
   };
 
@@ -232,22 +337,119 @@ const AIAssistant: React.FC = () => {
     message.success('消息已更新');
   };
 
+  // 智能推荐学科
+  const analyzeContentForSubject = (content: string): string | undefined => {
+    const subjectKeywords = {
+      'math': ['数学', '计算', '公式', '方程', '函数', '几何', '代数', '微积分', '统计', '概率'],
+      'physics': ['物理', '力学', '电学', '光学', '热学', '量子', '相对论', '能量', '动量'],
+      'chemistry': ['化学', '分子', '原子', '反应', '化合物', '元素', '有机', '无机', '催化'],
+      'biology': ['生物', '细胞', '基因', '蛋白质', 'DNA', '进化', '生态', '植物', '动物'],
+      'history': ['历史', '朝代', '战争', '文化', '政治', '社会', '经济', '人物', '事件'],
+      'literature': ['文学', '诗歌', '小说', '散文', '作家', '文本', '修辞', '语言', '文化'],
+      'english': ['英语', 'English', '语法', '词汇', '阅读', '写作', '听力', '口语'],
+      'computer': ['计算机', '编程', '算法', '数据结构', '软件', '硬件', '网络', '数据库']
+    };
+
+    const contentLower = content.toLowerCase();
+    let maxScore = 0;
+    let recommendedSubject = undefined;
+
+    Object.entries(subjectKeywords).forEach(([subject, keywords]) => {
+      const score = keywords.reduce((acc, keyword) => {
+        return acc + (contentLower.includes(keyword.toLowerCase()) ? 1 : 0);
+      }, 0);
+      if (score > maxScore) {
+        maxScore = score;
+        recommendedSubject = subject;
+      }
+    });
+
+    return maxScore > 0 ? recommendedSubject : undefined;
+  };
+
+  // 保存到知识图谱
+  const handleSaveToKnowledgeGraph = () => {
+    if (!editContent.trim()) {
+      message.warning('请输入要保存的内容');
+      return;
+    }
+    setKnowledgeGraphEditorVisible(true);
+  };
+
+
+
   const handleDeleteMessage = (messageId: string) => {
     // 这里应该删除消息
     message.success('消息已删除');
   };
 
-  // 新建对话
+  // 新建对话（UI处理）
   const handleNewConversation = () => {
-    const newConversation: ConversationItem = {
-      id: Date.now().toString(),
-      title: '新对话',
-      lastMessage: '',
-      timestamp: new Date()
-    };
-    setConversations([newConversation, ...conversations]);
-    setCurrentConversation(newConversation.id);
-    resetConversation();
+    handleCreateNewConversation();
+  };
+
+  // 处理图片上传
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // TODO: 实现图片上传功能
+      message.info('图片上传功能待实现');
+    }
+  };
+
+  // 处理PDF上传
+  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // TODO: 实现PDF上传功能
+      message.info('PDF上传功能待实现');
+    }
+  };
+
+  // 导出会话功能
+  const handleExportConversation = async (conversationId: string) => {
+    try {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (!conversation) {
+        message.error('会话不存在');
+        return;
+      }
+
+      // 获取会话的完整消息历史
+      const response = await fetch(`/api/conversations/${conversationId}/messages`);
+      if (!response.ok) {
+        throw new Error('获取会话消息失败');
+      }
+      
+      const messages = await response.json();
+      
+      // 生成导出内容
+      const exportContent = [
+        `会话标题: ${conversation.title}`,
+        `导出时间: ${new Date().toLocaleString()}`,
+        `消息数量: ${messages.length}`,
+        '\n' + '='.repeat(50) + '\n',
+        ...messages.map((msg: Message, index: number) => 
+          `${index + 1}. [${msg.type === 'user' ? '用户' : 'AI助手'}] ${new Date(msg.timestamp).toLocaleString()}\n${msg.content}\n`
+        )
+      ].join('\n');
+
+      // 创建并下载文件
+      const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${conversation.title}_${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      message.success('导出成功');
+    } catch (error) {
+      console.error('导出失败:', error);
+      message.error('导出失败，请重试');
+    }
   };
 
   // 预处理LaTeX公式格式
@@ -304,8 +506,8 @@ const AIAssistant: React.FC = () => {
                   autoSize={{ minRows: 2, maxRows: 8 }}
                 />
                 <div className="edit-actions">
-                  <Button size="small" onClick={handleSaveEdit} icon={<SaveOutlined />}>
-                    保存
+                  <Button size="small" onClick={handleSaveToKnowledgeGraph} icon={<SaveOutlined />} type="primary">
+                    保存到图谱
                   </Button>
                   <Button size="small" onClick={() => setEditingMessage(null)}>
                     取消
@@ -409,6 +611,14 @@ const AIAssistant: React.FC = () => {
   };
 
   // 侧边栏内容
+  // 过滤会话列表
+  const filteredConversations = conversations.filter(conv => {
+    if (!searchKeyword.trim()) return true;
+    const keyword = searchKeyword.toLowerCase();
+    return conv.title.toLowerCase().includes(keyword) || 
+           conv.lastMessage?.toLowerCase().includes(keyword);
+  });
+
   const renderSidebar = () => (
     <div className="ai-sidebar">
       <div className="sidebar-header">
@@ -417,20 +627,35 @@ const AIAssistant: React.FC = () => {
           icon={<PlusOutlined />} 
           onClick={handleNewConversation}
           block
+          style={{ marginBottom: '12px' }}
         >
           新建对话
         </Button>
+        
+        <Input
+          placeholder="搜索对话..."
+          prefix={<SearchOutlined />}
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          allowClear
+        />
       </div>
       
       <div className="conversation-list">
         <Text strong style={{ color: 'var(--text-primary)', marginBottom: '12px', display: 'block' }}>
-          对话历史
+          对话历史 ({filteredConversations.length})
         </Text>
-        {conversations.map(conv => (
-          <div 
+        {filteredConversations.length === 0 && searchKeyword ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
+            <SearchOutlined style={{ fontSize: '24px', marginBottom: '8px' }} />
+            <div>未找到匹配的对话</div>
+          </div>
+        ) : (
+          filteredConversations.map(conv => (
+            <div 
             key={conv.id}
-            className={`conversation-item ${currentConversation === conv.id ? 'active' : ''}`}
-            onClick={() => setCurrentConversation(conv.id)}
+            className={`conversation-item ${currentConversationId === conv.id ? 'active' : ''}`}
+            onClick={() => setCurrentConversationId(conv.id)}
           >
             <div className="conversation-content">
               <div className="conversation-title">
@@ -446,15 +671,18 @@ const AIAssistant: React.FC = () => {
                 items: [
                   { key: 'star', label: conv.starred ? '取消收藏' : '收藏', icon: <StarOutlined /> },
                   { key: 'rename', label: '重命名', icon: <EditOutlined /> },
+                  { key: 'export', label: '导出', icon: <ShareAltOutlined /> },
                   { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
-                ]
+                ],
+                onClick: ({ key }) => handleConversationAction(key, conv.id)
               }}
               trigger={['click']}
             >
               <Button type="text" size="small" icon={<MoreOutlined />} />
             </Dropdown>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );
@@ -670,12 +898,14 @@ const AIAssistant: React.FC = () => {
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        onChange={handleImageUpload}
         style={{ display: 'none' }}
       />
       <input
         ref={pdfInputRef}
         type="file"
         accept=".pdf"
+        onChange={handlePdfUpload}
         style={{ display: 'none' }}
       />
 
@@ -689,6 +919,60 @@ const AIAssistant: React.FC = () => {
       >
         {renderSettings()}
       </Drawer>
+
+      {/* 重命名对话框 */}
+      <Modal
+        title="重命名对话"
+        open={renameModalVisible}
+        onOk={async () => {
+          if (newConversationTitle.trim() && renamingConversationId) {
+            await updateConversation(renamingConversationId, { title: newConversationTitle.trim() });
+            setRenameModalVisible(false);
+            setRenamingConversationId(null);
+            setNewConversationTitle('');
+            message.success('重命名成功');
+          } else {
+            message.error('请输入有效的标题');
+          }
+        }}
+        onCancel={() => {
+          setRenameModalVisible(false);
+          setRenamingConversationId(null);
+          setNewConversationTitle('');
+        }}
+        okText="确定"
+        cancelText="取消"
+      >
+        <Input
+          value={newConversationTitle}
+          onChange={(e) => setNewConversationTitle(e.target.value)}
+          placeholder="请输入对话标题"
+          maxLength={50}
+          showCount
+          onPressEnter={() => {
+            if (newConversationTitle.trim() && renamingConversationId) {
+              updateConversation(renamingConversationId, { title: newConversationTitle.trim() });
+              setRenameModalVisible(false);
+              setRenamingConversationId(null);
+              setNewConversationTitle('');
+              message.success('重命名成功');
+            }
+          }}
+        />
+      </Modal>
+
+      {/* 知识图谱编辑器 */}
+      <KnowledgeGraphEditor
+        visible={knowledgeGraphEditorVisible}
+        onClose={() => setKnowledgeGraphEditorVisible(false)}
+        onSuccess={(data) => {
+          setKnowledgeGraphEditorVisible(false);
+          setEditingMessage(null);
+          setEditContent('');
+        }}
+        initialContent={editContent}
+        suggestedSubjectId={analyzeContentForSubject(editContent)}
+      />
     </div>
   );
 };

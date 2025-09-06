@@ -23,6 +23,16 @@ export interface Message {
   }>;
 }
 
+export interface ConversationItem {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: Date;
+  starred: boolean;
+  archived?: boolean;
+  messageCount?: number;
+}
+
 export interface PPTTemplate {
   id: number;
   name: string;
@@ -47,6 +57,11 @@ interface AIAssistantState {
   inputValue: string;
   loading: boolean;
   
+  // 会话管理相关
+  conversations: ConversationItem[];
+  currentConversationId: string | null;
+  conversationsLoading: boolean;
+  
   // PPT模板相关
   selectedTemplateId: number | null;
   selectedTemplateName: string;
@@ -70,6 +85,17 @@ interface AIAssistantState {
   addMessage: (message: Message) => void;
   setInputValue: (value: string) => void;
   setLoading: (loading: boolean) => void;
+  
+  // 会话管理操作
+  setConversations: (conversations: ConversationItem[]) => void;
+  setCurrentConversationId: (id: string | null) => void;
+  setConversationsLoading: (loading: boolean) => void;
+  loadConversations: () => Promise<void>;
+  createConversation: (title?: string) => Promise<string | null>;
+  updateConversation: (id: string, updates: Partial<ConversationItem>) => Promise<boolean>;
+  deleteConversation: (id: string) => Promise<boolean>;
+  toggleConversationStar: (id: string) => Promise<boolean>;
+  searchConversations: (keyword: string) => Promise<ConversationItem[]>;
   
   setSelectedTemplate: (id: number | null, name: string) => void;
   setShowPPTTemplateSelector: (show: boolean) => void;
@@ -115,6 +141,11 @@ export const useAIAssistantStore = create<AIAssistantState>()(
       messages: [initialMessage],
       inputValue: '',
       loading: false,
+      
+      // 会话管理初始状态
+      conversations: [],
+      currentConversationId: null,
+      conversationsLoading: false,
       
       selectedTemplateId: null,
       selectedTemplateName: '',
@@ -184,6 +215,222 @@ export const useAIAssistantStore = create<AIAssistantState>()(
         }));
       },
       
+      // 会话管理方法
+      setConversations: (conversations: ConversationItem[]) => set({ conversations }),
+      setCurrentConversationId: (id: string | null) => set({ currentConversationId: id }),
+      setConversationsLoading: (loading: boolean) => set({ conversationsLoading: loading }),
+      
+      loadConversations: async () => {
+        try {
+          set({ conversationsLoading: true });
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.warn('未找到认证token');
+            return;
+          }
+          
+          const response = await fetch('/api/ai-assistant/conversations', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              const conversations = result.data.conversations.map((conv: any) => ({
+                id: conv.id.toString(),
+                title: conv.title,
+                lastMessage: conv.last_message || '',
+                timestamp: new Date(conv.updated_at),
+                starred: conv.starred,
+                archived: conv.archived,
+                messageCount: conv.message_count || 0,
+              }));
+              set({ conversations });
+            }
+          }
+        } catch (error) {
+          console.error('加载会话列表失败:', error);
+        } finally {
+          set({ conversationsLoading: false });
+        }
+      },
+      
+      createConversation: async (title = '新对话') => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.warn('未找到认证token');
+            return null;
+          }
+          
+          const response = await fetch('/api/ai-assistant/conversations', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title }),
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              const newConversation: ConversationItem = {
+                id: result.data.id.toString(),
+                title: result.data.title,
+                lastMessage: '',
+                timestamp: new Date(result.data.created_at),
+                starred: false,
+                archived: false,
+                messageCount: 0,
+              };
+              
+              set((state) => ({
+                conversations: [newConversation, ...state.conversations],
+                currentConversationId: newConversation.id,
+              }));
+              
+              return newConversation.id;
+            }
+          }
+        } catch (error) {
+          console.error('创建会话失败:', error);
+        }
+        return null;
+      },
+      
+      updateConversation: async (id: string, updates: Partial<ConversationItem>) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.warn('未找到认证token');
+            return false;
+          }
+          
+          const response = await fetch(`/api/ai-assistant/conversations/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updates),
+          });
+          
+          if (response.ok) {
+            set((state) => ({
+              conversations: state.conversations.map((conv) =>
+                conv.id === id ? { ...conv, ...updates } : conv
+              ),
+            }));
+            return true;
+          }
+        } catch (error) {
+          console.error('更新会话失败:', error);
+        }
+        return false;
+      },
+      
+      deleteConversation: async (id: string) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.warn('未找到认证token');
+            return false;
+          }
+          
+          const response = await fetch(`/api/ai-assistant/conversations/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            set((state) => ({
+              conversations: state.conversations.filter((conv) => conv.id !== id),
+              currentConversationId: state.currentConversationId === id ? null : state.currentConversationId,
+            }));
+            return true;
+          }
+        } catch (error) {
+          console.error('删除会话失败:', error);
+        }
+        return false;
+      },
+      
+      toggleConversationStar: async (id: string) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.warn('未找到认证token');
+            return false;
+          }
+          
+          const response = await fetch(`/api/ai-assistant/conversations/${id}/star`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              const starred = result.data.starred;
+              set((state) => ({
+                conversations: state.conversations.map((conv) =>
+                  conv.id === id ? { ...conv, starred } : conv
+                ),
+              }));
+              return true;
+            }
+          }
+        } catch (error) {
+          console.error('切换收藏状态失败:', error);
+        }
+        return false;
+      },
+      
+      searchConversations: async (keyword: string) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.warn('未找到认证token');
+            return [];
+          }
+          
+          const response = await fetch(`/api/ai-assistant/conversations/search?keyword=${encodeURIComponent(keyword)}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              return result.data.conversations.map((conv: any) => ({
+                id: conv.id.toString(),
+                title: conv.title,
+                lastMessage: conv.last_message || '',
+                timestamp: new Date(conv.updated_at),
+                starred: conv.starred,
+                archived: conv.archived,
+                messageCount: conv.message_count || 0,
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('搜索会话失败:', error);
+        }
+        return [];
+      },
+      
       updateAIStats: (stats: Partial<AIStats>) => {
         set((state) => ({
           aiStats: { ...state.aiStats, ...stats }
@@ -216,6 +463,7 @@ export const useAIAssistantStore = create<AIAssistantState>()(
           selectedTemplateName: '',
           searchQuery: '',
           searchResults: [],
+          currentConversationId: null,
         });
       },
     }),
@@ -226,6 +474,8 @@ export const useAIAssistantStore = create<AIAssistantState>()(
         selectedTemplateId: state.selectedTemplateId,
         selectedTemplateName: state.selectedTemplateName,
         pptTemplates: state.pptTemplates,
+        conversations: state.conversations,
+        currentConversationId: state.currentConversationId,
       }),
     }
   )

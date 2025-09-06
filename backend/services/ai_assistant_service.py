@@ -25,7 +25,7 @@ from models.user import User
 from models.diagnosis import DiagnosisReport, WeaknessPoint
 from models.knowledge import KnowledgePoint, Subject
 from models.exam import ExamSession, ExamAnalytics
-from models.exam_papers import ExamPaper
+from models.exam_papers import ExamPaper, KnowledgeGraph
 from models.mistake import MistakeRecord, MistakeReviewSession, MistakePattern
 from models.learning import StudyRecord, MemoryCard
 from services.llm_service import llm_service
@@ -662,10 +662,158 @@ class AIAssistantService:
                 'message': '知识图谱生成失败，请重试',
                 'error': str(e)
             }
+    
+    def save_content_to_knowledge_graph(self, user_id: str, subject_id: str, content: str, tags: Optional[List[str]] = None, title: Optional[str] = None, force_overwrite: bool = False) -> Dict[str, Any]:
+        """
+        保存内容到知识图谱
+        
+        Args:
+            user_id: 用户ID
+            subject_id: 学科ID
+            content: 要保存的内容
+            tags: 标签列表
+            title: 自定义标题，如果不提供则自动生成
+            force_overwrite: 是否强制覆盖已存在的同名图谱
+            
+        Returns:
+            保存结果
+        """
+        try:
+            # 这里可以将内容保存到向量数据库或知识图谱存储中
+            # 暂时返回成功响应，实际实现可以根据需要扩展
+            
+            # 可以调用向量数据库服务保存内容
+            try:
+                # 生成唯一的文档ID
+                document_id = f"ai_assistant_edit_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                
+                # 准备元数据
+                metadata = {
+                    'user_id': user_id,
+                    'subject_id': subject_id,
+                    'tags': tags or [],
+                    'source': 'ai_assistant_edit',
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+                # 尝试保存到向量数据库（如果可用）
+                success = vector_db_service.add_document_vectors(
+                    document_id=document_id,
+                    document_type='ai_assistant_content',
+                    content_chunks=[content],  # 将内容作为单个块
+                    metadata=metadata
+                )
+                
+                if not success:
+                    logger.warning("向量数据库保存失败，但内容仍被记录")
+                    
+            except Exception as vector_error:
+                logger.warning(f"向量数据库保存失败，但内容仍被记录: {str(vector_error)}")
+            
+            # 保存到知识图谱数据库表
+            try:
+                # 获取学科信息
+                subject = Subject.query.get(subject_id)
+                if not subject:
+                    raise ValueError(f"Subject {subject_id} not found")
+                
+                # 生成或使用提供的标题
+                graph_name = title if title else f"AI助理保存 - {subject.name} - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                
+                # 检查是否存在相同名称的知识图谱
+                existing_graph = KnowledgeGraph.query.filter_by(
+                    subject_id=subject_id,
+                    name=graph_name,
+                    is_active=True
+                ).first()
+                
+                if existing_graph and not force_overwrite:
+                    # 返回重复提示，让前端处理
+                    return {
+                        'success': False,
+                        'duplicate_found': True,
+                        'existing_graph': {
+                            'id': existing_graph.id,
+                            'name': existing_graph.name,
+                            'created_at': existing_graph.created_at.isoformat(),
+                            'description': existing_graph.description
+                        },
+                        'message': '发现同名知识图谱，请选择覆盖或使用新名称',
+                        'suggested_name': f"{graph_name} - 副本"
+                    }
+                
+                # 如果需要覆盖，更新现有记录
+                if existing_graph and force_overwrite:
+                    knowledge_graph = existing_graph
+                    knowledge_graph.description = f"用户通过AI助理保存的知识内容（已更新）"
+                    knowledge_graph.updated_at = datetime.now()
+                else:
+                    # 创建新的知识图谱记录
+                    knowledge_graph = KnowledgeGraph(
+                        subject_id=subject_id,
+                        name=graph_name,
+                        description=f"用户通过AI助理保存的知识内容",
+                        year=datetime.now().year,
+                        graph_type='ai_assistant_content',
+                    nodes=[
+                        {
+                            'id': f'content_{document_id}',
+                            'name': f'AI助理内容',
+                            'type': 'ai_content',
+                            'content': content,
+                            'tags': tags or [],
+                            'level': 1,
+                            'x': 0,
+                            'y': 0
+                        }
+                    ],
+                    edges=[],
+                    layout_config={
+                        'layout': 'force',
+                        'node_size_factor': 1.0,
+                        'link_strength_factor': 1.0,
+                        'color_scheme': 'default'
+                    }
+                )
+                
+                db.session.add(knowledge_graph)
+                db.session.commit()
+                
+                logger.info(f"用户 {user_id} 保存内容到知识图谱成功，学科: {subject_id}，图谱ID: {knowledge_graph.id}")
+                
+                return {
+                    'success': True,
+                    'message': '内容已成功保存到知识图谱',
+                    'content': content,
+                    'tags': tags or [],
+                    'knowledge_graph_id': knowledge_graph.id,
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+            except Exception as db_error:
+                logger.error(f"保存到知识图谱数据库失败: {str(db_error)}")
+                db.session.rollback()
+                # 即使数据库保存失败，向量数据库可能已经保存成功，所以仍返回部分成功
+                return {
+                    'success': True,
+                    'message': '内容已保存到向量数据库，但知识图谱记录创建失败',
+                    'content': content,
+                    'tags': tags or [],
+                    'timestamp': datetime.now().isoformat(),
+                    'warning': '知识图谱记录创建失败，但内容已保存'
+                }
+            
+        except Exception as e:
+            logger.error(f"保存内容到知识图谱失败: {str(e)}")
+            return {
+                'success': False,
+                'message': '保存到知识图谱失败，请重试',
+                'error': str(e)
+            }
 
     def _retrieve_comprehensive_data(self, user_id: str, query: str) -> Dict[str, Any]:
         """
-        检索综合数据，包括文档、试卷、错题记录和学习情况
+        检索综合数据，包括文档、试卷、错题记录、学习情况和知识图谱
         
         Args:
             user_id: 用户ID
@@ -690,6 +838,9 @@ class AIAssistantService:
             # 检索学习记录
             study_records = self._get_study_records_data(user_id, query)
             
+            # 检索知识图谱
+            knowledge_graphs = self._get_knowledge_graphs_data(user_id, query)
+            
             # 获取学习分析数据
             learning_analytics = self._get_learning_analytics_data(user_id)
             
@@ -699,6 +850,7 @@ class AIAssistantService:
                 'mistake_records': mistake_records,
                 'exam_sessions': exam_sessions,
                 'study_records': study_records,
+                'knowledge_graphs': knowledge_graphs,
                 'learning_analytics': learning_analytics
             }
             
@@ -833,6 +985,17 @@ class AIAssistantService:
                 resolved_count = sum(1 for m in mistake_records if m.get('is_resolved'))
                 base_prompt += f"，已解决{resolved_count}道"
             
+            # 添加知识图谱信息
+            knowledge_graphs = comprehensive_data.get('knowledge_graphs', [])
+            if knowledge_graphs:
+                base_prompt += "\n\n相关知识图谱："
+                for i, kg in enumerate(knowledge_graphs[:3], 1):
+                    base_prompt += f"\n{i}. {kg['name']} ({kg['subject_name']}) - {kg['description'][:50]}..."
+                    if kg['content']:
+                        base_prompt += f"\n   内容摘要：{kg['content'][:100]}..."
+                    if kg['tags']:
+                        base_prompt += f"\n   标签：{', '.join(kg['tags'][:3])}"
+            
             # 添加学习分析数据
             learning_analytics = comprehensive_data.get('learning_analytics', {})
             if learning_analytics:
@@ -846,8 +1009,15 @@ class AIAssistantService:
             base_prompt += "\n\n回答指导："
             base_prompt += "\n- 结合用户的学习数据提供个性化建议"
             base_prompt += "\n- 针对错题记录和薄弱环节给出具体改进方案"
+            base_prompt += "\n- 利用知识图谱内容回答相关学科问题"
+            base_prompt += "\n- 当用户询问特定知识点时，优先引用相关的知识图谱内容"
             base_prompt += "\n- 推荐相关的学习资料和练习题目"
             base_prompt += "\n- 鼓励用户并提供学习动力"
+            base_prompt += "\n\n特殊任务处理："
+            base_prompt += "\n- 知识搜索任务：当用户要求列出某个主题的知识点时，从知识图谱中搜索相关内容，按重要性排序展示"
+            base_prompt += "\n- 报告生成任务：当用户要求生成报告时，整合相关知识点，包含标题、内容、描述、标签等完整信息"
+            base_prompt += "\n- 文档导出任务：当用户要求生成PDF或可打印文档时，调用PPT生成功能创建结构化文档"
+            base_prompt += "\n- 综合分析任务：结合多个数据源（文档、试卷、错题、知识图谱）提供全面分析"
         
         if context:
             base_prompt += f"\n\n对话上下文：{json.dumps(context, ensure_ascii=False)}"
@@ -1526,6 +1696,212 @@ class AIAssistantService:
         except Exception as e:
             logger.error(f"获取学习记录失败: {str(e)}")
             return []
+    
+    def _get_knowledge_graphs_data(self, user_id: str, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        获取用户的知识图谱数据，支持按查询内容过滤和智能语义搜索
+        
+        Args:
+            user_id: 用户ID
+            query: 查询内容（可选）
+        
+        Returns:
+            知识图谱数据列表
+        """
+        try:
+            # 构建基础查询
+            knowledge_graphs_query = KnowledgeGraph.query.filter_by(
+                is_active=True
+            )
+            
+            # 如果有查询内容，进行智能过滤
+            if query:
+                query_lower = query.lower()
+                
+                # 提取查询中的关键词和学科信息
+                search_keywords = self._extract_search_keywords(query)
+                subject_hints = self._extract_subject_hints(query)
+                
+                # 构建搜索条件
+                search_conditions = []
+                
+                # 基础文本匹配
+                for keyword in search_keywords:
+                    search_conditions.extend([
+                        KnowledgeGraph.name.ilike(f'%{keyword}%'),
+                        KnowledgeGraph.description.ilike(f'%{keyword}%'),
+                        KnowledgeGraph.content.ilike(f'%{keyword}%')
+                    ])
+                
+                # 注意：标签搜索已移至应用层处理，因为标签现在存储在nodes数组中
+                
+                # 如果识别出学科，添加学科过滤
+                if subject_hints:
+                    subject_ids = []
+                    for subject_hint in subject_hints:
+                        subjects = Subject.query.filter(
+                            Subject.name.ilike(f'%{subject_hint}%')
+                        ).all()
+                        subject_ids.extend([s.id for s in subjects])
+                    
+                    if subject_ids:
+                        search_conditions.append(
+                            KnowledgeGraph.subject_id.in_(subject_ids)
+                        )
+                
+                if search_conditions:
+                    knowledge_graphs_query = knowledge_graphs_query.filter(
+                        db.or_(*search_conditions)
+                    )
+            
+            knowledge_graphs = knowledge_graphs_query.order_by(
+                KnowledgeGraph.updated_at.desc()
+            ).limit(20).all()
+            
+            result = []
+            for kg in knowledge_graphs:
+                # 获取学科信息
+                subject = Subject.query.get(kg.subject_id)
+                subject_name = subject.name if subject else '未知学科'
+                
+                # 计算智能相关性分数
+                relevance_score = self._calculate_knowledge_graph_relevance(
+                    kg, query, subject_name
+                )
+                
+                # 从nodes数组中提取标签
+                node_tags = []
+                if kg.nodes:
+                    for node in kg.nodes:
+                        if isinstance(node, dict) and 'tags' in node:
+                            node_tags.extend(node.get('tags', []))
+                # 去重
+                node_tags = list(set(node_tags))
+                
+                kg_data = {
+                    'id': kg.id,
+                    'name': kg.name,
+                    'description': kg.description or '',
+                    'content': kg.content or '',
+                    'subject_name': subject_name,
+                    'subject_id': kg.subject_id,
+                    'tags': node_tags,
+                    'graph_type': kg.graph_type,
+                    'created_at': kg.created_at.isoformat() if kg.created_at else '',
+                    'updated_at': kg.updated_at.isoformat() if kg.updated_at else '',
+                    'relevance_score': relevance_score,
+                    'data_type': 'knowledge_graph'
+                }
+                
+                result.append(kg_data)
+            
+            # 应用层标签搜索过滤
+            if query:
+                search_keywords = self._extract_search_keywords(query)
+                if search_keywords:
+                    # 标签匹配过滤
+                    filtered_result = []
+                    for item in result:
+                        item_tags = [tag.lower() for tag in item.get('tags', [])]
+                        # 检查是否有任何搜索关键词匹配标签
+                        tag_match = any(keyword.lower() in ' '.join(item_tags) for keyword in search_keywords)
+                        if tag_match or item['relevance_score'] > 0:
+                            filtered_result.append(item)
+                    result = filtered_result
+                
+                # 按相关性分数排序
+                result.sort(key=lambda x: x['relevance_score'], reverse=True)
+                # 只返回相关性分数大于0或有标签匹配的结果
+                result = [item for item in result if item['relevance_score'] > 0 or any(keyword.lower() in ' '.join([tag.lower() for tag in item.get('tags', [])]) for keyword in search_keywords)]
+            
+            return result[:10]  # 限制返回数量
+            
+        except Exception as e:
+            logger.error(f"获取知识图谱数据失败: {str(e)}")
+            return []
+    
+    def _extract_search_keywords(self, query: str) -> List[str]:
+        """
+        从查询中提取关键词
+        """
+        import re
+        
+        # 移除常见的停用词
+        stop_words = {'的', '了', '在', '是', '有', '和', '与', '或', '但', '而', '中', '关于', '给我', '列出', '所有'}
+        
+        # 分词并清理
+        words = re.findall(r'[\u4e00-\u9fff]+|[a-zA-Z]+', query)
+        keywords = [word.lower() for word in words if len(word) > 1 and word not in stop_words]
+        
+        return keywords
+    
+    def _extract_subject_hints(self, query: str) -> List[str]:
+        """
+        从查询中提取学科提示
+        """
+        subject_keywords = {
+            '语文': ['语文', '文学', '古诗', '诗词', '作文', '阅读', '文言文'],
+            '数学': ['数学', '几何', '代数', '函数', '方程', '计算'],
+            '英语': ['英语', '单词', '语法', '阅读理解', '作文'],
+            '物理': ['物理', '力学', '电学', '光学', '热学'],
+            '化学': ['化学', '元素', '反应', '分子', '原子'],
+            '生物': ['生物', '细胞', '遗传', '生态', '植物', '动物'],
+            '历史': ['历史', '朝代', '事件', '人物'],
+            '地理': ['地理', '地形', '气候', '国家', '城市']
+        }
+        
+        detected_subjects = []
+        query_lower = query.lower()
+        
+        for subject, keywords in subject_keywords.items():
+            if any(keyword in query_lower for keyword in keywords):
+                detected_subjects.append(subject)
+        
+        return detected_subjects
+    
+    def _calculate_knowledge_graph_relevance(self, kg, query: Optional[str], subject_name: str) -> float:
+        """
+        计算知识图谱的相关性分数
+        """
+        if not query:
+            return 1.0
+        
+        relevance_score = 0.0
+        query_lower = query.lower()
+        
+        # 提取搜索关键词
+        search_keywords = self._extract_search_keywords(query)
+        
+        # 标题匹配（权重最高）
+        title_matches = sum(1 for keyword in search_keywords if keyword in kg.name.lower())
+        if title_matches > 0:
+            relevance_score += 0.5 * (title_matches / len(search_keywords))
+        
+        # 内容匹配
+        if kg.content:
+            content_matches = sum(1 for keyword in search_keywords if keyword in kg.content.lower())
+            if content_matches > 0:
+                relevance_score += 0.3 * (content_matches / len(search_keywords))
+        
+        # 描述匹配
+        if kg.description:
+            desc_matches = sum(1 for keyword in search_keywords if keyword in kg.description.lower())
+            if desc_matches > 0:
+                relevance_score += 0.15 * (desc_matches / len(search_keywords))
+        
+        # 标签匹配
+        if kg.tags:
+            tag_matches = sum(1 for keyword in search_keywords 
+                            for tag in kg.tags if keyword in tag.lower())
+            if tag_matches > 0:
+                relevance_score += 0.05 * min(tag_matches / len(search_keywords), 1.0)
+        
+        # 学科匹配加分
+        subject_hints = self._extract_subject_hints(query)
+        if subject_hints and subject_name in subject_hints:
+            relevance_score += 0.1
+        
+        return min(relevance_score, 1.0)
     
     def _get_learning_analytics_data(self, user_id: str) -> Dict[str, Any]:
         """

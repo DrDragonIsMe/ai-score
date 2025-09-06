@@ -17,6 +17,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from utils.response import success_response, error_response
 from services.ai_assistant_service import ai_assistant_service
+from models.conversation import Conversation, ConversationMessage
+from utils.database import db
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -232,10 +234,310 @@ def submit_feedback():
         'feedback_id': f"fb_1_{int(datetime.now().timestamp())}"
     }, "反馈提交成功")
 
+# ==================== 会话管理API ====================
+
+@ai_assistant_bp.route('/conversations', methods=['GET'])
+@jwt_required()
+def get_conversations():
+    """
+    获取用户的会话列表
+    
+    查询参数:
+    - page: 页码（默认1）
+    - per_page: 每页数量（默认20）
+    - starred_only: 只显示收藏的（默认false）
+    - include_archived: 包含已归档的（默认false）
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        starred_only = request.args.get('starred_only', 'false').lower() == 'true'
+        include_archived = request.args.get('include_archived', 'false').lower() == 'true'
+        
+        result = Conversation.get_user_conversations(
+            user_id=user_id,
+            page=page,
+            per_page=per_page,
+            starred_only=starred_only,
+            include_archived=include_archived
+        )
+        
+        return success_response(result, "获取会话列表成功")
+    except Exception as e:
+        logger.error(f"获取会话列表失败: {str(e)}")
+        return error_response("获取会话列表失败", 500)
+
+@ai_assistant_bp.route('/conversations', methods=['POST'])
+@jwt_required()
+def create_conversation():
+    """
+    创建新会话
+    
+    请求参数:
+    - title: 会话标题（可选）
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        data = request.get_json() or {}
+        title = data.get('title', '新对话')
+        
+        conversation = Conversation(
+            user_id=user_id,
+            title=title
+        )
+        
+        db.session.add(conversation)
+        db.session.commit()
+        
+        return success_response(conversation.to_dict(), "创建会话成功")
+    except Exception as e:
+        logger.error(f"创建会话失败: {str(e)}")
+        db.session.rollback()
+        return error_response("创建会话失败", 500)
+
+@ai_assistant_bp.route('/conversations/<conversation_id>', methods=['GET'])
+@jwt_required()
+def get_conversation(conversation_id):
+    """
+    获取指定会话详情
+    
+    路径参数:
+    - conversation_id: 会话ID
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        conversation = Conversation.query.filter_by(
+            id=conversation_id,
+            user_id=user_id
+        ).first()
+        
+        if not conversation:
+            return error_response("会话不存在", 404)
+        
+        return success_response(conversation.to_dict(include_messages=True), "获取会话详情成功")
+    except Exception as e:
+        logger.error(f"获取会话详情失败: {str(e)}")
+        return error_response("获取会话详情失败", 500)
+
+@ai_assistant_bp.route('/conversations/<conversation_id>', methods=['PUT'])
+@jwt_required()
+def update_conversation(conversation_id):
+    """
+    更新会话信息
+    
+    路径参数:
+    - conversation_id: 会话ID
+    
+    请求参数:
+    - title: 新标题（可选）
+    - starred: 收藏状态（可选）
+    - archived: 归档状态（可选）
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        conversation = Conversation.query.filter_by(
+            id=conversation_id,
+            user_id=user_id
+        ).first()
+        
+        if not conversation:
+            return error_response("会话不存在", 404)
+        
+        data = request.get_json() or {}
+        
+        # 更新标题
+        if 'title' in data:
+            if not conversation.update_title(data['title']):
+                return error_response("标题不能为空", 400)
+        
+        # 更新收藏状态
+        if 'starred' in data:
+            conversation.starred = bool(data['starred'])
+        
+        # 更新归档状态
+        if 'archived' in data:
+            if data['archived']:
+                conversation.archive()
+            else:
+                conversation.unarchive()
+        
+        db.session.commit()
+        
+        return success_response(conversation.to_dict(), "更新会话成功")
+    except Exception as e:
+        logger.error(f"更新会话失败: {str(e)}")
+        db.session.rollback()
+        return error_response("更新会话失败", 500)
+
+@ai_assistant_bp.route('/conversations/<conversation_id>', methods=['DELETE'])
+@jwt_required()
+def delete_conversation(conversation_id):
+    """
+    删除会话
+    
+    路径参数:
+    - conversation_id: 会话ID
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        conversation = Conversation.query.filter_by(
+            id=conversation_id,
+            user_id=user_id
+        ).first()
+        
+        if not conversation:
+            return error_response("会话不存在", 404)
+        
+        db.session.delete(conversation)
+        db.session.commit()
+        
+        return success_response({"id": conversation_id}, "删除会话成功")
+    except Exception as e:
+        logger.error(f"删除会话失败: {str(e)}")
+        db.session.rollback()
+        return error_response("删除会话失败", 500)
+
+@ai_assistant_bp.route('/conversations/<conversation_id>/star', methods=['POST'])
+@jwt_required()
+def toggle_conversation_star(conversation_id):
+    """
+    切换会话收藏状态
+    
+    路径参数:
+    - conversation_id: 会话ID
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        conversation = Conversation.query.filter_by(
+            id=conversation_id,
+            user_id=user_id
+        ).first()
+        
+        if not conversation:
+            return error_response("会话不存在", 404)
+        
+        starred = conversation.toggle_star()
+        db.session.commit()
+        
+        return success_response({
+            "id": conversation_id,
+            "starred": starred
+        }, f"会话{'收藏' if starred else '取消收藏'}成功")
+    except Exception as e:
+        logger.error(f"切换收藏状态失败: {str(e)}")
+        db.session.rollback()
+        return error_response("操作失败", 500)
+
+@ai_assistant_bp.route('/conversations/search', methods=['GET'])
+@jwt_required()
+def search_conversations():
+    """
+    搜索会话
+    
+    查询参数:
+    - keyword: 搜索关键词
+    - page: 页码（默认1）
+    - per_page: 每页数量（默认20）
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        keyword = request.args.get('keyword', '').strip()
+        if not keyword:
+            return error_response("搜索关键词不能为空", 400)
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        result = Conversation.search_conversations(
+            user_id=user_id,
+            keyword=keyword,
+            page=page,
+            per_page=per_page
+        )
+        
+        return success_response(result, "搜索会话成功")
+    except Exception as e:
+        logger.error(f"搜索会话失败: {str(e)}")
+        return error_response("搜索会话失败", 500)
+
+@ai_assistant_bp.route('/conversations/<conversation_id>/messages', methods=['POST'])
+@jwt_required()
+def add_message_to_conversation(conversation_id):
+    """
+    向会话添加消息
+    
+    路径参数:
+    - conversation_id: 会话ID
+    
+    请求参数:
+    - role: 消息角色（user/assistant/system）
+    - content: 消息内容
+    - message_type: 消息类型（默认text）
+    - metadata: 元数据（可选）
+    """
+    try:
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        conversation = Conversation.query.filter_by(
+            id=conversation_id,
+            user_id=user_id
+        ).first()
+        
+        if not conversation:
+            return error_response("会话不存在", 404)
+        
+        data = request.get_json()
+        if not data or 'role' not in data or 'content' not in data:
+            return error_response("缺少必要参数：role, content", 400)
+        
+        role = data['role']
+        content = data['content']
+        message_type = data.get('message_type', 'text')
+        metadata = data.get('metadata')
+        
+        if role not in ['user', 'assistant', 'system']:
+            return error_response("无效的消息角色", 400)
+        
+        if not content.strip():
+            return error_response("消息内容不能为空", 400)
+        
+        message = conversation.add_message(
+            role=role,
+            content=content,
+            message_type=message_type,
+            metadata=metadata
+        )
+        
+        db.session.commit()
+        
+        return success_response(message.to_dict(), "添加消息成功")
+    except Exception as e:
+        logger.error(f"添加消息失败: {str(e)}")
+        db.session.rollback()
+        return error_response("添加消息失败", 500)
+
+# ==================== 兼容性接口 ====================
+
 @ai_assistant_bp.route('/conversation-history', methods=['GET'])
 def get_conversation_history():
     """
-    获取对话历史
+    获取对话历史（兼容性接口）
     
     查询参数:
     - limit: 限制数量（默认20）
@@ -348,6 +650,10 @@ def generate_knowledge_graph():
     
     请求参数:
     - subject_id: 学科ID
+    - content: 要保存的内容（可选）
+    - tags: 标签列表（可选）
+    - title: 自定义标题（可选）
+    - force_overwrite: 是否强制覆盖（可选）
     """
     data = request.get_json()
     
@@ -355,26 +661,88 @@ def generate_knowledge_graph():
         return error_response("缺少必要参数：subject_id", 400)
     
     subject_id = data['subject_id']
+    content = data.get('content')
+    tags = data.get('tags', [])
+    title = data.get('title')
+    force_overwrite = data.get('force_overwrite', False)
     
     try:
         # 从JWT token中获取用户ID
         current_user_data = get_jwt_identity()
         user_id = current_user_data['user_id']
         
-        # 调用知识图谱生成服务
-        result = ai_assistant_service.generate_knowledge_graph_for_user(
-            user_id=user_id,
-            subject_id=subject_id
-        )
+        # 如果有自定义内容，保存到知识图谱
+        if content:
+            result = ai_assistant_service.save_content_to_knowledge_graph(
+                user_id=user_id,
+                subject_id=subject_id,
+                content=content,
+                tags=tags,
+                title=title,
+                force_overwrite=force_overwrite
+            )
+        else:
+            # 调用知识图谱生成服务
+            result = ai_assistant_service.generate_knowledge_graph_for_user(
+                user_id=user_id,
+                subject_id=subject_id
+            )
         
         if result['success']:
-            return success_response(result, "知识图谱生成成功")
+            return success_response(result, "知识图谱操作成功")
+        elif result.get('duplicate_found'):
+            # 返回重复检测结果，让前端处理
+            return jsonify(result), 409  # 409 Conflict
         else:
-            return error_response(result.get('message', '知识图谱生成失败'), 500)
+            return error_response(result.get('message', '知识图谱操作失败'), 500)
             
     except Exception as e:
-        logger.error(f"知识图谱生成API异常: {str(e)}")
-        return error_response("知识图谱生成服务异常，请稍后重试", 503)
+        logger.error(f"知识图谱API异常: {str(e)}")
+        return error_response("知识图谱服务异常，请稍后重试", 503)
+
+@ai_assistant_bp.route('/search-knowledge-graphs', methods=['POST'])
+@jwt_required()
+def search_knowledge_graphs():
+    """
+    搜索知识图谱内容
+    
+    请求参数:
+    - query: 搜索查询
+    - subject_filter: 学科过滤（可选）
+    """
+    data = request.get_json()
+    
+    if not data or 'query' not in data:
+        return error_response("缺少必要参数：query", 400)
+    
+    query = data['query']
+    subject_filter = data.get('subject_filter')
+    
+    try:
+        # 从JWT token中获取用户ID
+        current_user_data = get_jwt_identity()
+        user_id = current_user_data['user_id']
+        
+        # 搜索知识图谱
+        knowledge_graphs = ai_assistant_service._get_knowledge_graphs_data(user_id, query)
+        
+        # 如果有学科过滤，进一步过滤结果
+        if subject_filter:
+            knowledge_graphs = [
+                kg for kg in knowledge_graphs 
+                if kg['subject_id'] == subject_filter
+            ]
+        
+        return success_response({
+            'results': knowledge_graphs,
+            'total_found': len(knowledge_graphs),
+            'message': f'找到 {len(knowledge_graphs)} 个相关知识图谱',
+            'timestamp': datetime.now().isoformat()
+        }, "知识图谱搜索成功")
+        
+    except Exception as e:
+        logger.error(f"知识图谱搜索失败: {str(e)}")
+        return error_response("知识图谱搜索失败，请重试", 500)
 
 @ai_assistant_bp.route('/generate-ppt', methods=['POST'])
 def generate_ppt():

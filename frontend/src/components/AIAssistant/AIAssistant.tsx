@@ -594,11 +594,23 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ visible, onClose }) => {
         visible={showKnowledgeGraphEditor}
         onClose={() => setShowKnowledgeGraphEditor(false)}
         onSuccess={(knowledgeGraph) => {
+          // 从节点中提取标签
+          const nodeTags: string[] = [];
+          if (knowledgeGraph.knowledge_graph?.nodes) {
+            knowledgeGraph.knowledge_graph.nodes.forEach((node: any) => {
+              if (node.tags && Array.isArray(node.tags)) {
+                nodeTags.push(...node.tags);
+              }
+            });
+          }
+          // 去重
+          const uniqueTags = [...new Set(nodeTags)];
+          
           // 将知识图谱结果添加到聊天中
           const assistantMessage: Message = {
             id: Date.now().toString(),
             type: 'assistant',
-            content: `已成功生成知识图谱！\n\n**学科**: ${knowledgeGraph.subject_id}\n**内容**: ${knowledgeGraph.content}\n**标签**: ${knowledgeGraph.tags?.join(', ') || '无'}\n\n知识图谱包含 ${knowledgeGraph.knowledge_graph?.nodes?.length || 0} 个节点和 ${knowledgeGraph.knowledge_graph?.edges?.length || 0} 个连接。`,
+            content: `已成功生成知识图谱！\n\n**学科**: ${knowledgeGraph.subject_id}\n**内容**: ${knowledgeGraph.content}\n**标签**: ${uniqueTags.join(', ') || '无'}\n\n知识图谱包含 ${knowledgeGraph.knowledge_graph?.nodes?.length || 0} 个节点和 ${knowledgeGraph.knowledge_graph?.edges?.length || 0} 个连接。`,
             timestamp: new Date()
           };
           addMessage(assistantMessage);

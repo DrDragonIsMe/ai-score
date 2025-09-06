@@ -25,31 +25,84 @@ from sqlalchemy import desc, func, and_
 import json
 from datetime import datetime
 
+from sqlalchemy.orm.attributes import flag_modified
+
 knowledge_graph_bp = Blueprint('knowledge_graph', __name__)
 
-@knowledge_graph_bp.route('/knowledge-graph/<subject_id>', methods=['GET'])
+@knowledge_graph_bp.route('/knowledge-graph', methods=['GET'])
 @jwt_required()
-def get_subject_knowledge_graph(subject_id):
-    """获取学科知识图谱"""
+def get_knowledge_graphs():
+    """获取知识图谱列表"""
     try:
         # 从JWT token中获取tenant_id
         current_user_identity = get_jwt_identity()
         tenant_id = current_user_identity.get('tenant_id')
-        year = request.args.get('year', datetime.now().year, type=int)
-        graph_type = request.args.get('type', 'exam_scope')  # 默认为考试范围
         
-        # 验证学科
+        # 获取查询参数
+        subject_id = request.args.get('subject_id')
+        year = request.args.get('year', datetime.now().year, type=int)
+        graph_type = request.args.get('type', 'exam_scope')
+        
+        # 构建查询条件
+        query = KnowledgeGraph.query.filter_by(is_active=True)
+        
+        if subject_id:
+            # 验证学科是否存在且属于当前租户
+            subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
+            if not subject:
+                return error_response('Subject not found', 404)
+            query = query.filter_by(subject_id=subject_id)
+        
+        if year:
+            query = query.filter_by(year=year)
+            
+        if graph_type:
+            query = query.filter_by(graph_type=graph_type)
+        
+        # 获取知识图谱列表
+        knowledge_graphs = query.order_by(desc(KnowledgeGraph.created_at)).all()
+        
+        # 转换为字典格式
+        result = [kg.to_dict() for kg in knowledge_graphs]
+        
+        return success_response(result)
+        
+    except Exception as e:
+        return error_response(f'Failed to get knowledge graphs: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/<id_param>', methods=['GET'])
+@jwt_required()
+def get_subject_knowledge_graph(id_param):
+    """获取学科知识图谱或单个知识图谱"""
+    try:
+        # 尝试按图谱ID获取
+        knowledge_graph = KnowledgeGraph.query.filter_by(id=id_param, is_active=True).first()
+        if knowledge_graph:
+            current_user_identity = get_jwt_identity()
+            tenant_id = current_user_identity.get('tenant_id')
+            subject = Subject.query.filter_by(id=knowledge_graph.subject_id, tenant_id=tenant_id).first()
+            if not subject:
+                return error_response('Access denied to this knowledge graph', 403)
+            return success_response(knowledge_graph.to_dict())
+
+        # 如果不是图谱ID，则按学科ID处理
+        subject_id = id_param
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
+        year = request.args.get('year', datetime.now().year, type=int)
+        graph_type = request.args.get('type', 'exam_scope')
+
         subject = Subject.query.filter_by(id=subject_id, tenant_id=tenant_id).first()
         if not subject:
-            return error_response('Subject not found', 404)
-        
+            return error_response('Knowledge graph or Subject not found', 404)
+
         # 查找现有的知识图谱
-        knowledge_graph = KnowledgeGraph.query.filter_by(
+        existing_graph = KnowledgeGraph.query.filter_by(
             subject_id=subject_id, year=year, graph_type=graph_type, is_active=True
         ).first()
         
-        if knowledge_graph:
-            return success_response(knowledge_graph.to_dict())
+        if existing_graph:
+            return success_response(existing_graph.to_dict())
         
         # 根据图谱类型生成不同的图谱数据
         if graph_type == 'exam_scope':
@@ -137,7 +190,108 @@ def create_knowledge_node():
         
     except Exception as e:
         db.session.rollback()
-        return error_response(f'Error creating knowledge node: {str(e)}', 500)
+        return error_response(f'Failed to create knowledge node: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/nodes/<node_id>', methods=['PUT'])
+@jwt_required()
+def update_knowledge_node(node_id):
+    """更新知识图谱节点"""
+    try:
+        current_user_identity = get_jwt_identity()
+        tenant_id = current_user_identity.get('tenant_id')
+        
+        data = request.get_json()
+        
+        # 查找知识图谱
+        knowledge_graph = KnowledgeGraph.query.filter_by(
+            id=node_id,
+            is_active=True
+        ).first()
+        
+        if not knowledge_graph:
+            return error_response('Knowledge graph node not found', 404)
+        
+        # 更新字段
+        if 'content' in data:
+            knowledge_graph.content = data['content']
+        
+        # 统一标签体系：更新nodes数组中的标签
+        if knowledge_graph.nodes:
+            if knowledge_graph.graph_type == 'ai_assistant_content':
+                # AI内容类型：只更新第一个节点
+                if knowledge_graph.nodes:
+                    node = knowledge_graph.nodes[0]
+                    if 'content' in data:
+                        node['content'] = data['content']
+                    if 'tags' in data:
+                        node['tags'] = data['tags'] if isinstance(data['tags'], list) else []
+                    # 标记nodes字段已修改
+                    flag_modified(knowledge_graph, 'nodes')
+            else:
+                # 其他类型：将标签应用到所有节点
+                if 'tags' in data:
+                    tags_to_apply = data['tags'] if isinstance(data['tags'], list) else []
+                    for node in knowledge_graph.nodes:
+                        node['tags'] = tags_to_apply
+                    # 标记nodes字段已修改
+                    flag_modified(knowledge_graph, 'nodes')
+        
+        if 'subject_id' in data:
+            # 验证目标学科是否存在
+            target_subject = Subject.query.filter_by(
+                id=data['subject_id'],
+                tenant_id=tenant_id,
+                is_active=True
+            ).first()
+            if target_subject:
+                knowledge_graph.subject_id = data['subject_id']
+                # 同时更新nodes数组中的subject_id
+                if knowledge_graph.graph_type == 'ai_assistant_content' and knowledge_graph.nodes:
+                    knowledge_graph.nodes[0]['subject_id'] = data['subject_id']
+                    # 标记nodes字段已修改
+                    flag_modified(knowledge_graph, 'nodes')
+            else:
+                return error_response('Target subject not found', 404)
+        
+        knowledge_graph.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        db.session.refresh(knowledge_graph)
+        
+        return success_response(knowledge_graph.to_dict(), 'Knowledge node updated successfully')
+        
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f'Failed to update knowledge node: {str(e)}', 500)
+
+@knowledge_graph_bp.route('/knowledge-graph/nodes/<node_id>', methods=['DELETE'])
+@jwt_required()
+def delete_knowledge_node(node_id):
+    """删除知识图谱节点"""
+    try:
+        # 查找AI内容节点
+        knowledge_graph = KnowledgeGraph.query.filter_by(
+            id=node_id,
+            is_active=True
+        ).first()
+        
+        if not knowledge_graph:
+            return error_response('Knowledge graph node not found', 404)
+        
+        # 软删除
+        knowledge_graph.is_active = False
+        knowledge_graph.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return success_response({
+            'id': knowledge_graph.id,
+            'message': 'Knowledge node deleted successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f'Failed to delete knowledge node: {str(e)}', 500)
 
 @knowledge_graph_bp.route('/knowledge-graph/<subject_id>', methods=['POST'])
 @jwt_required()

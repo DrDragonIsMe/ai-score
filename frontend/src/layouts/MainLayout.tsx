@@ -32,6 +32,7 @@ import {
   TrophyOutlined,
   SwapOutlined,
   RobotOutlined,
+  NodeIndexOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
@@ -80,6 +81,11 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       icon: <RobotOutlined />,
       label: t('menu.scorePlus'),
       className: 'score-plus-menu-item',
+    },
+    {
+      key: '/knowledge-graph',
+      icon: <NodeIndexOutlined />,
+      label: '知识图谱',
     },
     {
       key: '/subjects',

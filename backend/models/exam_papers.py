@@ -122,8 +122,29 @@ class KnowledgeGraph(db.Model):
         return f'<KnowledgeGraph {self.name}>'
     
     def to_dict(self):
+        # 从nodes中提取content（如果存在）
+        content = None
+        if self.nodes and len(self.nodes) > 0:
+            for node in self.nodes:
+                if node.get('content'):
+                    content = node.get('content')
+                    break
+        
+        # 从nodes中提取tags（统一标签体系）
+        tags = []
+        if self.nodes and len(self.nodes) > 0:
+            tags_set = set()
+            for node in self.nodes:
+                node_tags = node.get('tags', [])
+                if isinstance(node_tags, list):
+                    for tag in node_tags:
+                        if tag and isinstance(tag, str):
+                            tags_set.add(tag.strip())
+            tags = list(tags_set)
+        
         return {
             'id': str(self.id),
+            'subject_id': str(self.subject_id),
             'name': self.name,
             'description': self.description,
             'year': self.year,
@@ -131,6 +152,8 @@ class KnowledgeGraph(db.Model):
             'nodes': self.nodes,
             'edges': self.edges,
             'layout_config': self.layout_config,
+            'content': content,
+            'tags': tags,
             'created_at': self.created_at.isoformat() if self.created_at is not None else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at is not None else None
         }
