@@ -32,9 +32,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import settingsApi from '../services/settings';
-import KnowledgeGraphViewer from '../components/KnowledgeGraphViewer.tsx';
-import ExamPaperManager from '../components/ExamPaperManager.tsx';
-import StarMapViewer from '../components/StarMapViewer.tsx';
+
+// 移除ExamPaperManager导入，改为跳转到试卷管理模块
+
 import { useAuthStore } from '../stores/authStore';
 
 // const { TabPane } = Tabs; // 已弃用，改用items属性
@@ -156,13 +156,13 @@ const SubjectManagement: React.FC = () => {
   };
 
   const handleViewKnowledgeGraph = (subject: Subject) => {
-    setSelectedSubject(subject);
-    setActiveTab('knowledge-graph');
+    // 跳转到知识图谱页面并传递学科筛选参数
+    navigate(`/knowledge-graph?subject=${subject.id}&subjectName=${encodeURIComponent(subject.name)}`);
   };
 
   const handleViewExamPapers = (subject: Subject) => {
-    setSelectedSubject(subject);
-    setActiveTab('exam-papers');
+    // 跳转到试卷管理模块并以该学科为筛选条件
+    navigate(`/exam-papers?subject=${subject.id}&subjectName=${encodeURIComponent(subject.name)}`);
   };
 
   const handleViewStatistics = (subject: Subject) => {
@@ -171,10 +171,7 @@ const SubjectManagement: React.FC = () => {
     setActiveTab('statistics');
   };
 
-  const handleViewStarMap = (subject: Subject) => {
-    setSelectedSubject(subject);
-    setActiveTab('star-map');
-  };
+
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -403,36 +400,15 @@ const SubjectManagement: React.FC = () => {
                 </>
               )
             },
-            {
-              key: 'knowledge-graph',
-              label: '知识图谱',
-              disabled: !selectedSubject,
-              children: selectedSubject && (
-                <KnowledgeGraphViewer subjectId={selectedSubject.id} />
-              )
-            },
-            {
-              key: 'exam-papers',
-              label: '试卷管理',
-              disabled: !selectedSubject,
-              children: selectedSubject && (
-                <ExamPaperManager subjectId={selectedSubject.id} />
-              )
-            },
+
+            // 移除试卷管理标签页，改为跳转到独立的试卷管理模块
             {
               key: 'statistics',
               label: '统计分析',
               disabled: !selectedSubject,
               children: renderStatistics()
             },
-            {
-              key: 'star-map',
-              label: '星图视图',
-              disabled: !selectedSubject,
-              children: selectedSubject && (
-                <StarMapViewer subjectId={selectedSubject.id} />
-              )
-            }
+
           ]}
         />
       </Card>

@@ -376,7 +376,7 @@ const InteractiveKnowledgeGraph: React.FC<InteractiveKnowledgeGraphProps> = ({
         
         const contentNode: GraphNode = {
           id: `content_${content.id}`,
-          name: content.title || `知识图谱 ${index + 1}`,
+          name: content.name || content.title || `知识图谱 ${index + 1}`,
           type: 'ai_content',
           level: 1,
           content: content.content,

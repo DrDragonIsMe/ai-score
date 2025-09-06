@@ -43,26 +43,24 @@ class LLMService:
         加载默认模型配置
         """
         try:
-            from flask import current_app
-            with current_app.app_context():
-                # 首先查找设置为默认的模型
+            # 首先查找设置为默认的模型
+            self.default_model = AIModelConfig.query.filter_by(
+                is_active=True,
+                is_default=True
+            ).first()
+            
+            # 如果没有默认模型，查找任何可用的模型
+            if not self.default_model:
                 self.default_model = AIModelConfig.query.filter_by(
-                    is_active=True,
-                    is_default=True
+                    is_active=True
                 ).first()
+            
+            if not self.default_model:
+                logger.warning("未找到任何AI模型配置，创建备用模型")
+                self.default_model = self._create_fallback_model()
+            else:
+                logger.info(f"加载AI模型: {self.default_model.model_name} ({self.default_model.model_type})")
                 
-                # 如果没有默认模型，查找任何可用的模型
-                if not self.default_model:
-                    self.default_model = AIModelConfig.query.filter_by(
-                        is_active=True
-                    ).first()
-                
-                if not self.default_model:
-                    logger.warning("未找到任何AI模型配置，创建备用模型")
-                    self.default_model = self._create_fallback_model()
-                else:
-                    logger.info(f"加载AI模型: {self.default_model.model_name} ({self.default_model.model_type})")
-                    
         except Exception as e:
             logger.error(f"加载默认模型失败: {str(e)}")
             self.default_model = self._create_fallback_model()
@@ -136,7 +134,7 @@ class LLMService:
             
             # 构建请求参数
             request_data = {
-                "model": model.model_name,
+                "model": model.model_id,  # 使用model_id而不是model_name
                 "messages": [
                     {"role": "user", "content": prompt}
                 ],
@@ -304,8 +302,8 @@ class LLMService:
         self._ensure_initialized()
         
         if model_name:
+            # 不限制tenant_id，查找所有激活的模型
             return AIModelConfig.query.filter_by(
-                tenant_id="default",
                 model_name=model_name,
                 is_active=True
             ).first()

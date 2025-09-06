@@ -35,6 +35,8 @@ from services.vector_database_service import vector_db_service
 from services.ppt_generation_service import ppt_generation_service
 from services.knowledge_graph_service import knowledge_graph_service
 from services.mastery_classification_service import mastery_classification_service
+from services.pep_high_school_prompt_service import pep_prompt_service
+from services.enhanced_prompt_service import enhanced_prompt_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -49,7 +51,7 @@ class AIAssistantService:
         self.assistant_personality = {
             "role": "智能学习助手",
             "traits": ["友善", "耐心", "专业", "鼓励性"],
-            "greeting": "你好！我是高小分，你的专属学习助手。我可以帮你分析试题、制定学习计划，还能通过拍照识别题目哦！"
+            "greeting": "我是高小分，你的专属学习助手。我可以帮你分析试题、制定学习计划，还能通过拍照识别题目。"
         }
     
     def get_assistant_info(self) -> Dict[str, Any]:
@@ -470,7 +472,10 @@ class AIAssistantService:
                 "real_name": getattr(user, 'real_name', None),
                 "nickname": getattr(user, 'nickname', None),
                 "preferred_greeting": getattr(user, 'preferred_greeting', 'casual'),
-                "grade_level": getattr(user, 'grade_level', '未知'),
+                # 优先从User.grade读取年级水平，如果没有则回退到可能存在的grade_level字段
+                "grade_level": (getattr(user, 'grade', None) or getattr(user, 'grade_level', '未知')),
+                # 将个人描述写入档案，后续注入提示词
+                "bio": getattr(user, 'bio', ''),
                 "recent_reports": len(recent_reports),
                 "learning_style": self._infer_learning_style(recent_reports),
                 "strong_subjects": self._get_strong_subjects(recent_reports),
@@ -861,11 +866,12 @@ class AIAssistantService:
     def _build_chat_prompt(self, user_profile: Dict, context: Optional[Dict] = None, 
                           relevant_documents: Optional[List[Dict]] = None) -> str:
         """
-        构建对话提示词
+        构建对话提示词（集成人教版高中专业提示词）
         """
         # 确定用户称呼
         user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
         preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        grade_level = user_profile.get('grade_level', '高中')
         
         # 根据问候偏好设置称呼方式
         greeting_styles = {
@@ -877,7 +883,48 @@ class AIAssistantService:
         
         greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
         
-        base_prompt = f"""
+        # 检查是否有学科相关的对话内容
+        message_content = context.get('message', '') if isinstance(context, dict) else (context if isinstance(context, str) else '')
+        detected_subject = self._detect_question_subject(message_content) if message_content else None
+        question_type = self._detect_question_type(message_content) if message_content else '学习咨询'
+        
+        # 构建人教版专业提示词
+        if detected_subject and grade_level in ['高一', '高二', '高三', '高中']:
+            # 使用人教版高中专业提示词
+            context_info = {
+                'difficulty_level': user_profile.get('difficulty_preference', '中等'),
+                'knowledge_points': user_profile.get('strong_subjects', []),
+                'exam_type': '学习咨询'
+            }
+            
+            pep_prompt = pep_prompt_service.build_subject_specific_prompt(
+                subject_name=detected_subject,
+                question_type=question_type,
+                grade_level=grade_level,
+                context=context_info
+            )
+            
+            base_prompt = f"""{pep_prompt}
+
+当前对话任务：
+用户信息：
+- 称呼：{user_nickname}
+- 问候方式：{greeting_style}
+- 年级：{grade_level}
+- 擅长科目：{', '.join(user_profile.get('strong_subjects', []))}
+- 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
+
+回答标准：
+- 直接回答用户问题，避免多余的问候语
+- 严格按照人教版教材标准和课程要求
+- 使用规范的学科术语和表达方式
+- 体现相应的学科核心素养
+- 答案准确、专业、易懂
+- 适合{grade_level}学生的认知水平
+"""
+        else:
+            # 使用通用提示词
+            base_prompt = f"""
 你是{self.assistant_name}，一个友善、耐心、专业的AI学习助手。你的任务是帮助学生提高学习效果。
 
 用户信息：
@@ -888,13 +935,16 @@ class AIAssistantService:
 - 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
 
 对话风格要求：
-- 在回复开始时使用设定的问候方式称呼用户
+- 直接回答用户问题，避免多余的问候语
 - 在对话中适当使用用户的称呼
 - 根据用户偏好调整语言风格（正式/亲切/友好/专业）
 - 使用友善、鼓励性的语言
 - 根据用户的学习情况提供针对性建议
 - 适当使用表情符号增加亲和力
 - 保持专业性，提供准确的学习指导
+"""
+        
+        base_prompt += f"""
 
 数学公式格式要求：
 - 行间公式必须使用 \\[ \\] 包围，例如：\\[ F = ma \\]
@@ -927,100 +977,115 @@ class AIAssistantService:
     def _build_comprehensive_chat_prompt(self, user_profile: Dict, context: Optional[Dict] = None, 
                                        comprehensive_data: Optional[Dict] = None) -> str:
         """
-        构建包含综合数据的对话提示词
+        构建包含综合数据的对话提示词（使用增强版提示词服务根据年级智能调用）
         """
-        # 确定用户称呼
+        # 确定用户称呼和年级
         user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
         preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        grade_level = user_profile.get('grade_level', '高中')
         
-        # 根据问候偏好设置称呼方式
-        greeting_styles = {
-            'formal': f'您好，{user_nickname}',
-            'casual': f'嗨，{user_nickname}',
-            'friendly': f'{user_nickname}，你好',
-            'professional': f'{user_nickname}同学'
+        # 获取用户上传的材料信息
+        user_materials = self._get_user_documents_summary(user_profile.get('user_id', ''))
+        
+        # 检查是否有学科相关的对话内容
+        message_content = context.get('message', '') if isinstance(context, dict) else (context if isinstance(context, str) else '')
+        detected_subject = self._detect_question_subject(message_content) if message_content else None
+        question_type = self._detect_question_type(message_content) if message_content else '综合咨询'
+        
+        # 构建上下文参数
+        context_params = {
+            'user_nickname': user_nickname,
+            'preferred_greeting': preferred_greeting,
+            'question_type': question_type,
+            'subject': detected_subject,
+            'user_materials': user_materials,
+            'user_bio': user_profile.get('bio', ''),
+            'difficulty_level': user_profile.get('difficulty_preference', '中等'),
+            'strong_subjects': user_profile.get('strong_subjects', []),
+            'weak_areas': user_profile.get('weak_areas', []),
+            'comprehensive_data': comprehensive_data
         }
         
-        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        # 使用增强版提示词服务构建年级特定提示词
+        enhanced_prompt = enhanced_prompt_service.build_grade_specific_prompt(
+            subject_name=detected_subject or '通用',
+            grade_level=grade_level,
+            context=context_params
+        )
         
-        base_prompt = f"""
-你是{self.assistant_name}，一个友善、耐心、专业的AI学习助手。你的任务是帮助学生提高学习效果。
-
-用户信息：
-- 称呼：{user_nickname}
-- 问候方式：{greeting_style}
-- 年级：{user_profile.get('grade_level', '未知')}
-- 擅长科目：{', '.join(user_profile.get('strong_subjects', []))}
-- 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
-
-对话风格要求：
-- 在回复开始时使用设定的问候方式称呼用户
-- 在对话中适当使用用户的称呼
-- 根据用户偏好调整语言风格（正式/亲切/友好/专业）
-- 使用友善、鼓励性的语言
-- 根据用户的学习情况提供针对性建议
-- 适当使用表情符号增加亲和力
-- 保持专业性，提供准确的学习指导
-"""
+        # 构建基础提示词
+        base_prompt = f"{enhanced_prompt}\n\n当前综合学习任务："
         
+        if message_content:
+            base_prompt += f"\n用户问题：{message_content}"
+        
+        # 添加综合数据信息（简化处理，重点突出）
         if comprehensive_data:
-            # 添加文档信息
+            # 文档资料
             documents = comprehensive_data.get('documents', [])
             if documents:
-                base_prompt += "\n\n相关文档资料："
-                for i, doc in enumerate(documents[:3], 1):
-                    base_prompt += f"\n{i}. {doc['title']} - {doc['content_snippet'][:100]}..."
+                base_prompt += "\n\n📚 相关资料："
+                for i, doc in enumerate(documents[:2], 1):
+                    try:
+                        logger.debug(f"Processing document {i}: type={type(doc)}, content={doc}")
+                        doc_title = doc.get('title', '未命名文档') if isinstance(doc, dict) else str(doc)
+                        base_prompt += f"\n{i}. {doc_title}"
+                    except Exception as e:
+                        logger.error(f"Error processing document {i}: {e}, doc type: {type(doc)}, doc: {doc}")
+                        base_prompt += f"\n{i}. 文档处理错误"
             
-            # 添加试卷信息
+            # 试卷信息
             exam_papers = comprehensive_data.get('exam_papers', [])
             if exam_papers:
-                base_prompt += "\n\n相关试卷："
-                for i, paper in enumerate(exam_papers[:3], 1):
-                    base_prompt += f"\n{i}. {paper['title']} ({paper['year']}年 {paper['exam_type']})"
+                base_prompt += "\n\n📝 相关试卷："
+                for i, paper in enumerate(exam_papers[:2], 1):
+                    try:
+                        logger.debug(f"Processing paper {i}: type={type(paper)}, content={paper}")
+                        if isinstance(paper, dict):
+                            paper_title = paper.get('title', '未命名试卷')
+                            paper_year = paper.get('year', '')
+                            base_prompt += f"\n{i}. {paper_title} ({paper_year}年)" if paper_year else f"\n{i}. {paper_title}"
+                        else:
+                            base_prompt += f"\n{i}. {str(paper)}"
+                    except Exception as e:
+                        logger.error(f"Error processing paper {i}: {e}, paper type: {type(paper)}, paper: {paper}")
+                        base_prompt += f"\n{i}. 试卷处理错误"
             
-            # 添加错题记录信息
+            # 错题统计
             mistake_records = comprehensive_data.get('mistake_records', [])
             if mistake_records:
-                base_prompt += f"\n\n用户错题情况：共有{len(mistake_records)}道错题记录"
-                resolved_count = sum(1 for m in mistake_records if m.get('is_resolved'))
-                base_prompt += f"，已解决{resolved_count}道"
+                try:
+                    logger.debug(f"Processing mistake_records: type={type(mistake_records)}, length={len(mistake_records)}")
+                    for i, m in enumerate(mistake_records[:3]):
+                        logger.debug(f"Mistake record {i}: type={type(m)}, content={m}")
+                    resolved_count = sum(1 for m in mistake_records if isinstance(m, dict) and m.get('is_resolved'))
+                    base_prompt += f"\n\n❌ 错题记录：{len(mistake_records)}道，已解决{resolved_count}道"
+                except Exception as e:
+                    logger.error(f"Error processing mistake_records: {e}, type: {type(mistake_records)}")
+                    base_prompt += f"\n\n❌ 错题记录处理错误"
             
-            # 添加知识图谱信息
+            # 知识图谱
             knowledge_graphs = comprehensive_data.get('knowledge_graphs', [])
             if knowledge_graphs:
-                base_prompt += "\n\n相关知识图谱："
-                for i, kg in enumerate(knowledge_graphs[:3], 1):
-                    base_prompt += f"\n{i}. {kg['name']} ({kg['subject_name']}) - {kg['description'][:50]}..."
-                    if kg['content']:
-                        base_prompt += f"\n   内容摘要：{kg['content'][:100]}..."
-                    if kg['tags']:
-                        base_prompt += f"\n   标签：{', '.join(kg['tags'][:3])}"
-            
-            # 添加学习分析数据
-            learning_analytics = comprehensive_data.get('learning_analytics', {})
-            if learning_analytics:
-                mistake_analysis = learning_analytics.get('mistake_analysis', {})
-                exam_performance = learning_analytics.get('exam_performance', {})
-                if mistake_analysis.get('total_mistakes', 0) > 0:
-                    base_prompt += f"\n\n学习分析：最近30天错题{mistake_analysis['total_mistakes']}道，解决率{mistake_analysis.get('resolution_rate', 0):.1f}%"
-                if exam_performance.get('total_exams', 0) > 0:
-                    base_prompt += f"，平均考试成绩{exam_performance.get('average_score', 0):.1f}分"
-            
-            base_prompt += "\n\n回答指导："
-            base_prompt += "\n- 结合用户的学习数据提供个性化建议"
-            base_prompt += "\n- 针对错题记录和薄弱环节给出具体改进方案"
-            base_prompt += "\n- 利用知识图谱内容回答相关学科问题"
-            base_prompt += "\n- 当用户询问特定知识点时，优先引用相关的知识图谱内容"
-            base_prompt += "\n- 推荐相关的学习资料和练习题目"
-            base_prompt += "\n- 鼓励用户并提供学习动力"
-            base_prompt += "\n\n特殊任务处理："
-            base_prompt += "\n- 知识搜索任务：当用户要求列出某个主题的知识点时，从知识图谱中搜索相关内容，按重要性排序展示"
-            base_prompt += "\n- 报告生成任务：当用户要求生成报告时，整合相关知识点，包含标题、内容、描述、标签等完整信息"
-            base_prompt += "\n- 文档导出任务：当用户要求生成PDF或可打印文档时，调用PPT生成功能创建结构化文档"
-            base_prompt += "\n- 综合分析任务：结合多个数据源（文档、试卷、错题、知识图谱）提供全面分析"
+                base_prompt += "\n\n🧠 知识图谱："
+                for i, kg in enumerate(knowledge_graphs[:2], 1):
+                    try:
+                        logger.debug(f"Processing knowledge graph {i}: type={type(kg)}, content={kg}")
+                        if isinstance(kg, dict):
+                            kg_name = kg.get('name', '未命名图谱')
+                            kg_subject = kg.get('subject_name', '未知学科')
+                            base_prompt += f"\n{i}. {kg_name} ({kg_subject})"
+                        else:
+                            base_prompt += f"\n{i}. {str(kg)}"
+                    except Exception as e:
+                        logger.error(f"Error processing knowledge graph {i}: {e}, kg type: {type(kg)}, kg: {kg}")
+                        base_prompt += f"\n{i}. 知识图谱处理错误"
         
-        if context:
-            base_prompt += f"\n\n对话上下文：{json.dumps(context, ensure_ascii=False)}"
+        # 添加上下文信息
+        if isinstance(context, dict):
+            base_prompt += f"\n\n💬 对话上下文：{context.get('message', '')}"
+        elif isinstance(context, str):
+            base_prompt += f"\n\n💬 对话上下文：{context}"
         
         return base_prompt
     
@@ -1108,55 +1173,113 @@ class AIAssistantService:
     def _build_question_analysis_prompt(self, question: str, user_answer: Optional[str], 
                                       user_profile: Dict) -> str:
         """
-        构建题目分析提示词
+        构建题目分析提示词（使用增强版提示词服务根据年级智能调用）
         """
-        # 确定用户称呼
+        # 确定用户称呼和年级
         user_nickname = user_profile.get('nickname') or user_profile.get('real_name') or user_profile.get('username', '同学')
         preferred_greeting = user_profile.get('preferred_greeting', 'casual')
+        grade_level = user_profile.get('grade_level', '高中')
         
-        # 根据问候偏好设置称呼方式
-        greeting_styles = {
-            'formal': f'您好，{user_nickname}',
-            'casual': f'嗨，{user_nickname}',
-            'friendly': f'{user_nickname}，你好',
-            'professional': f'{user_nickname}同学'
+        # 获取用户上传的材料信息
+        user_materials = self._get_user_documents_summary(user_profile.get('user_id', ''))
+        
+        # 智能识别学科和题目类型
+        detected_subject = self._detect_question_subject(question)
+        question_type = self._detect_question_type(question)
+        
+        # 构建上下文参数
+        context_params = {
+            'user_nickname': user_nickname,
+            'preferred_greeting': preferred_greeting,
+            'question_type': question_type,
+            'user_answer': user_answer,
+            'subject': detected_subject,
+            'user_materials': user_materials,
+            'user_bio': user_profile.get('bio', ''),
+            'difficulty_level': user_profile.get('difficulty_preference', '中等'),
+            'strong_subjects': user_profile.get('strong_subjects', []),
+            'weak_areas': user_profile.get('weak_areas', [])
         }
         
-        greeting_style = greeting_styles.get(preferred_greeting, f'你好，{user_nickname}')
+        # 使用增强版提示词服务构建年级特定提示词
+        enhanced_prompt = enhanced_prompt_service.build_grade_specific_prompt(
+            subject_name=detected_subject or '通用',
+            grade_level=grade_level,
+            context=context_params
+        )
         
-        prompt = f"""
-作为专业的学习助手{self.assistant_name}，请分析以下题目：
-
-题目：
-{question}
-"""
+        # 提取题目主题用于搜索
+        topic = self._extract_topic_from_question(question)
+        context_params['topic'] = topic
+        
+        # 使用增强版提示词服务构建集成搜索功能的提示词
+        enhanced_prompt = enhanced_prompt_service.build_enhanced_prompt_with_search(
+            subject_name=detected_subject or '通用',
+            grade_level=grade_level,
+            question_type='题目分析',
+            context=context_params
+        )
+        
+        # 构建完整提示词
+        prompt = f"{enhanced_prompt}\n\n题目内容：\n{question}"
         
         if user_answer:
             prompt += f"\n\n学生答案：\n{user_answer}"
         
+        # 添加知识点识别和拓展要求
         prompt += f"""
 
-用户信息：
-- 称呼：{user_nickname}
-- 问候方式：{greeting_style}
-- 擅长领域：{', '.join(user_profile.get('strong_subjects', []))}
-- 薄弱环节：{', '.join(user_profile.get('weak_areas', []))}
-
-请提供：
-1. 题目解析和标准答案
-2. 解题思路和方法
-3. 相关知识点
-4. 常见错误分析
-5. 针对该用户的个性化建议
-
-回答要求：
-- 在回复开始时使用设定的问候方式称呼用户
-- 在分析过程中适当使用用户的称呼
-- 根据用户偏好调整语言风格（正式/亲切/友好/专业）
-- 用友善、鼓励的语调回答
+特别要求：
+1. 识别题目涉及的核心知识点，并与{grade_level}教材内容精准对应
+2. 如果用户有相关上传材料，优先关联分析，提供具体页码或章节引用
+3. 提供2-3道类似的拓展练习题目（难度递进）
+4. 推荐相关的网络学习资源（包含具体网址或精确搜索关键词）
+5. 知识点总结要干练精辟，避免冗余表述，突出核心要点
+6. 如无相关材料，主动搜索并提供优质试题资源链接和内容
 """
         
         return prompt
+    
+    def _extract_topic_from_question(self, question: str) -> str:
+        """从题目中提取主题关键词"""
+        # 简单的关键词提取逻辑
+        keywords = [
+            '函数', '方程', '不等式', '几何', '概率', '统计', '导数', '积分',
+            '三角函数', '向量', '数列', '立体几何', '解析几何', '排列组合',
+            '力学', '电学', '光学', '热学', '原子物理', '波动', '磁场', '电场',
+            '化学反应', '有机化学', '无机化学', '化学平衡', '电化学', '化学键',
+            '细胞', '遗传', '生态', '进化', '生理', '分子生物学', '免疫',
+            '古代史', '近代史', '现代史', '政治制度', '经济发展', '文化交流',
+            '地理环境', '气候', '地形', '人口', '城市', '农业', '工业',
+            '政治制度', '经济制度', '法律', '哲学', '马克思主义', '思想道德'
+        ]
+        
+        for keyword in keywords:
+            if keyword in question:
+                return keyword
+        
+        # 如果没有找到特定关键词，返回通用主题
+        return '基础知识'
+    
+    def _get_user_documents_summary(self, user_id: str) -> str:
+        """获取用户上传文档的摘要信息"""
+        try:
+            # 使用现有的文档检索功能获取用户文档
+            documents = self._retrieve_relevant_documents(user_id, "学习材料")
+            if not documents:
+                return "暂无相关学习材料"
+            
+            summaries = []
+            for doc in documents[:5]:  # 限制最多5个文档
+                doc_info = f"《{doc.get('title', '未命名文档')}》"
+                if doc.get('subject'):
+                    doc_info += f"({doc['subject']})"
+                summaries.append(doc_info)
+            
+            return f"用户已上传材料：{', '.join(summaries)}"
+        except Exception as e:
+            logger.error(f"获取用户文档摘要失败: {e}")
+            return "暂无相关学习材料"
     
     def _parse_analysis_result(self, result: str) -> Dict[str, Any]:
         """
@@ -1190,12 +1313,25 @@ class AIAssistantService:
     
     def _generate_assistant_comment(self, analysis: Dict, user_answer: Optional[str]) -> str:
         """
-        生成助理评论
+        生成助理评论（集成人教版高中专业提示词）
         """
-        if user_answer:
-            return f"我看了你的答案，{self._get_encouraging_comment()}！让我来帮你分析一下这道题。"
+        # 检测题目学科和类型
+        question_text = analysis.get('question', '')
+        detected_subject = self._detect_question_subject(question_text) if question_text else None
+        question_type = self._detect_question_type(question_text) if question_text else '题目分析'
+        
+        # 如果检测到学科，使用专业化的评论
+        if detected_subject:
+            if user_answer:
+                return f"让我来帮你分析这道{detected_subject}{question_type}。"
+            else:
+                return f"我来为你详细解析这道{detected_subject}{question_type}。"
         else:
-            return f"这是一道很有意思的题目！{self._get_encouraging_comment()}，我来为你详细解析。"
+            # 使用通用评论
+            if user_answer:
+                return f"{self._get_encouraging_comment()}，让我来帮你分析一下这道题。"
+            else:
+                return f"{self._get_encouraging_comment()}，我来为你详细解析。"
     
     def _get_encouraging_comment(self) -> str:
         """
@@ -1364,12 +1500,11 @@ class AIAssistantService:
 
 请基于文档内容回答用户的问题，并结合用户的学习情况给出个性化的学习建议。
 回答要求：
-1. 在回复开始时使用设定的问候方式称呼用户
-2. 直接回答用户问题
-3. 引用文档中的相关内容
-4. 提供学习建议
-5. 根据用户偏好调整语言风格（正式/亲切/友好/专业）
-6. 语言要友善、鼓励性
+1. 直接回答用户问题，避免多余的问候语
+2. 引用文档中的相关内容
+3. 提供学习建议
+4. 根据用户偏好调整语言风格（正式/亲切/友好/专业）
+5. 语言要友善、鼓励性
 """
     
     def _build_document_analysis_prompt(self, document_info: Dict, document_content: str, 
@@ -1416,7 +1551,7 @@ class AIAssistantService:
 5. 个性化学习建议
 
 回答要求：
-- 在回复开始时使用设定的问候方式称呼用户
+- 直接进行文档分析，避免多余的问候语
 - 根据用户偏好调整语言风格（正式/亲切/友好/专业）
 - 回答要友善、专业，并具有鼓励性
 """
@@ -1729,8 +1864,7 @@ class AIAssistantService:
                 for keyword in search_keywords:
                     search_conditions.extend([
                         KnowledgeGraph.name.ilike(f'%{keyword}%'),
-                        KnowledgeGraph.description.ilike(f'%{keyword}%'),
-                        KnowledgeGraph.content.ilike(f'%{keyword}%')
+                        KnowledgeGraph.description.ilike(f'%{keyword}%')
                     ])
                 
                 # 注意：标签搜索已移至应用层处理，因为标签现在存储在nodes数组中
@@ -1782,7 +1916,6 @@ class AIAssistantService:
                     'id': kg.id,
                     'name': kg.name,
                     'description': kg.description or '',
-                    'content': kg.content or '',
                     'subject_name': subject_name,
                     'subject_id': kg.subject_id,
                     'tags': node_tags,
@@ -1812,7 +1945,7 @@ class AIAssistantService:
                 # 按相关性分数排序
                 result.sort(key=lambda x: x['relevance_score'], reverse=True)
                 # 只返回相关性分数大于0或有标签匹配的结果
-                result = [item for item in result if item['relevance_score'] > 0 or any(keyword.lower() in ' '.join([tag.lower() for tag in item.get('tags', [])]) for keyword in search_keywords)]
+                result = [item for item in result if isinstance(item, dict) and (item.get('relevance_score', 0) > 0 or any(keyword.lower() in ' '.join([tag.lower() for tag in item.get('tags', []) if isinstance(tag, str)]) for keyword in search_keywords))]
             
             return result[:10]  # 限制返回数量
             
@@ -1903,6 +2036,68 @@ class AIAssistantService:
         
         return min(relevance_score, 1.0)
     
+    def _detect_question_subject(self, text: str) -> Optional[str]:
+        """
+        智能检测题目或问题的学科
+        """
+        if not text:
+            return None
+            
+        text_lower = text.lower()
+        
+        # 学科关键词映射
+        subject_keywords = {
+            '数学': ['数学', '函数', '方程', '几何', '代数', '微积分', '导数', '积分', '三角', '概率', '统计', '向量', '矩阵', '解题', '计算', '证明'],
+            '物理': ['物理', '力学', '电学', '光学', '热学', '原子', '分子', '能量', '功率', '电流', '电压', '磁场', '波动', '振动', '牛顿', '欧姆'],
+            '化学': ['化学', '元素', '化合物', '反应', '分子式', '原子', '离子', '酸碱', '氧化', '还原', '有机', '无机', '催化', '平衡'],
+            '生物': ['生物', '细胞', '基因', '蛋白质', '酶', 'DNA', 'RNA', '遗传', '进化', '生态', '植物', '动物', '微生物', '新陈代谢'],
+            '语文': ['语文', '文言文', '古诗', '作文', '阅读理解', '修辞', '语法', '字词', '成语', '诗歌', '散文', '小说', '议论文'],
+            '英语': ['英语', 'english', '单词', '语法', '阅读', '写作', '听力', '口语', '翻译', 'grammar', 'vocabulary', 'reading', 'writing'],
+            '历史': ['历史', '朝代', '战争', '政治', '经济', '文化', '社会', '改革', '革命', '古代', '近代', '现代', '世界史', '中国史'],
+            '地理': ['地理', '地形', '气候', '人口', '城市', '农业', '工业', '交通', '环境', '资源', '地图', '经纬度', '板块', '洋流'],
+            '政治': ['政治', '马克思', '哲学', '经济学', '法律', '道德', '社会主义', '民主', '法治', '人权', '国际关系', '政府', '制度']
+        }
+        
+        # 计算每个学科的匹配度
+        subject_scores = {}
+        for subject, keywords in subject_keywords.items():
+            score = sum(1 for keyword in keywords if keyword in text_lower)
+            if score > 0:
+                subject_scores[subject] = score
+        
+        # 返回匹配度最高的学科
+        if subject_scores:
+            return max(subject_scores.keys(), key=lambda x: subject_scores[x])
+        
+        return None
+    
+    def _detect_question_type(self, text: str) -> str:
+        """
+        智能检测题目类型
+        """
+        if not text:
+            return '其他'
+            
+        text_lower = text.lower()
+        
+        # 题目类型关键词
+        if any(keyword in text_lower for keyword in ['选择', '单选', '多选', 'abcd', '下列']):
+            return '选择题'
+        elif any(keyword in text_lower for keyword in ['填空', '空格', '______']):
+            return '填空题'
+        elif any(keyword in text_lower for keyword in ['计算', '求解', '解答', '证明']):
+            return '解答题'
+        elif any(keyword in text_lower for keyword in ['分析', '论述', '简答', '说明']):
+            return '分析题'
+        elif any(keyword in text_lower for keyword in ['作文', '写作', '议论', '记叙']):
+            return '写作题'
+        elif any(keyword in text_lower for keyword in ['实验', '操作', '观察']):
+            return '实验题'
+        elif any(keyword in text_lower for keyword in ['翻译', '阅读理解', '完形填空']):
+            return '语言题'
+        else:
+            return '综合题'
+    
     def _get_learning_analytics_data(self, user_id: str) -> Dict[str, Any]:
         """
         获取学习分析数据
@@ -1915,7 +2110,7 @@ class AIAssistantService:
         """
         try:
             from datetime import datetime, timedelta
-            from sqlalchemy import func
+            from sqlalchemy import func, case
             
             # 获取最近30天的数据
             thirty_days_ago = datetime.utcnow() - timedelta(days=30)
@@ -1923,7 +2118,7 @@ class AIAssistantService:
             # 错题统计
             mistake_stats = db.session.query(
                 func.count(MistakeRecord.id).label('total_mistakes'),
-                func.count(func.case((MistakeRecord.is_resolved == True, 1))).label('resolved_mistakes'),
+                func.sum(case((MistakeRecord.is_resolved == True, 1), else_=0)).label('resolved_mistakes'),
                 func.avg(MistakeRecord.mastery_level).label('avg_mastery')
             ).filter(
                 MistakeRecord.user_id == user_id
@@ -1948,7 +2143,8 @@ class AIAssistantService:
                 func.count(StudyRecord.id).label('total_sessions'),
                 func.avg(StudyRecord.mastery_level).label('avg_mastery')
             ).filter(
-                StudyRecord.user_id == user_id,
+                StudyRecord.user_id == user_id
+            ).filter(
                 StudyRecord.start_time >= thirty_days_ago
             ).first()
             

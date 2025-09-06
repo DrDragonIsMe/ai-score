@@ -33,6 +33,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthStore } from '../stores/authStore';
 import { examPaperApi } from '../services/api';
+import { useLocation } from 'react-router-dom';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -64,6 +65,7 @@ interface Subject {
 
 const ExamPaperManagement: React.FC = () => {
   const { token } = useAuthStore();
+  const location = useLocation();
   const [papers, setPapers] = useState<ExamPaper[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,7 +87,15 @@ const ExamPaperManagement: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+    // 检查URL参数，如果有学科筛选参数则自动设置
+    const urlParams = new URLSearchParams(location.search);
+    const subjectId = urlParams.get('subject');
+    const subjectName = urlParams.get('subjectName');
+    if (subjectId) {
+      setFilterSubject(subjectId);
+      // 移除重复的筛选提示，避免与知识图谱页面的提示重复
+    }
+  }, [location.search]);
 
   const loadData = async () => {
     if (!token) {

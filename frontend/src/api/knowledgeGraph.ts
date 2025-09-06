@@ -62,10 +62,11 @@ export const generateKnowledgeGraph = async (data: KnowledgeGraphRequest): Promi
 };
 
 // 获取知识图谱列表
-export const getKnowledgeGraphs = async (params?: { subjectId?: string; graphType?: string; [key: string]: any }): Promise<KnowledgeGraphResponse[]> => {
+export const getKnowledgeGraphs = async (params?: { subjectId?: string; graphType?: string; year?: number; [key: string]: any }): Promise<KnowledgeGraphResponse[]> => {
   const queryParams: any = {};
   if (params?.subjectId) queryParams.subject_id = params.subjectId;
   if (params?.graphType) queryParams.type = params.graphType;
+  if (params?.year) queryParams.year = params.year;
   const response = await api.get('/knowledge-graph', { params: queryParams });
   return response.data || [];
 };

@@ -127,8 +127,14 @@ def login():
         
         # 获取租户信息
         tenant_id = g.get('tenant_id', 'default')
+        print(f"Debug: tenant_id from g: {tenant_id}")
+        print(f"Debug: Database URI: {db.engine.url}")
+        all_tenants = Tenant.query.all()
+        print(f"Debug: All tenants: {[t.subdomain for t in all_tenants]}")
         tenant = Tenant.query.filter_by(subdomain=tenant_id, is_active=True).first()
+        print(f"Debug: tenant found: {tenant}")
         if not tenant:
+            print(f"Debug: No tenant found with subdomain={tenant_id}, is_active=True")
             return error_response('Invalid tenant', 400)
         
         # 查找用户（支持用户名或邮箱登录）

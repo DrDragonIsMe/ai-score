@@ -190,11 +190,12 @@ def update_user(user_id):
         if current_user_role != 'admin' and current_user_id != user_id:
             return error_response('Permission denied', 403)
         
-        tenant_subdomain = g.get('tenant_id', 'default')
+        # 从JWT token中获取tenant_id
+        tenant_id = current_user_data.get('tenant_id')
         
-        # 通过subdomain查找租户
+        # 通过tenant_id查找租户
         from models import Tenant
-        tenant = Tenant.query.filter_by(subdomain=tenant_subdomain, is_active=True).first()
+        tenant = Tenant.query.filter_by(id=tenant_id, is_active=True).first()
         if not tenant:
             return error_response('Tenant not found', 400)
         

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   Card,
   Button,
@@ -60,13 +61,15 @@ interface KnowledgeGraphItem {
 // Subject接口已从../api/subjects导入
 
 const KnowledgeGraph: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [knowledgeGraphs, setKnowledgeGraphs] = useState<KnowledgeGraphItem[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedYear, setSelectedYear] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'graph'>('grid');
+  const [fromSubjectManagement, setFromSubjectManagement] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingGraph, setEditingGraph] = useState<KnowledgeGraphItem | null>(null);
   const [tagModalVisible, setTagModalVisible] = useState(false);
@@ -86,8 +89,22 @@ const KnowledgeGraph: React.FC = () => {
 
   useEffect(() => {
     fetchSubjects();
-    fetchKnowledgeGraphs();
-  }, []);
+    
+    // 检查URL参数，如果来自学科管理页面，则设置相应的筛选条件
+    const subjectParam = searchParams.get('subject');
+    const subjectNameParam = searchParams.get('subjectName');
+    
+    if (subjectParam && subjectParam !== 'all') {
+      setSelectedSubject(subjectParam);
+      setFromSubjectManagement(true);
+      // 移除筛选提示，避免重复显示
+    }
+    
+    // 只有在没有URL参数时才立即获取数据，否则让第二个useEffect处理
+    if (!subjectParam || subjectParam === 'all') {
+      fetchKnowledgeGraphs();
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchKnowledgeGraphs();

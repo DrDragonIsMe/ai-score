@@ -40,7 +40,7 @@ def get_knowledge_graphs():
         
         # 获取查询参数
         subject_id = request.args.get('subject_id')
-        year = request.args.get('year', datetime.now().year, type=int)
+        year = request.args.get('year', type=int)  # 不设置默认值，允许为None
         graph_type = request.args.get('type', 'exam_scope')
         
         # 构建查询条件

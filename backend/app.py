@@ -73,6 +73,12 @@ def create_app(config_class=Config):
         except:
             pass
         
+        # 允许通过自定义请求头覆盖租户（便于本地开发/测试）
+        header_tenant = request.headers.get('X-Tenant-ID') or request.headers.get('X-Tenant')
+        if header_tenant:
+            g.tenant_id = header_tenant.strip()
+            return
+        
         # 如果JWT中没有tenant_id，则从域名中提取
         host = request.headers.get('Host', 'localhost')
         tenant_id = extract_tenant_from_host(host)
@@ -153,10 +159,20 @@ def create_app(config_class=Config):
 
 def extract_tenant_from_host(host):
     """从主机名提取租户ID"""
-    # 示例：tenant1.aiscore.com -> tenant1
-    if '.' in host and not host.startswith('localhost'):
-        return host.split('.')[0]
-    return 'default'
+    # 先去除端口
+    hostname = host.split(':')[0] if host else ''
+    # 本地或IP地址一律返回default
+    if not hostname or hostname == 'localhost' or hostname == '::1':
+        return 'default'
+    # IPv4 地址：全是数字且有三个点
+    parts = hostname.split('.')
+    if len(parts) == 4 and all(p.isdigit() for p in parts):
+        return 'default'
+    # 无点的主机名（如本机某些别名）也返回default
+    if '.' not in hostname:
+        return 'default'
+    # 正常域名：取子域名作为租户
+    return hostname.split('.')[0]
 
 if __name__ == '__main__':
     app = create_app()
